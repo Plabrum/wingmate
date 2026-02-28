@@ -5,9 +5,9 @@ import { supabase } from '@/lib/supabase';
 type AuthContextValue = {
   session: Session | null;
   loading: boolean;
-  sendOTP: (phone: string) => Promise<void>;
-  verifyOTP: (phone: string, token: string) => Promise<void>;
-  signOut: () => Promise<void>;
+  sendOTP: (phone: string) => Promise<{ error: Error | null }>;
+  verifyOTP: (phone: string, token: string) => Promise<{ error: Error | null }>;
+  signOut: () => Promise<{ error: Error | null }>;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -31,17 +31,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   async function sendOTP(phone: string) {
     const { error } = await supabase.auth.signInWithOtp({ phone });
-    if (error) throw error;
+    return { error };
   }
 
   async function verifyOTP(phone: string, token: string) {
     const { error } = await supabase.auth.verifyOtp({ phone, token, type: 'sms' });
-    if (error) throw error;
+    return { error };
   }
 
   async function signOut() {
     const { error } = await supabase.auth.signOut();
-    if (error) throw error;
+    return { error };
   }
 
   return (
