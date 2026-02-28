@@ -172,7 +172,10 @@ export default function SmsModal() {
                   >
                     <Text style={{ color: '#fff', fontWeight: '600', fontSize: 16 }}>Verify</Text>
                   </Pressable>
-                  <Pressable style={{ alignItems: 'center', padding: 10 }} onPress={() => setStep('phone')}>
+                  <Pressable
+                    style={{ alignItems: 'center', padding: 10 }}
+                    onPress={() => setStep('phone')}
+                  >
                     <Text style={{ color: '#2563eb', fontSize: 14 }}>Change number</Text>
                   </Pressable>
                 </>

@@ -51,9 +51,7 @@ export default function LoginScreen() {
           })}
           onPress={() => router.push('/(auth)/sms')}
         >
-          <Text style={{ color: '#000', fontWeight: '600', fontSize: 16 }}>
-            Continue with SMS
-          </Text>
+          <Text style={{ color: '#000', fontWeight: '600', fontSize: 16 }}>Continue with SMS</Text>
         </Pressable>
 
         <Text style={{ textAlign: 'center', color: '#aaa', fontSize: 12, marginTop: 4 }}>

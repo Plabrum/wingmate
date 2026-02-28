@@ -27,6 +27,22 @@ export const Colors = {
   },
 };
 
+export const colors = {
+  ink: '#18181C',
+  inkMid: '#52525E',
+  inkDim: '#8C8C9E',
+  inkGhost: '#BBBBC8',
+  canvas: '#F7F6F3',
+  white: '#FFFFFF',
+  purple: '#6654D9',
+  purplePale: '#EEEAFF',
+  purpleSoft: '#D9D4FF',
+  green: '#22C55E',
+  divider: '#EBEBF0',
+  muted: '#F1F0EE',
+  lavender: '#E9E6FF',
+};
+
 export const Fonts = Platform.select({
   ios: {
     /** iOS `UIFontDescriptorSystemDesignDefault` */

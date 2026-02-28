@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "wingmate",
+    "name": "Orbit",
     "slug": "wingmate",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -37,7 +37,8 @@
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
         }
-      ]
+      ],
+      "@react-native-community/datetimepicker"
     ],
     "experiments": {
       "typedRoutes": true

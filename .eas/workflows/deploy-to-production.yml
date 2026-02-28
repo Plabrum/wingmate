@@ -22,7 +22,7 @@ jobs:
     if: ${{ !needs.get_ios_build.outputs.build_id }}
     type: build
     env:
-      EAS_BUILD_NO_EXPO_GO_WARNING: "true"
+      EAS_BUILD_NO_EXPO_GO_WARNING: 'true'
     params:
       platform: ios
       profile: production
@@ -31,7 +31,7 @@ jobs:
     needs: [build_ios]
     type: submit
     env:
-      EXPO_DEBUG: "1"
+      EXPO_DEBUG: '1'
     params:
       build_id: ${{ needs.build_ios.outputs.build_id }}
   publish_ios_update:
