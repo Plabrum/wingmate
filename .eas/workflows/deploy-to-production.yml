@@ -21,6 +21,8 @@ jobs:
     needs: [get_ios_build]
     if: ${{ !needs.get_ios_build.outputs.build_id }}
     type: build
+    env:
+      EAS_BUILD_NO_EXPO_GO_WARNING: "true"
     params:
       platform: ios
       profile: production

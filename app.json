@@ -12,10 +12,16 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.plabrum.wingmate",
       "entitlements": {
-        "com.apple.developer.applesignin": ["Default"]
+        "com.apple.developer.applesignin": [
+          "Default",
+          "Default"
+        ]
+      },
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
-"web": {
+    "web": {
       "bundler": "metro",
       "output": "static",
       "favicon": "./assets/images/favicon.png"

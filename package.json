@@ -3,7 +3,7 @@
   "main": "expo-router/entry",
   "version": "1.0.0",
   "scripts": {
-    "start": "expo start",
+    "start": "expo start --dev-client",
     "reset-project": "node ./scripts/reset-project.js",
     "android": "expo start --android",
     "ios": "expo start --ios",
@@ -12,7 +12,9 @@
     "supabase:start": "supabase start",
     "supabase:stop": "supabase stop",
     "db:types": "supabase gen types typescript --local > types/database.ts",
-    "build:local": "eas build --platform ios --profile production --local --output builds/app.ipa",
+    "prebuild:local": "bash scripts/check-local-build-deps.sh",
+    "build:local": "EAS_BUILD_NO_EXPO_GO_WARNING=true eas build --platform ios --profile production --local --output builds/app.ipa",
+    "build:dev-sim": "EAS_BUILD_NO_EXPO_GO_WARNING=true eas build --platform ios --profile development-simulator --local --output builds/dev-sim.app",
     "submit:local": "eas submit --platform ios --profile production --path builds/app.ipa"
   },
   "dependencies": {
@@ -34,6 +36,7 @@
     "expo-status-bar": "~3.0.9",
     "expo-symbols": "~1.0.8",
     "expo-system-ui": "~6.0.9",
+    "expo-updates": "~29.0.16",
     "expo-web-browser": "~15.0.10",
     "libphonenumber-js": "^1.12.38",
     "react": "19.1.0",
