@@ -10,7 +10,7 @@ jobs:
     name: Fingerprint
     type: fingerprint
   get_ios_build:
-    name: Check for existing ios build
+    name: Check for existing iOS build
     needs: [fingerprint]
     type: get-build
     params:
@@ -25,13 +25,13 @@ jobs:
       platform: ios
       profile: production
   submit_ios_build:
-    name: Submit iOS Build
+    name: Submit to App Store
     needs: [build_ios]
     type: submit
     params:
       build_id: ${{ needs.build_ios.outputs.build_id }}
   publish_ios_update:
-    name: Publish iOS update
+    name: Publish OTA update
     needs: [get_ios_build]
     if: ${{ needs.get_ios_build.outputs.build_id }}
     type: update
