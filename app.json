@@ -10,17 +10,9 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.plab99.wingmate"
+      "bundleIdentifier": "com.plabrum.wingmate"
     },
-    "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
-      },
-      "edgeToEdgeEnabled": true,
-      "package": "com.plab99.wingmate"
-    },
-    "web": {
+"web": {
       "bundler": "metro",
       "output": "static",
       "favicon": "./assets/images/favicon.png"
