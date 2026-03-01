@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { colors, Fonts } from '@/constants/theme';
+import { View, Text, Pressable } from '@/lib/tw';
 
 type Role = 'dater' | 'winger';
 
@@ -23,99 +23,40 @@ export default function RoleScreen() {
 
   function handleContinue() {
     if (!selected) return;
-     
     router.push({ pathname: '/(onboarding)/profile' as any, params: { role: selected } });
   }
 
   return (
-    <SafeAreaView style={styles.safe}>
-      <View style={styles.container}>
-        <Text style={styles.title}>How do you want to use Orbit?</Text>
+    <SafeAreaView className="flex-1 bg-canvas">
+      <View className="flex-1 px-6 pt-12 pb-10">
+        <Text className="font-serif text-[28px] font-semibold text-ink leading-9 mb-10">
+          How do you want to use Orbit?
+        </Text>
 
-        <View style={styles.cards}>
+        <View className="flex-1 gap-4">
           {CARDS.map(({ role, title, subtitle }) => (
-            <TouchableOpacity
+            <Pressable
               key={role}
-              style={[styles.card, selected === role && styles.cardSelected]}
+              className={[
+                'bg-white rounded-2xl border-2 p-5',
+                selected === role ? 'border-purple bg-purple-pale' : 'border-divider',
+              ].join(' ')}
               onPress={() => setSelected(role)}
-              activeOpacity={0.8}
             >
-              <Text style={styles.cardTitle}>{title}</Text>
-              <Text style={styles.cardSubtitle}>{subtitle}</Text>
-            </TouchableOpacity>
+              <Text className="text-[17px] font-semibold text-ink mb-1.5">{title}</Text>
+              <Text className="text-sm text-ink-mid leading-5">{subtitle}</Text>
+            </Pressable>
           ))}
         </View>
 
-        <TouchableOpacity
-          style={[styles.button, !selected && styles.buttonDisabled]}
+        <Pressable
+          className={['mt-6 bg-purple rounded-[14px] py-4 items-center', !selected ? 'opacity-40' : ''].join(' ')}
           onPress={handleContinue}
           disabled={!selected}
-          activeOpacity={0.85}
         >
-          <Text style={styles.buttonText}>Continue</Text>
-        </TouchableOpacity>
+          <Text className="text-white text-[17px] font-semibold">Continue</Text>
+        </Pressable>
       </View>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-    backgroundColor: colors.canvas,
-  },
-  container: {
-    flex: 1,
-    paddingHorizontal: 24,
-    paddingTop: 48,
-    paddingBottom: 40,
-  },
-  title: {
-    fontFamily: Fonts?.serif ?? 'serif',
-    fontSize: 28,
-    fontWeight: '600',
-    color: colors.ink,
-    lineHeight: 36,
-    marginBottom: 40,
-  },
-  cards: {
-    flex: 1,
-    gap: 16,
-  },
-  card: {
-    backgroundColor: colors.white,
-    borderRadius: 16,
-    borderWidth: 2,
-    borderColor: colors.divider,
-    padding: 20,
-  },
-  cardSelected: {
-    borderColor: colors.purple,
-    backgroundColor: colors.purplePale,
-  },
-  cardTitle: {
-    fontSize: 17,
-    fontWeight: '600',
-    color: colors.ink,
-    marginBottom: 6,
-  },
-  cardSubtitle: {
-    fontSize: 14,
-    color: colors.inkMid,
-    lineHeight: 20,
-  },
-  button: {
-    backgroundColor: colors.purple,
-    borderRadius: 14,
-    paddingVertical: 16,
-    alignItems: 'center',
-  },
-  buttonDisabled: {
-    opacity: 0.4,
-  },
-  buttonText: {
-    color: colors.white,
-    fontSize: 17,
-    fontWeight: '600',
-  },
-});

@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { Platform } from 'react-native';
 import type { Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 
@@ -17,16 +18,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'INITIAL_SESSION' && __DEV__ && Platform.OS === 'web') return;
       setSession(session);
       setLoading(false);
     });
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-    });
+    if (__DEV__ && Platform.OS === 'web') {
+      supabase.auth
+        .signInWithPassword({ email: 'dev@local.test', password: 'devpassword' })
+        .then(({ error }) => {
+          if (error) {
+            console.error('[dev] auto sign-in failed:', error.message);
+            setLoading(false);
+          }
+        });
+    }
 
     return () => subscription.unsubscribe();
   }, []);

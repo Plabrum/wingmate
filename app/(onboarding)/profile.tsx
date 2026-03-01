@@ -8,17 +8,16 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
-  Modal,
   ActivityIndicator,
   SafeAreaView,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
-import DateTimePicker from '@react-native-community/datetimepicker';
 import { useAuth } from '@/context/auth';
 import { useProfile } from '@/context/profile';
 import { updateBaseProfile } from '@/queries/profiles';
 import { colors, Fonts } from '@/constants/theme';
 import type { Database } from '@/types/database';
+import DateInput from '@/components/ui/DateInput';
 
 type Gender = Database['public']['Enums']['gender'];
 type City = Database['public']['Enums']['city'];
@@ -35,8 +34,6 @@ export default function ProfileScreen() {
 
   const [chosenName, setChosenName] = useState('');
   const [dateOfBirth, setDateOfBirth] = useState<Date | null>(null);
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [tempDate, setTempDate] = useState(new Date(2000, 0, 1));
   const [gender, setGender] = useState<Gender | null>(null);
   const [phoneNumber, setPhoneNumber] = useState(session?.user.phone ?? '');
   const [city, setCity] = useState<City | null>(null);
@@ -51,14 +48,6 @@ export default function ProfileScreen() {
     dateOfBirth !== null &&
     gender !== null &&
     (!isDater || city !== null);
-
-  function formatDate(date: Date) {
-    return date.toLocaleDateString('en-GB', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    });
-  }
 
   async function handleSubmit() {
     if (!isValid) return;
@@ -118,28 +107,7 @@ export default function ProfileScreen() {
 
           {/* Date of birth */}
           <Text style={styles.label}>Date of birth</Text>
-          <TouchableOpacity
-            style={[styles.input, styles.dateTouchable]}
-            onPress={() => setShowDatePicker(true)}
-          >
-            <Text style={dateOfBirth ? styles.dateText : styles.datePlaceholder}>
-              {dateOfBirth ? formatDate(dateOfBirth) : 'Date of birth'}
-            </Text>
-          </TouchableOpacity>
-
-          {/* Android date picker shown inline when triggered */}
-          {showDatePicker && Platform.OS === 'android' && (
-            <DateTimePicker
-              value={dateOfBirth ?? tempDate}
-              mode="date"
-              display="default"
-              maximumDate={new Date()}
-              onChange={(_, date) => {
-                setShowDatePicker(false);
-                if (date) setDateOfBirth(date);
-              }}
-            />
-          )}
+          <DateInput value={dateOfBirth} onChange={setDateOfBirth} />
 
           {/* Gender */}
           <Text style={styles.label}>Gender</Text>
@@ -212,32 +180,6 @@ export default function ProfileScreen() {
         </ScrollView>
       </KeyboardAvoidingView>
 
-      {/* iOS Date Picker Modal */}
-      {Platform.OS === 'ios' && (
-        <Modal visible={showDatePicker} transparent animationType="slide">
-          <View style={styles.modalOverlay}>
-            <View style={styles.datePickerSheet}>
-              <View style={styles.datePickerHeader}>
-                <TouchableOpacity onPress={() => setShowDatePicker(false)}>
-                  <Text style={styles.datePickerDone}>Done</Text>
-                </TouchableOpacity>
-              </View>
-              <DateTimePicker
-                value={dateOfBirth ?? tempDate}
-                mode="date"
-                display="spinner"
-                maximumDate={new Date()}
-                onChange={(_, date) => {
-                  if (date) {
-                    setDateOfBirth(date);
-                    setTempDate(date);
-                  }
-                }}
-              />
-            </View>
-          </View>
-        </Modal>
-      )}
     </SafeAreaView>
   );
 }
@@ -274,9 +216,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.ink,
   },
-  dateTouchable: { justifyContent: 'center' },
-  dateText: { fontSize: 16, color: colors.ink },
-  datePlaceholder: { fontSize: 16, color: colors.inkGhost },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: {
     paddingHorizontal: 16,
@@ -303,27 +242,4 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: { opacity: 0.4 },
   buttonText: { color: colors.white, fontSize: 17, fontWeight: '600' },
-  modalOverlay: {
-    flex: 1,
-    justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0,0,0,0.3)',
-  },
-  datePickerSheet: {
-    backgroundColor: colors.white,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    paddingBottom: 32,
-  },
-  datePickerHeader: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.divider,
-  },
-  datePickerDone: {
-    color: colors.purple,
-    fontSize: 17,
-    fontWeight: '600',
-  },
 });

@@ -1,7 +1,7 @@
 import '../global.css';
 import 'react-native-url-polyfill/auto';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { Redirect, Stack, router } from 'expo-router';
+import { Stack, router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { ActivityIndicator, View } from 'react-native';
 import 'react-native-reanimated';
@@ -33,25 +33,26 @@ function RootNavigator() {
     });
   }, [session, loadingProfile]);
 
-  if (loading) return null;
+  useEffect(() => {
+    if (loading) return;
+    if (session && loadingProfile) return;
 
-  function getRedirect(): string {
-    if (!session) return '/(auth)/login';
-    if (!profile?.chosen_name) return '/(onboarding)/role';
-    if (profile.role === 'winger') return '/(tabs)/profile';
-    return '/(tabs)/discover';
-  }
+    let redirect: string;
+    if (!session) redirect = '/(auth)/login';
+    else if (!profile?.chosen_name) redirect = '/(onboarding)/role';
+    else if (profile.role === 'winger') redirect = '/(tabs)/profile';
+    else redirect = '/(tabs)/discover';
 
-  if (session && loadingProfile) {
+    router.replace(redirect as any);
+  }, [loading, session, loadingProfile, profile]);
+
+  if (loading || (session && loadingProfile)) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <ActivityIndicator />
       </View>
     );
   }
-
-   
-  const redirect = getRedirect() as any;
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
@@ -61,7 +62,6 @@ function RootNavigator() {
         <Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
         <Stack.Screen name="invite" options={{ headerShown: false }} />
       </Stack>
-      <Redirect href={redirect} />
       <StatusBar style="auto" />
     </ThemeProvider>
   );
