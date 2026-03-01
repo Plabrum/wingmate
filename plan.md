@@ -1,4 +1,4 @@
-# Wingmate — Phased Build Plan
+# Orbit — Phased Build Plan
 
 ## Current State
 
@@ -369,7 +369,7 @@ Built in Phase 3. Receives `{ phone, daterName }` and sends an SMS via Twilio (o
 ```ts
 // Minimal implementation — no fancy invite token needed for v1.
 // Deep link: wingmate://invite  (the app just shows pending invitations on open)
-const message = `${daterName} invited you to be their wingperson on Wingmate. Download: [link]`;
+const message = `${daterName} invited you to be their wingperson on Orbit. Download: [link]`;
 await twilioClient.messages.create({ to: phone, from: TWILIO_NUMBER, body: message });
 ```
 
