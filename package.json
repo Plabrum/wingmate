@@ -1,7 +1,7 @@
 {
   "name": "wingmate",
   "main": "expo-router/entry",
-  "version": "1.0.0",
+  "version": "1.0.5",
   "scripts": {
     "start": "expo start --dev-client",
     "dev:sim": "bash scripts/dev-sim.sh",
