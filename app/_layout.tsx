@@ -1,3 +1,4 @@
+import '../global.css';
 import 'react-native-url-polyfill/auto';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { Redirect, Stack, router } from 'expo-router';

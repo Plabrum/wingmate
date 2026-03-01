@@ -30,7 +30,7 @@ export default function RoleScreen() {
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.container}>
-        <Text style={styles.title}>How do you want to use Wingmate?</Text>
+        <Text style={styles.title}>How do you want to use Orbit?</Text>
 
         <View style={styles.cards}>
           {CARDS.map(({ role, title, subtitle }) => (

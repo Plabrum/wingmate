@@ -47,7 +47,7 @@ Deno.serve(async (req) => {
   await sendPush(
     profile.push_token,
     "You've been invited! 🤝",
-    "Someone wants you to be their wingperson on Wingmate.",
+    "Someone wants you to be their wingperson on Orbit.",
   );
 
   return json({ ok: true }, 200);

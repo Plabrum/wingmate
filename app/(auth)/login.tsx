@@ -17,7 +17,7 @@ export default function LoginScreen() {
       }}
     >
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', gap: 12 }}>
-        <Text style={{ fontSize: 42, fontWeight: '800', letterSpacing: -1 }}>Wingmate</Text>
+        <Text style={{ fontSize: 42, fontWeight: '800', letterSpacing: -1 }}>Orbit</Text>
         <Text style={{ fontSize: 16, color: '#666', textAlign: 'center' }}>
           Your personal aviation companion
         </Text>

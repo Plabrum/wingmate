@@ -346,7 +346,7 @@ export default function WingpeopleScreen() {
               <View style={st.handle} />
               <Text style={st.sheetTitle}>Invite a Wingperson</Text>
               <Text style={st.sheetSub}>
-                Enter their phone number and we{"'"}ll send them an invite to Wingmate.
+                Enter their phone number and we{"'"}ll send them an invite to Orbit.
               </Text>
               <TextInput
                 style={st.input}

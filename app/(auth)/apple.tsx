@@ -49,7 +49,7 @@ export default function AppleModal() {
       contentContainerStyle={{ flex: 1, padding: 24, justifyContent: 'center', gap: 20 }}
     >
       <View style={{ alignItems: 'center', gap: 8 }}>
-        <Text style={{ fontSize: 20, fontWeight: '700' }}>Welcome to Wingmate</Text>
+        <Text style={{ fontSize: 20, fontWeight: '700' }}>Welcome to Orbit</Text>
         <Text style={{ fontSize: 15, color: '#666', textAlign: 'center' }}>
           Use your Apple ID to securely sign in. No password required.
         </Text>

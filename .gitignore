@@ -44,3 +44,8 @@ app-example
 
 # local builds
 /builds
+/builds/dev-sim-extracted
+
+# fingerprint cache (local build state)
+.build-fingerprint
+.dev-sim-fingerprint

@@ -2,20 +2,18 @@
   "expo": {
     "name": "Orbit",
     "slug": "wingmate",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "wingmate",
+    "scheme": "orbit",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.plabrum.wingmate",
       "entitlements": {
-        "com.apple.developer.applesignin": [
-          "Default",
-          "Default"
-        ]
+        "com.apple.developer.applesignin": ["Default"],
+        "aps-environment": "production"
       },
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
@@ -23,12 +21,13 @@
     },
     "web": {
       "bundler": "metro",
-      "output": "static",
+      "output": "single",
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
       "expo-router",
       "expo-apple-authentication",
+      "expo-notifications",
       [
         "expo-splash-screen",
         {
@@ -54,7 +53,7 @@
       "url": "https://u.expo.dev/ce961544-87fc-4eb0-8168-3c7cd646d58e"
     },
     "runtimeVersion": {
-      "policy": "appVersion"
+      "policy": "fingerprint"
     }
   }
 }
