@@ -47,7 +47,7 @@
         "ascAppId": "6759815338",
         "ascApiKeyId": "66BPK6T5T3",
         "ascApiKeyIssuerId": "5e9b50f7-e876-4587-a7c9-52c1fc40a253",
-        "ascApiKeyPath": "$ASC_API_KEY_PATH"
+        "ascApiKeyPath": ".secrets/ascApiKey/AuthKey_66BPK6T5T3.p8"
       }
     }
   }
