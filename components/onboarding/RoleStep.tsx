@@ -1,9 +1,8 @@
 import { useState } from 'react';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
-import { View, Text, Pressable } from '@/lib/tw';
+import { View, Text, Pressable, SafeAreaView } from '@/lib/tw';
+import type { Database } from '@/types/database';
 
-type Role = 'dater' | 'winger';
+type Role = Database['public']['Enums']['user_role'];
 
 const CARDS: { role: Role; title: string; subtitle: string }[] = [
   {
@@ -18,13 +17,10 @@ const CARDS: { role: Role; title: string; subtitle: string }[] = [
   },
 ];
 
-export default function RoleScreen() {
-  const [selected, setSelected] = useState<Role | null>(null);
+type Props = { onNext: (role: Role) => void };
 
-  function handleContinue() {
-    if (!selected) return;
-    router.push({ pathname: '/(onboarding)/profile' as any, params: { role: selected } });
-  }
+export default function RoleStep({ onNext }: Props) {
+  const [selected, setSelected] = useState<Role | null>(null);
 
   return (
     <SafeAreaView className="flex-1 bg-canvas">
@@ -50,8 +46,11 @@ export default function RoleScreen() {
         </View>
 
         <Pressable
-          className={['mt-6 bg-purple rounded-[14px] py-4 items-center', !selected ? 'opacity-40' : ''].join(' ')}
-          onPress={handleContinue}
+          className={[
+            'mt-6 bg-purple rounded-[14px] py-4 items-center',
+            !selected ? 'opacity-40' : '',
+          ].join(' ')}
+          onPress={() => selected && onNext(selected)}
           disabled={!selected}
         >
           <Text className="text-white text-[17px] font-semibold">Continue</Text>

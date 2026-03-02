@@ -48,9 +48,7 @@ export function getOtherProfile(match: MatchRow, currentUserId: string) {
  * Helper: return the first approved photo from a profile's dating_profiles.
  * Falls back to null if no approved photo exists.
  */
-export function getFirstPhoto(
-  profile: MatchRow['user_a'] | MatchRow['user_b']
-): string | null {
+export function getFirstPhoto(profile: MatchRow['user_a'] | MatchRow['user_b']): string | null {
   const dp = profile.dating_profiles;
   const singleDp = Array.isArray(dp) ? dp[0] : dp;
   type Photo = { storage_url: string; display_order: number; approved_at: string | null };
@@ -68,6 +66,20 @@ export function getFirstPhoto(
 export function hasMessages(match: MatchRow): boolean {
   return (match.messages?.length ?? 0) > 0;
 }
+
+// ── Sheet data types ──────────────────────────────────────────────────────────
+
+export type Prompt = {
+  id: string;
+  answer: string;
+  template: { question: string } | null;
+};
+
+export type WingNote = {
+  note: string | null;
+  suggested_by: string | null;
+  winger: { chosen_name: string | null } | null;
+};
 
 // ── Match prompts ─────────────────────────────────────────────────────────────
 
@@ -89,6 +101,22 @@ export function getMatchPrompts(otherUserId: string) {
     .eq('user_id', otherUserId)
     .order('created_at', { referencedTable: 'profile_prompts', ascending: true })
     .maybeSingle();
+}
+
+// ── Combined sheet data ───────────────────────────────────────────────────────
+
+export async function getMatchSheetData(userId: string, otherUserId: string) {
+  const [noteResult, promptResult] = await Promise.all([
+    getWingNoteForMatch(userId, otherUserId),
+    getMatchPrompts(otherUserId),
+  ]);
+  if (noteResult.error) throw new Error(noteResult.error.message);
+  if (promptResult.error) throw new Error(promptResult.error.message);
+
+  const dp = promptResult.data;
+  const raw = dp?.profile_prompts ?? [];
+  const prompts = (Array.isArray(raw) ? raw : [raw]) as Prompt[];
+  return { wingNote: noteResult.data as WingNote | null, prompts };
 }
 
 // ── Wing note on a match ──────────────────────────────────────────────────────

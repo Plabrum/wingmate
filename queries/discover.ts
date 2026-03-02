@@ -92,3 +92,54 @@ export async function getActiveWingerTabs(daterId: string) {
     .is('decision', null)
     .not('suggested_by', 'is', null);
 }
+
+export type WingerTab = { id: string; name: string };
+
+// ── Likes You pool (dater's "Likes You" tab) ──────────────────────────────────
+
+export async function getLikesYouPool(
+  viewerId: string,
+  pageSize = 20,
+  pageOffset = 0
+): Promise<{ data: DiscoverCard[] | null; error: Error | null }> {
+  const { data, error } = await supabase.rpc('get_likes_you_pool', {
+    viewer_id: viewerId,
+    page_size: pageSize,
+    page_offset: pageOffset,
+  });
+  return { data: data as DiscoverCard[] | null, error };
+}
+
+export async function getLikesYouCount(
+  viewerId: string
+): Promise<{ data: number | null; error: Error | null }> {
+  const { data, error } = await supabase.rpc('get_likes_you_count', {
+    viewer_id: viewerId,
+  });
+  return { data: data as number | null, error };
+}
+
+/**
+ * Suspense-ready version of getActiveWingerTabs.
+ * Deduplication logic lives here (CLAUDE.md: transforms belong in the query function).
+ */
+export async function getWingerTabs(daterId: string): Promise<WingerTab[]> {
+  const { data, error } = await supabase
+    .from('decisions')
+    .select(`suggested_by, winger:profiles!decisions_suggested_by_fkey (id, chosen_name)`)
+    .eq('actor_id', daterId)
+    .is('decision', null)
+    .not('suggested_by', 'is', null);
+
+  if (error || !data) return [];
+  const seen = new Set<string>();
+  const distinct: WingerTab[] = [];
+  for (const row of data) {
+    const winger = row.winger as { id: string; chosen_name: string } | null;
+    if (winger && !seen.has(winger.id)) {
+      seen.add(winger.id);
+      distinct.push({ id: winger.id, name: winger.chosen_name });
+    }
+  }
+  return distinct;
+}

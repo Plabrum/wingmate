@@ -1,21 +1,17 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import {
-  SectionList,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import React, { useCallback, useMemo } from 'react';
+import { SectionList, StyleSheet } from 'react-native';
 import { router } from 'expo-router';
 
 import { useAuth } from '@/context/auth';
-import { supabase } from '@/lib/supabase';
 import { getConversations, type ConversationRow } from '@/queries/messages';
 import { getInitials } from '@/components/profile/profile-helpers';
 import { FaceAvatar } from '@/components/ui/FaceAvatar';
 import { LargeHeader } from '@/components/ui/LargeHeader';
+import ScreenSuspense from '@/components/ui/ScreenSuspense';
 import { colors } from '@/constants/theme';
+import { useMessagesListPresence } from '@/hooks/use-messages-list-presence';
+import { useSuspenseQuery, useQueryRefresh } from '@/lib/useSuspenseQuery';
+import { View, Text, Pressable, SafeAreaView } from '@/lib/tw';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -58,40 +54,46 @@ type ConvoRowProps = {
 function ConvoRow({ convo, userId, onlineIds, onPress }: ConvoRowProps) {
   const other = getOtherParticipant(convo, userId);
   const lastMsg = getLastMessage(convo);
-  const isUnread =
-    lastMsg != null && lastMsg.sender_id !== userId && !lastMsg.is_read;
+  const isUnread = lastMsg != null && lastMsg.sender_id !== userId && !lastMsg.is_read;
   const initials = getInitials(other?.chosen_name);
   const isOnline = other?.id != null && onlineIds.has(other.id);
 
   return (
-    <TouchableOpacity style={styles.row} onPress={onPress} activeOpacity={0.7}>
-      <View style={styles.avatarWrap}>
+    <Pressable className="flex-row items-center px-4 py-3 bg-white" onPress={onPress}>
+      <View className="relative mr-3">
         <FaceAvatar initials={initials} size={48} />
-        {isUnread && <View style={styles.unreadDot} />}
-        {isOnline && <View style={styles.onlineDot} />}
+        {isUnread && (
+          <View className="absolute bottom-0 right-0 w-3 h-3 rounded-[6px] bg-purple border-2 border-white" />
+        )}
+        {isOnline && (
+          <View className="absolute top-0 right-0 w-3 h-3 rounded-[6px] bg-green border-2 border-white" />
+        )}
       </View>
-      <View style={styles.rowBody}>
-        <View style={styles.rowTop}>
-          <Text style={[styles.name, isUnread && styles.nameBold]} numberOfLines={1}>
+      <View className="flex-1">
+        <View className="flex-row justify-between items-center mb-0.5">
+          <Text
+            className={`flex-1 text-15 text-ink mr-2 ${isUnread ? 'font-bold' : 'font-medium'}`}
+            numberOfLines={1}
+          >
             {other?.chosen_name ?? 'Someone'}
           </Text>
           {lastMsg != null && (
-            <Text style={styles.time}>{relativeTime(lastMsg.created_at)}</Text>
+            <Text className="text-12 text-ink-ghost">{relativeTime(lastMsg.created_at)}</Text>
           )}
         </View>
         {lastMsg != null ? (
           <Text
-            style={[styles.preview, isUnread && styles.previewBold]}
+            className={`text-14 ${isUnread ? 'text-ink font-medium' : 'text-ink-mid'}`}
             numberOfLines={1}
           >
             {lastMsg.sender_id === userId ? 'You: ' : ''}
             {lastMsg.body}
           </Text>
         ) : (
-          <Text style={styles.previewMuted}>New match — say hello!</Text>
+          <Text className="text-14 text-ink-ghost italic">New match — say hello!</Text>
         )}
       </View>
-    </TouchableOpacity>
+    </Pressable>
   );
 }
 
@@ -99,91 +101,39 @@ function ConvoRow({ convo, userId, onlineIds, onPress }: ConvoRowProps) {
 
 function SkeletonRow() {
   return (
-    <View style={[styles.row, styles.skeletonRow]}>
-      <View style={styles.skeletonAvatar} />
-      <View style={styles.skeletonBody}>
-        <View style={styles.skeletonLine} />
-        <View style={[styles.skeletonLine, styles.skeletonLineShort]} />
+    <View className="flex-row items-center px-4 py-3 bg-white gap-3">
+      <View className="w-12 h-12 rounded-3xl bg-divider" />
+      <View className="flex-1 gap-2">
+        <View className="h-3.5 rounded-[7px] bg-divider w-[70%]" />
+        <View className="h-3.5 rounded-[7px] bg-divider w-[45%]" />
       </View>
     </View>
   );
 }
 
-// ── Screen ────────────────────────────────────────────────────────────────────
+// ── MessagesContent ───────────────────────────────────────────────────────────
 
 type Section = {
   title: string;
   data: ConversationRow[];
 };
 
-export default function MessagesScreen() {
-  const { session } = useAuth();
-  const userId = session?.user.id ?? '';
+type ContentProps = {
+  userId: string;
+  onlineIds: Set<string>;
+};
 
-  const [convos, setConvos] = useState<ConversationRow[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [refreshing, setRefreshing] = useState(false);
-  const [onlineIds, setOnlineIds] = useState<Set<string>>(new Set());
-  const presenceChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
-
-  const load = useCallback(
-    async (isRefresh = false) => {
-      if (!userId) return;
-      if (isRefresh) setRefreshing(true);
-      else setLoading(true);
-      setError(null);
-      try {
-        const { data, error: err } = await getConversations(userId);
-        if (err) throw err;
-        setConvos(data ?? []);
-      } catch {
-        setError("Couldn't load conversations.");
-      } finally {
-        setLoading(false);
-        setRefreshing(false);
-      }
-    },
-    [userId]
-  );
-
-  useEffect(() => {
-    load();
-  }, [load]);
-
-  // Single broad presence channel for the messages list
-  useEffect(() => {
-    if (!userId) return;
-
-    const channel = supabase.channel('presence:messages-list', {
-      config: { presence: { key: userId } },
-    });
-    presenceChannelRef.current = channel;
-
-    channel
-      .on('presence', { event: 'sync' }, () => {
-        const state = channel.presenceState<{ user_id: string }>();
-        const ids = new Set<string>();
-        for (const presences of Object.values(state)) {
-          for (const p of presences) {
-            if (p.user_id !== userId) ids.add(p.user_id);
-          }
-        }
-        setOnlineIds(ids);
-      })
-      .subscribe(async (status) => {
-        if (status === 'SUBSCRIBED') {
-          await channel.track({ user_id: userId });
-        }
-      });
-
-    return () => {
-      channel.unsubscribe();
-      presenceChannelRef.current = null;
-    };
+function MessagesContent({ userId, onlineIds }: ContentProps) {
+  const queryFn = useCallback(async () => {
+    const { data, error } = await getConversations(userId);
+    if (error) throw new Error(error.message);
+    return data ?? [];
   }, [userId]);
 
-  const sections: Section[] = React.useMemo(() => {
+  const convos = useSuspenseQuery(queryFn);
+  const [refresh, isRefreshing] = useQueryRefresh(queryFn);
+
+  const sections: Section[] = useMemo(() => {
     const active = convos.filter(hasMessages);
     const starters = convos.filter((c) => !hasMessages(c));
     const result: Section[] = [];
@@ -192,219 +142,80 @@ export default function MessagesScreen() {
     return result;
   }, [convos]);
 
-  if (loading) {
-    return (
-      <SafeAreaView style={styles.canvas} edges={['top']}>
-        <LargeHeader title="Messages" />
-        <SkeletonRow />
-        <SkeletonRow />
-        <SkeletonRow />
-      </SafeAreaView>
-    );
-  }
-
   return (
-    <SafeAreaView style={styles.canvas} edges={['top']}>
-      {error != null && (
-        <View style={styles.errorBanner}>
-          <Text style={styles.errorText}>{error}</Text>
-          <TouchableOpacity onPress={() => load()}>
-            <Text style={styles.retryText}>Retry</Text>
-          </TouchableOpacity>
+    <SectionList
+      sections={sections}
+      keyExtractor={(item) => item.id}
+      onRefresh={refresh}
+      refreshing={isRefreshing}
+      ListHeaderComponent={<LargeHeader title="Messages" />}
+      ListEmptyComponent={
+        <View className="flex-1 items-center justify-center p-10 pt-20">
+          <Text className="text-15 text-ink-mid text-center leading-[22px]">
+            No conversations yet. Start one from your Matches.
+          </Text>
+        </View>
+      }
+      renderSectionHeader={({ section }) => (
+        <View className="px-4 pt-5 pb-1.5 bg-canvas">
+          <Text className="text-11 font-bold tracking-[0.8px] text-ink-dim uppercase">
+            {section.title}
+          </Text>
         </View>
       )}
-
-      <SectionList
-        sections={sections}
-        keyExtractor={(item) => item.id}
-        onRefresh={() => load(true)}
-        refreshing={refreshing}
-        ListHeaderComponent={<LargeHeader title="Messages" />}
-        ListEmptyComponent={
-          <View style={styles.emptyWrap}>
-            <Text style={styles.emptyText}>
-              No conversations yet. Start one from your Matches.
-            </Text>
-          </View>
-        }
-        renderSectionHeader={({ section }) => (
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>{section.title}</Text>
-          </View>
-        )}
-        renderItem={({ item }) => (
-          <ConvoRow
-            convo={item}
-            userId={userId}
-            onlineIds={onlineIds}
-            onPress={() => router.push(`/(tabs)/messages/${item.id}` as never)}
-          />
-        )}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
-        contentContainerStyle={styles.listContent}
-      />
-    </SafeAreaView>
+      renderItem={({ item }) => (
+        <ConvoRow
+          convo={item}
+          userId={userId}
+          onlineIds={onlineIds}
+          onPress={() => {
+            const other = getOtherParticipant(item, userId);
+            router.push({
+              pathname: '/(tabs)/messages/[matchId]',
+              params: {
+                matchId: item.id,
+                otherName: other?.chosen_name ?? '',
+                otherUserId: other?.id ?? '',
+              },
+            } as never);
+          }}
+        />
+      )}
+      ItemSeparatorComponent={() => (
+        <View
+          style={{
+            height: StyleSheet.hairlineWidth,
+            backgroundColor: colors.divider,
+            marginLeft: 76,
+          }}
+        />
+      )}
+      contentContainerStyle={{ flexGrow: 1 }}
+    />
   );
 }
 
-// ── Styles ────────────────────────────────────────────────────────────────────
+// ── Screen ────────────────────────────────────────────────────────────────────
 
-const styles = StyleSheet.create({
-  canvas: {
-    flex: 1,
-    backgroundColor: colors.canvas,
-  },
-  listContent: {
-    flexGrow: 1,
-  },
+export default function MessagesScreen() {
+  const { session } = useAuth();
+  const userId = session?.user.id ?? '';
+  const onlineIds = useMessagesListPresence(userId);
 
-  // Section header
-  sectionHeader: {
-    paddingHorizontal: 16,
-    paddingTop: 20,
-    paddingBottom: 6,
-    backgroundColor: colors.canvas,
-  },
-  sectionTitle: {
-    fontSize: 11,
-    fontWeight: '700',
-    letterSpacing: 0.8,
-    color: colors.inkDim,
-    textTransform: 'uppercase',
-  },
-
-  // Row
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: colors.white,
-  },
-  avatarWrap: {
-    position: 'relative',
-    marginRight: 12,
-  },
-  unreadDot: {
-    position: 'absolute',
-    bottom: 0,
-    right: 0,
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: colors.purple,
-    borderWidth: 2,
-    borderColor: colors.white,
-  },
-  onlineDot: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: '#22C55E',
-    borderWidth: 2,
-    borderColor: colors.white,
-  },
-  rowBody: {
-    flex: 1,
-  },
-  rowTop: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 2,
-  },
-  name: {
-    flex: 1,
-    fontSize: 15,
-    fontWeight: '500',
-    color: colors.ink,
-    marginRight: 8,
-  },
-  nameBold: {
-    fontWeight: '700',
-  },
-  time: {
-    fontSize: 12,
-    color: colors.inkGhost,
-  },
-  preview: {
-    fontSize: 14,
-    color: colors.inkMid,
-  },
-  previewBold: {
-    color: colors.ink,
-    fontWeight: '500',
-  },
-  previewMuted: {
-    fontSize: 14,
-    color: colors.inkGhost,
-    fontStyle: 'italic',
-  },
-
-  separator: {
-    height: StyleSheet.hairlineWidth,
-    backgroundColor: colors.divider,
-    marginLeft: 76,
-  },
-
-  // Empty
-  emptyWrap: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 40,
-    paddingTop: 80,
-  },
-  emptyText: {
-    fontSize: 15,
-    color: colors.inkMid,
-    textAlign: 'center',
-    lineHeight: 22,
-  },
-
-  // Error banner
-  errorBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#FEE2E2',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-  },
-  errorText: {
-    fontSize: 13,
-    color: '#B91C1C',
-  },
-  retryText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#B91C1C',
-  },
-
-  // Skeleton
-  skeletonRow: {
-    gap: 12,
-  },
-  skeletonAvatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: colors.divider,
-  },
-  skeletonBody: {
-    flex: 1,
-    gap: 8,
-  },
-  skeletonLine: {
-    height: 14,
-    borderRadius: 7,
-    backgroundColor: colors.divider,
-    width: '70%',
-  },
-  skeletonLineShort: {
-    width: '45%',
-  },
-});
+  return (
+    <SafeAreaView className="flex-1 bg-canvas" edges={['top']}>
+      <ScreenSuspense
+        fallback={
+          <>
+            <LargeHeader title="Messages" />
+            <SkeletonRow />
+            <SkeletonRow />
+            <SkeletonRow />
+          </>
+        }
+      >
+        <MessagesContent userId={userId} onlineIds={onlineIds} />
+      </ScreenSuspense>
+    </SafeAreaView>
+  );
+}

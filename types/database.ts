@@ -472,7 +472,7 @@ export type Database = {
         | 'Photography'
         | 'Dance'
         | 'Volunteering';
-      city: 'London' | 'Manchester' | 'Birmingham' | 'Leeds' | 'Glasgow';
+      city: 'Boston' | 'New York';
       wingperson_status: 'invited' | 'active' | 'removed';
       decision_type: 'approved' | 'declined';
     };

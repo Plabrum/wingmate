@@ -1,23 +1,14 @@
 import { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  SafeAreaView,
-  Alert,
-  ActivityIndicator,
-  Dimensions,
-} from 'react-native';
+import { StyleSheet, TouchableOpacity, Alert, ActivityIndicator, Dimensions } from 'react-native';
+import { View, Text } from '@/lib/tw';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
-import { router, useLocalSearchParams } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
-import { useAuth } from '@/context/auth';
-import { useProfile } from '@/context/profile';
 import { createDatingProfile, getOwnDatingProfile } from '@/queries/profiles';
 import { uploadPhoto, insertPhoto, deleteOwnPhoto, getPhotoUrl } from '@/queries/photos';
 import { colors, Fonts } from '@/constants/theme';
+import { toast } from 'sonner-native';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const PADDING = 24;
@@ -25,58 +16,42 @@ const GAP = 10;
 const SLOT_SIZE = Math.floor((SCREEN_WIDTH - PADDING * 2 - GAP * 2) / 3);
 const MAX_PHOTOS = 6;
 
-type LocalPhoto = {
-  id: string;
-  uri: string;
-  storagePath: string;
+type LocalPhoto = { id: string; uri: string; storagePath: string };
+
+type Props = {
+  userId: string;
+  /** Already-set dpId from normal flow; null only when resuming after an app kill */
+  dpId: string | null;
+  onDpCreated: (id: string) => void;
+  onNext: () => void;
 };
 
-export default function PhotosScreen() {
-  const { city, bio } = useLocalSearchParams<{ city: string; bio?: string }>();
-  const { session } = useAuth();
-  const { datingProfile } = useProfile();
-  const userId = session?.user.id ?? '';
-
-  const [dpId, setDpId] = useState<string | null>(null);
+export default function PhotosStep({ userId, dpId: initialDpId, onDpCreated, onNext }: Props) {
+  const [localDpId, setLocalDpId] = useState(initialDpId);
   const [photos, setPhotos] = useState<LocalPhoto[]>([]);
   const [uploading, setUploading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [initializing, setInitializing] = useState(true);
+  // Only true when app was killed mid-flow and we need to (re)create the dating profile
+  const [initializing, setInitializing] = useState(!initialDpId);
 
   useEffect(() => {
-    async function init() {
-      try {
-        if (datingProfile) {
-          // Re-mount edge case: dating profile already exists
-          setDpId(datingProfile.id);
-          setPhotos(
-            datingProfile.photos.map((p) => ({
-              id: p.id,
-              uri: getPhotoUrl(p.storage_url),
-              storagePath: p.storage_url,
-            }))
-          );
-        } else {
-          const { data: dp, error: dpError } = await createDatingProfile({
-            user_id: userId,
-            city: city ?? 'London',
-            bio: bio?.trim() || undefined,
-            age_from: 18,
-            interested_gender: [],
-            religion: 'Prefer not to say',
-            interests: [],
-            dating_status: 'open',
-          });
-          if (dpError) throw dpError;
-          setDpId(dp!.id);
-        }
-      } catch {
-        setError('Could not set up your profile. Please go back and try again.');
-      } finally {
-        setInitializing(false);
+    if (initialDpId) return; // normal flow — dpId already set by parent
+    createDatingProfile({
+      user_id: userId,
+      city: 'Boston',
+      age_from: 18,
+      interested_gender: [],
+      religion: 'Prefer not to say',
+      interests: [],
+      dating_status: 'open',
+    }).then(({ data: dp, error: dpError }) => {
+      if (dpError || !dp) {
+        toast.error('Could not set up your profile. Please try again.');
+      } else {
+        setLocalDpId(dp.id);
+        onDpCreated(dp.id);
       }
-    }
-    init();
+      setInitializing(false);
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -94,7 +69,7 @@ export default function PhotosScreen() {
   }
 
   async function handleAddPhoto() {
-    if (photos.length >= MAX_PHOTOS || !dpId) return;
+    if (photos.length >= MAX_PHOTOS || !localDpId) return;
 
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
@@ -102,41 +77,30 @@ export default function PhotosScreen() {
       return;
     }
 
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: 'images',
-      quality: 1,
-    });
+    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: 'images', quality: 1 });
     if (result.canceled || !result.assets?.[0]) return;
 
     setUploading(true);
-    setError(null);
-
     try {
       const asset = result.assets[0];
-
-      // Resize and compress
       const ctx = ImageManipulator.manipulate(asset.uri);
       ctx.resize({ width: 1200 });
       const imageRef = await ctx.renderAsync();
       const saved = await imageRef.saveAsync({ compress: 0.8, format: SaveFormat.JPEG });
 
-      // Convert to blob
-      const response = await fetch(saved.uri);
-      const blob = await response.blob();
-      const filename = `${Date.now()}.jpg`;
-
-      // Upload to storage
-      const { path, error: uploadError } = await uploadPhoto(userId, blob, filename);
+      const { path, error: uploadError } = await uploadPhoto(
+        userId,
+        saved.uri,
+        `${Date.now()}.jpg`
+      );
       if (uploadError) throw uploadError;
 
-      // Insert DB row
-      const { error: insertError } = await insertPhoto(dpId, path, photos.length, null);
+      const { error: insertError } = await insertPhoto(localDpId, path, photos.length, null);
       if (insertError) throw insertError;
 
-      // Sync from DB to get real photo ID
       await refreshPhotos();
     } catch {
-      setError('Failed to upload photo. Please try again.');
+      toast.error('Failed to upload photo. Please try again.');
     } finally {
       setUploading(false);
     }
@@ -155,16 +119,11 @@ export default function PhotosScreen() {
             await deleteOwnPhoto(photo.id, photo.storagePath);
           } catch {
             setPhotos(previous);
-            setError('Failed to remove photo. Please try again.');
+            toast.error('Failed to remove photo. Please try again.');
           }
         },
       },
     ]);
-  }
-
-  function navigateToPrompts() {
-     
-    router.replace({ pathname: '/(onboarding)/prompts' as any, params: { datingProfileId: dpId! } });
   }
 
   if (initializing) {
@@ -175,6 +134,7 @@ export default function PhotosScreen() {
     );
   }
 
+  const disabled = !localDpId || uploading;
   const canAddMore = photos.length < MAX_PHOTOS && !uploading;
 
   return (
@@ -183,7 +143,6 @@ export default function PhotosScreen() {
         <Text style={styles.title}>Add your photos</Text>
         <Text style={styles.subtitle}>Add at least one so people can see you.</Text>
 
-        {/* Photo grid */}
         <View style={styles.grid}>
           {photos.map((photo) => (
             <View key={photo.id} style={styles.slot}>
@@ -198,14 +157,12 @@ export default function PhotosScreen() {
             </View>
           ))}
 
-          {/* Uploading slot */}
           {uploading && (
             <View style={[styles.slot, styles.uploadingSlot]}>
               <ActivityIndicator color={colors.purple} />
             </View>
           )}
 
-          {/* Empty add slot */}
           {canAddMore && (
             <TouchableOpacity
               style={[styles.slot, styles.emptySlot]}
@@ -218,28 +175,17 @@ export default function PhotosScreen() {
         </View>
 
         {photos.length === 0 && !uploading && (
-          <Text style={styles.emptyHint}>
-            Add at least one photo so people can see you.
-          </Text>
+          <Text style={styles.emptyHint}>Add at least one photo so people can see you.</Text>
         )}
 
-        {error && <Text style={styles.errorText}>{error}</Text>}
-
-        {/* Footer */}
         <View style={styles.footer}>
-          <TouchableOpacity
-            onPress={navigateToPrompts}
-            style={styles.skipBtn}
-            disabled={!dpId || uploading}
-          >
-            <Text style={[styles.skipText, (!dpId || uploading) && styles.textDisabled]}>
-              Skip
-            </Text>
+          <TouchableOpacity onPress={onNext} style={styles.skipBtn} disabled={disabled}>
+            <Text style={[styles.skipText, disabled && styles.textDisabled]}>Skip</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.button, (!dpId || uploading) && styles.buttonDisabled]}
-            onPress={navigateToPrompts}
-            disabled={!dpId || uploading}
+            style={[styles.button, disabled && styles.buttonDisabled]}
+            onPress={onNext}
+            disabled={disabled}
           >
             <Text style={styles.buttonText}>Continue</Text>
           </TouchableOpacity>
@@ -282,11 +228,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   deleteBtnText: { color: colors.white, fontSize: 11, fontWeight: '700' },
-  uploadingSlot: {
-    backgroundColor: colors.muted,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
+  uploadingSlot: { backgroundColor: colors.muted, justifyContent: 'center', alignItems: 'center' },
   emptySlot: {
     backgroundColor: colors.white,
     borderWidth: 1.5,
@@ -303,7 +245,6 @@ const styles = StyleSheet.create({
     marginTop: 24,
     lineHeight: 20,
   },
-  errorText: { color: '#EF4444', marginTop: 16, fontSize: 14, textAlign: 'center' },
   footer: {
     flexDirection: 'row',
     alignItems: 'center',

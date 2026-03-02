@@ -2,7 +2,7 @@ const { version } = require('./package.json');
 
 module.exports = {
   expo: {
-    name: 'Orbit',
+    name: 'Wyng',
     slug: 'wingmate',
     version,
     orientation: 'portrait',

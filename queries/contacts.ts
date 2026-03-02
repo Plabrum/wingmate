@@ -20,9 +20,7 @@ export function getMyWingpeople(daterId: string) {
     .order('created_at', { ascending: true });
 }
 
-export type Wingperson = NonNullable<
-  Awaited<ReturnType<typeof getMyWingpeople>>['data']
->[number];
+export type Wingperson = NonNullable<Awaited<ReturnType<typeof getMyWingpeople>>['data']>[number];
 
 /**
  * "Pending invitations" — contacts where the current user IS the invitee
@@ -68,9 +66,7 @@ export function getWingingFor(wingerId: string) {
     .order('created_at', { ascending: true });
 }
 
-export type WingingFor = NonNullable<
-  Awaited<ReturnType<typeof getWingingFor>>['data']
->[number];
+export type WingingFor = NonNullable<Awaited<ReturnType<typeof getWingingFor>>['data']>[number];
 
 // ── Activity counts ───────────────────────────────────────────────────────────
 
@@ -87,6 +83,57 @@ export async function getWingerWeeklyCount(wingerId: string, daterId: string) {
     .eq('actor_id', daterId)
     .gte('created_at', since);
   return { count: count ?? 0, error };
+}
+
+// ── Combined query for Wingpeople screen ──────────────────────────────────────
+
+/**
+ * Fetches all data for the Wingpeople screen in one call.
+ * Throws on any Supabase error so useSuspenseQuery propagates to an error boundary.
+ */
+export async function getWingpeopleWithCounts(daterId: string) {
+  const [wpResult, invResult, wfResult] = await Promise.all([
+    getMyWingpeople(daterId),
+    getIncomingInvitations(daterId),
+    getWingingFor(daterId),
+  ]);
+  if (wpResult.error) throw new Error(wpResult.error.message);
+  if (invResult.error) throw new Error(invResult.error.message);
+  if (wfResult.error) throw new Error(wfResult.error.message);
+
+  const wingpeople = wpResult.data ?? [];
+  const invitations = invResult.data ?? [];
+  const wingingFor = wfResult.data ?? [];
+
+  // Build winger-profile-id → contact-row-id map for the batch count lookup.
+  const wingerIds: string[] = [];
+  const wingerToContact: Record<string, string> = {};
+  for (const w of wingpeople) {
+    const winger = (w as any).winger as { id: string } | null;
+    if (winger?.id) {
+      wingerIds.push(winger.id);
+      wingerToContact[winger.id] = w.id;
+    }
+  }
+
+  // Single query instead of one COUNT per winger.
+  const weeklyCounts: Record<string, number> = {};
+  if (wingerIds.length > 0) {
+    const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    const { data: rows, error: countError } = await supabase
+      .from('decisions')
+      .select('suggested_by')
+      .eq('actor_id', daterId)
+      .in('suggested_by', wingerIds)
+      .gte('created_at', since);
+    if (countError) throw new Error(countError.message);
+    for (const row of rows ?? []) {
+      const contactId = wingerToContact[row.suggested_by];
+      if (contactId) weeklyCounts[contactId] = (weeklyCounts[contactId] ?? 0) + 1;
+    }
+  }
+
+  return { wingpeople, invitations, wingingFor, weeklyCounts };
 }
 
 // ── Mutations ─────────────────────────────────────────────────────────────────

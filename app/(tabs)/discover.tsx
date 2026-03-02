@@ -1,19 +1,20 @@
-import React, { useEffect, useState } from 'react';
-import {
-  ActivityIndicator,
-  Modal,
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import React, { Suspense, useCallback, useEffect, useState } from 'react';
+import { ActivityIndicator, Modal } from 'react-native';
+import { useForm } from 'react-hook-form';
+import { toast } from 'sonner-native';
 
+import { View, Text, ScrollView, SafeAreaView, Pressable } from '@/lib/tw';
 import { useAuth } from '@/context/auth';
 import { useProfile } from '@/context/profile';
-import { useDiscover } from '@/hooks/use-discover';
-import { getActiveWingerTabs, type DiscoverCard } from '@/queries/discover';
+import { useDiscover, type PoolFetcher } from '@/hooks/use-discover';
+import {
+  getDiscoverPool,
+  getLikesYouPool,
+  getLikesYouCount,
+  getWingerTabs,
+  type DiscoverCard,
+  type WingerTab,
+} from '@/queries/discover';
 import { updateDatingProfile } from '@/queries/profiles';
 import { LargeHeader } from '@/components/ui/LargeHeader';
 import { TextTabBar } from '@/components/ui/TextTabBar';
@@ -22,16 +23,20 @@ import { Pill } from '@/components/ui/Pill';
 import { PurpleButton } from '@/components/ui/PurpleButton';
 import { WingStack } from '@/components/ui/WingStack';
 import { colors } from '@/constants/theme';
+import { useSuspenseQuery } from '@/lib/useSuspenseQuery';
+import ScreenSuspense from '@/components/ui/ScreenSuspense';
 
-type WingerTab = { id: string; name: string };
+const PAGE_SIZE = 20;
 
 // ── DiscoverPausedScreen ──────────────────────────────────────────────────────
 
 function DiscoverPausedScreen({ status }: { status: 'break' | 'winging' }) {
   const { session } = useAuth();
   const { refreshProfile } = useProfile();
-  const [updating, setUpdating] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const {
+    handleSubmit,
+    formState: { isSubmitting },
+  } = useForm();
 
   const copy =
     status === 'break'
@@ -40,28 +45,29 @@ function DiscoverPausedScreen({ status }: { status: 'break' | 'winging' }) {
 
   async function resume() {
     if (!session?.user.id) return;
-    setUpdating(true);
-    setError(null);
     const { error: err } = await updateDatingProfile(session.user.id, { dating_status: 'open' });
     if (err) {
-      setError('Something went wrong. Please try again.');
-      setUpdating(false);
+      toast.error('Something went wrong. Please try again.');
       return;
     }
     await refreshProfile();
-    setUpdating(false);
   }
 
   return (
-    <SafeAreaView style={styles.canvas}>
+    <SafeAreaView className="flex-1 bg-canvas">
       <LargeHeader title="Discover" />
-      <View style={styles.centered}>
-        <Text style={styles.pausedTitle}>
+      <View className="flex-1 justify-center items-center p-6 gap-4">
+        <Text className="text-[24px] font-bold font-serif text-ink text-center">
           {status === 'break' ? "You're on a break" : "You're winging"}
         </Text>
-        <Text style={styles.pausedBody}>{copy}</Text>
-        {error != null && <Text style={styles.errorText}>{error}</Text>}
-        <PurpleButton label="Resume Discover" onPress={resume} loading={updating} />
+        <Text className="text-15 text-ink-mid text-center" style={{ lineHeight: 22 }}>
+          {copy}
+        </Text>
+        <PurpleButton
+          label="Resume Discover"
+          onPress={handleSubmit(resume)}
+          loading={isSubmitting}
+        />
       </View>
     </SafeAreaView>
   );
@@ -74,18 +80,24 @@ function WingNoteSection({ card }: { card: DiscoverCard }) {
   const initial = card.suggester_name ? card.suggester_name[0].toUpperCase() : '?';
 
   return (
-    <View style={styles.wingNote}>
-      <View style={styles.wingNoteHeader}>
+    <View className="bg-lavender rounded-[12px] p-3 mb-4 gap-[6px]">
+      <View className="flex-row items-center gap-2">
         <WingStack initials={[initial]} />
-        <Text style={styles.wingNoteBy}>{card.suggester_name} thinks you{"'"}d get along</Text>
+        <Text className="text-14 font-semibold text-ink flex-1">
+          {card.suggester_name} thinks you{"'"}d get along
+        </Text>
       </View>
-      <Text style={styles.wingNoteText} numberOfLines={expanded ? undefined : 2}>
+      <Text
+        className="text-14 text-ink-mid"
+        style={{ lineHeight: 20 }}
+        numberOfLines={expanded ? undefined : 2}
+      >
         {card.wing_note}
       </Text>
       {!expanded && (
-        <TouchableOpacity onPress={() => setExpanded(true)}>
-          <Text style={styles.readMore}>Read more</Text>
-        </TouchableOpacity>
+        <Pressable onPress={() => setExpanded(true)}>
+          <Text className="text-13 text-purple font-medium mt-[2px]">Read more</Text>
+        </Pressable>
       )}
     </View>
   );
@@ -95,22 +107,26 @@ function WingNoteSection({ card }: { card: DiscoverCard }) {
 
 function CardView({ card }: { card: DiscoverCard }) {
   return (
-    <ScrollView style={styles.cardScroll} showsVerticalScrollIndicator={false}>
+    <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
       <PhotoRect uri={card.first_photo} ratio={4 / 5} />
-      <View style={styles.cardBody}>
-        <Text style={styles.cardName}>
+      <View className="p-4">
+        <Text className="text-[28px] font-serif font-bold text-ink">
           {card.chosen_name}, {card.age}
         </Text>
-        <Text style={styles.cardCity}>{card.city}</Text>
+        <Text className="text-15 text-ink-mid mt-1 mb-3">{card.city}</Text>
         {card.wing_note != null && <WingNoteSection card={card} />}
         {card.interests.length > 0 && (
-          <View style={styles.pills}>
+          <View className="flex-row flex-wrap gap-2 mb-4">
             {card.interests.map((interest) => (
               <Pill key={interest} label={interest} />
             ))}
           </View>
         )}
-        {card.bio != null && <Text style={styles.cardBio}>{card.bio}</Text>}
+        {card.bio != null && (
+          <Text className="text-15 text-ink-mid" style={{ lineHeight: 22 }}>
+            {card.bio}
+          </Text>
+        )}
       </View>
     </ScrollView>
   );
@@ -131,14 +147,19 @@ function MatchOverlay({
 
   return (
     <Modal visible={visible} animationType="fade" transparent>
-      <View style={styles.overlay}>
-        <View style={styles.overlayPhotoWrap}>
-          <PhotoRect uri={card.first_photo} ratio={4 / 5} blur style={styles.overlayPhoto} />
+      <View className="flex-1 bg-black/88 justify-center items-center p-6">
+        <View className="w-[80%] mb-8">
+          <PhotoRect
+            uri={card.first_photo}
+            ratio={4 / 5}
+            blur
+            style={{ borderRadius: 16, overflow: 'hidden' }}
+          />
         </View>
-        <View style={styles.overlayContent}>
-          <Text style={styles.matchTitle}>It{"'"}s a Match!</Text>
-          <Text style={styles.matchName}>{card.chosen_name}</Text>
-          <View style={styles.overlayActions}>
+        <View className="items-center gap-3 w-full">
+          <Text className="text-[32px] font-serif font-bold text-white">It{"'"}s a Match!</Text>
+          <Text className="text-[20px] text-white/85 mb-2">{card.chosen_name}</Text>
+          <View className="w-full gap-3">
             <PurpleButton label="Send a Message" onPress={onDismiss} />
             <PurpleButton label="Keep Swiping" onPress={onDismiss} outline />
           </View>
@@ -150,76 +171,75 @@ function MatchOverlay({
 
 // ── EmptyState ────────────────────────────────────────────────────────────────
 
-function EmptyState({ tab, wingerName }: { tab: string; wingerName?: string }) {
-  const isWinger = tab !== 'For You' && tab !== 'All';
-  const copy = isWinger
-    ? `No picks from ${wingerName ?? tab} yet. Ask them to swipe for you.`
+function EmptyState({ tabIndex, wingerName }: { tabIndex: number; wingerName?: string }) {
+  if (tabIndex === 0) {
+    return (
+      <View className="flex-1 justify-center items-center p-6 gap-4">
+        <Text className="text-16 text-ink-mid text-center" style={{ lineHeight: 24 }}>
+          No one has liked you yet — check back soon.
+        </Text>
+      </View>
+    );
+  }
+
+  const copy = wingerName
+    ? `No picks from ${wingerName} yet. Ask them to swipe for you.`
     : "You're all caught up. Check back soon for new profiles.";
 
   return (
-    <View style={styles.centered}>
-      <Text style={styles.emptyText}>{copy}</Text>
+    <View className="flex-1 justify-center items-center p-6 gap-4">
+      <Text className="text-16 text-ink-mid text-center" style={{ lineHeight: 24 }}>
+        {copy}
+      </Text>
     </View>
   );
 }
 
-// ── DiscoverScreen ────────────────────────────────────────────────────────────
+// ── DiscoverPool ──────────────────────────────────────────────────────────────
+// Keyed by activeTabIndex — remounts (and re-suspends) on every tab switch.
 
-export default function DiscoverScreen() {
-  const { session } = useAuth();
-  const { datingProfile, loadingProfile } = useProfile();
+type DiscoverPoolProps = {
+  userId: string;
+  activeTabIndex: number;
+  wingerTabs: WingerTab[];
+  tabs: string[];
+  onDecrement: (() => void) | null;
+};
 
-  const [wingerTabs, setWingerTabs] = useState<WingerTab[]>([]);
-  const [activeTabIndex, setActiveTabIndex] = useState(0);
+function DiscoverPool({
+  userId,
+  activeTabIndex,
+  wingerTabs,
+  tabs,
+  onDecrement,
+}: DiscoverPoolProps) {
+  const fetchPool = useCallback<PoolFetcher>(
+    (uid, pageSize, offset) => {
+      if (activeTabIndex === 0) return getLikesYouPool(uid, pageSize, offset);
+      const isAll = activeTabIndex === tabs.length - 1;
+      const wingerId =
+        !isAll && activeTabIndex >= 2 ? (wingerTabs[activeTabIndex - 2]?.id ?? null) : null;
+      return getDiscoverPool(uid, wingerId, pageSize, offset);
+    },
+    [activeTabIndex, wingerTabs, tabs.length]
+  );
+
+  // Initial pool loaded via Suspense — no effect needed.
+  // loadInitialPoolFn is a stable wrapper that passes the required args to fetchPool.
+  const loadInitialPoolFn = useCallback(async () => {
+    const { data, error } = await fetchPool(userId, PAGE_SIZE, 0);
+    if (error) throw error;
+    return data ?? [];
+  }, [fetchPool, userId]);
+  const initialPool = useSuspenseQuery(loadInitialPoolFn);
+
+  const { pool, index, like, pass } = useDiscover(fetchPool, userId, initialPool);
   const [matchCard, setMatchCard] = useState<DiscoverCard | null>(null);
-
-  const tabs = ['For You', ...wingerTabs.map((w) => w.name), 'All'];
-
-  const filterWingerId =
-    activeTabIndex === 0 || activeTabIndex === tabs.length - 1
-      ? null
-      : (wingerTabs[activeTabIndex - 1]?.id ?? null);
-
-  const { pool, index, loading, like, pass } = useDiscover(filterWingerId);
   const card = pool[index] ?? null;
-
-  // Load winger tabs on mount
-  useEffect(() => {
-    if (!session?.user.id) return;
-    getActiveWingerTabs(session.user.id).then(({ data }) => {
-      if (!data) return;
-      const seen = new Set<string>();
-      const distinct: WingerTab[] = [];
-      for (const row of data) {
-        const winger = row.winger as { id: string; chosen_name: string } | null;
-        if (winger && !seen.has(winger.id)) {
-          seen.add(winger.id);
-          distinct.push({ id: winger.id, name: winger.chosen_name });
-        }
-      }
-      setWingerTabs(distinct);
-    });
-  }, [session?.user.id]);
-
-  // Profile loading
-  if (loadingProfile) {
-    return (
-      <SafeAreaView style={styles.canvas}>
-        <View style={styles.centered}>
-          <ActivityIndicator size="large" color={colors.purple} />
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  // Gate: dater must be open
-  if (datingProfile?.dating_status !== 'open') {
-    const status = (datingProfile?.dating_status as 'break' | 'winging') ?? 'break';
-    return <DiscoverPausedScreen status={status} />;
-  }
 
   async function handleLike() {
     const likedCard = pool[index];
+    onDecrement?.();
     const result = await like();
     if (result === 'match') {
       setMatchCard(likedCard);
@@ -227,47 +247,48 @@ export default function DiscoverScreen() {
   }
 
   async function handlePass() {
+    onDecrement?.();
     await pass();
   }
 
   return (
-    <SafeAreaView style={styles.canvas}>
-      <LargeHeader title="Discover" />
-      <TextTabBar tabs={tabs} active={activeTabIndex} setActive={setActiveTabIndex} />
-
-      <View style={styles.feedContainer}>
-        {loading ? (
-          <View style={styles.centered}>
-            <ActivityIndicator size="large" color={colors.purple} />
-          </View>
-        ) : card != null ? (
+    <>
+      <View className="flex-1">
+        {card != null ? (
           <CardView card={card} />
         ) : (
-          <EmptyState
-            tab={tabs[activeTabIndex]}
-            wingerName={wingerTabs[activeTabIndex - 1]?.name}
-          />
+          <EmptyState tabIndex={activeTabIndex} wingerName={wingerTabs[activeTabIndex - 2]?.name} />
         )}
       </View>
 
-      {card != null && !loading && (
-        <View style={styles.actionRow}>
-          <TouchableOpacity
-            style={[styles.actionBtn, styles.passBtn]}
+      {card != null && (
+        <View className="flex-row justify-center items-center gap-[40px] py-5 pb-7">
+          <Pressable
+            className="w-16 h-16 rounded-full justify-center items-center bg-white"
+            style={{
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.12,
+              shadowRadius: 6,
+              elevation: 4,
+            }}
             onPress={handlePass}
-            disabled={loading}
-            activeOpacity={0.8}
           >
-            <Text style={styles.passBtnText}>✕</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.actionBtn, styles.likeBtn]}
+            <Text className="text-[24px] text-ink-mid">✕</Text>
+          </Pressable>
+          <Pressable
+            className="w-16 h-16 rounded-full justify-center items-center bg-purple"
+            style={{
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.12,
+              shadowRadius: 6,
+              elevation: 4,
+            }}
             onPress={handleLike}
-            disabled={loading}
-            activeOpacity={0.8}
           >
-            <Text style={styles.likeBtnText}>♥</Text>
-          </TouchableOpacity>
+            <Text className="text-[24px] text-white">♥</Text>
+          </Pressable>
         </View>
       )}
 
@@ -276,191 +297,75 @@ export default function DiscoverScreen() {
         visible={matchCard != null}
         onDismiss={() => setMatchCard(null)}
       />
+    </>
+  );
+}
+
+// ── DiscoverContent ───────────────────────────────────────────────────────────
+
+function DiscoverContent({ userId }: { userId: string }) {
+  const wingerTabsFn = useCallback(() => getWingerTabs(userId), [userId]);
+  const wingerTabs = useSuspenseQuery(wingerTabsFn);
+  const [activeTabIndex, setActiveTabIndex] = useState(0);
+  const [likesYouCount, setLikesYouCount] = useState(0);
+
+  // tabs: [Likes You, For You, ...wingers, All]
+  const tabs = ['Likes You', 'For You', ...wingerTabs.map((w: WingerTab) => w.name), 'All'];
+
+  // Load initial likes-you count on mount
+  useEffect(() => {
+    getLikesYouCount(userId).then(({ data }) => {
+      if (data != null) setLikesYouCount(data);
+    });
+  }, [userId]);
+
+  return (
+    <SafeAreaView className="flex-1 bg-canvas">
+      <LargeHeader title="Discover" />
+      <TextTabBar
+        tabs={tabs}
+        active={activeTabIndex}
+        setActive={setActiveTabIndex}
+        badges={{ 0: likesYouCount }}
+      />
+
+      {/* Inner Suspense keeps the tab bar visible while the pool loads */}
+      <Suspense
+        fallback={
+          <View className="flex-1 justify-center items-center p-6 gap-4">
+            <ActivityIndicator size="large" color={colors.purple} />
+          </View>
+        }
+      >
+        <DiscoverPool
+          key={activeTabIndex}
+          userId={userId}
+          activeTabIndex={activeTabIndex}
+          wingerTabs={wingerTabs}
+          tabs={tabs}
+          onDecrement={
+            activeTabIndex === 0 ? () => setLikesYouCount((c) => Math.max(0, c - 1)) : null
+          }
+        />
+      </Suspense>
     </SafeAreaView>
   );
 }
 
-// ── Styles ────────────────────────────────────────────────────────────────────
+// ── DiscoverScreen ────────────────────────────────────────────────────────────
 
-const styles = StyleSheet.create({
-  canvas: {
-    flex: 1,
-    backgroundColor: colors.canvas,
-  },
-  centered: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 24,
-    gap: 16,
-  },
+export default function DiscoverScreen() {
+  const { session } = useAuth();
+  const { datingProfile } = useProfile();
 
-  // Paused screen
-  pausedTitle: {
-    fontSize: 24,
-    fontWeight: '700',
-    fontFamily: 'Georgia',
-    color: colors.ink,
-    textAlign: 'center',
-  },
-  pausedBody: {
-    fontSize: 15,
-    color: colors.inkMid,
-    textAlign: 'center',
-    lineHeight: 22,
-  },
-  errorText: {
-    fontSize: 14,
-    color: '#EF4444',
-    textAlign: 'center',
-  },
+  if (datingProfile?.dating_status !== 'open') {
+    const status = (datingProfile?.dating_status as 'break' | 'winging') ?? 'break';
+    return <DiscoverPausedScreen status={status} />;
+  }
 
-  // Wing note
-  wingNote: {
-    backgroundColor: colors.lavender,
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 16,
-    gap: 6,
-  },
-  wingNoteHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  wingNoteBy: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.ink,
-    flex: 1,
-  },
-  wingNoteText: {
-    fontSize: 14,
-    color: colors.inkMid,
-    lineHeight: 20,
-  },
-  readMore: {
-    fontSize: 13,
-    color: colors.purple,
-    fontWeight: '500',
-    marginTop: 2,
-  },
-
-  // Card
-  cardScroll: {
-    flex: 1,
-  },
-  cardBody: {
-    padding: 16,
-  },
-  cardName: {
-    fontSize: 28,
-    fontFamily: 'Georgia',
-    color: colors.ink,
-    fontWeight: '700',
-  },
-  cardCity: {
-    fontSize: 15,
-    color: colors.inkMid,
-    marginTop: 4,
-    marginBottom: 12,
-  },
-  pills: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginBottom: 16,
-  },
-  cardBio: {
-    fontSize: 15,
-    color: colors.inkMid,
-    lineHeight: 22,
-  },
-
-  // Match overlay
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.88)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 24,
-  },
-  overlayPhotoWrap: {
-    width: '80%',
-    marginBottom: 32,
-  },
-  overlayPhoto: {
-    borderRadius: 16,
-    overflow: 'hidden',
-  },
-  overlayContent: {
-    alignItems: 'center',
-    gap: 12,
-    width: '100%',
-  },
-  matchTitle: {
-    fontSize: 32,
-    fontFamily: 'Georgia',
-    fontWeight: '700',
-    color: colors.white,
-  },
-  matchName: {
-    fontSize: 20,
-    color: colors.white,
-    opacity: 0.85,
-    marginBottom: 8,
-  },
-  overlayActions: {
-    width: '100%',
-    gap: 12,
-  },
-
-  // Feed
-  feedContainer: {
-    flex: 1,
-  },
-
-  // Empty state
-  emptyText: {
-    fontSize: 16,
-    color: colors.inkMid,
-    textAlign: 'center',
-    lineHeight: 24,
-  },
-
-  // Action row
-  actionRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 40,
-    paddingVertical: 20,
-    paddingBottom: 28,
-  },
-  actionBtn: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.12,
-    shadowRadius: 6,
-    elevation: 4,
-  },
-  passBtn: {
-    backgroundColor: colors.white,
-  },
-  likeBtn: {
-    backgroundColor: colors.purple,
-  },
-  passBtnText: {
-    fontSize: 24,
-    color: colors.inkMid,
-  },
-  likeBtnText: {
-    fontSize: 24,
-    color: colors.white,
-  },
-});
+  return (
+    <ScreenSuspense>
+      <DiscoverContent userId={session!.user.id} />
+    </ScreenSuspense>
+  );
+}

@@ -1,19 +1,29 @@
+import * as FileSystem from 'expo-file-system';
 import { supabase } from '@/lib/supabase';
 
 // ── Upload ────────────────────────────────────────────────────────────────────
 
 /**
- * Upload a photo file to the profile-photos bucket.
- * Files are stored at {userId}/{filename} so the storage RLS policy allows it.
+ * Upload a local image URI to the profile-photos bucket.
+ * Uses FileSystem + base64 → Uint8Array to avoid the fetch().blob() serialization
+ * issues that cause silent corrupt uploads in React Native.
  *
- * @param userId  The uploading user's ID (used for the folder prefix).
- * @param file    The file to upload (Blob or ArrayBuffer from expo-image-picker).
+ * @param userId   The uploading user's ID (used for the folder prefix).
+ * @param uri      Local file URI from expo-image-manipulator.
  * @param filename A unique filename, e.g. `${Date.now()}.jpg`.
- * @returns       The bucket-relative path to store in profile_photos.storage_url.
+ * @returns        The bucket-relative path to store in profile_photos.storage_url.
  */
-export async function uploadPhoto(userId: string, file: Blob, filename: string) {
+export async function uploadPhoto(userId: string, uri: string, filename: string) {
   const path = `${userId}/${filename}`;
-  const { error } = await supabase.storage.from('profile-photos').upload(path, file, {
+  const base64 = await FileSystem.readAsStringAsync(uri, {
+    encoding: 'base64',
+  });
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  const { error } = await supabase.storage.from('profile-photos').upload(path, bytes, {
     contentType: 'image/jpeg',
     upsert: false,
   });
@@ -82,7 +92,7 @@ export async function deleteOwnPhoto(photoId: string, storagePath: string) {
 }
 
 /** Update display_order for a batch of photos (drag-to-reorder). */
-export async function reorderPhotos(updates: Array<{ id: string; display_order: number }>) {
+export async function reorderPhotos(updates: { id: string; display_order: number }[]) {
   // Supabase JS v2 doesn't support batch updates natively; fire in parallel.
   return Promise.all(
     updates.map(({ id, display_order }) =>

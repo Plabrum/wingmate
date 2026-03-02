@@ -52,7 +52,7 @@ Deno.serve(async (req) => {
   const accountSid = Deno.env.get('TWILIO_ACCOUNT_SID');
   const authToken = Deno.env.get('TWILIO_AUTH_TOKEN');
   const twilioNumber = Deno.env.get('TWILIO_NUMBER');
-  const appUrl = Deno.env.get('APP_DOWNLOAD_URL') ?? 'https://wingmate.app';
+  const appUrl = Deno.env.get('APP_DOWNLOAD_URL') ?? 'https://orbit.app';
 
   if (!accountSid || !authToken || !twilioNumber) {
     console.error('Missing Twilio credentials');

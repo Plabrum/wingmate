@@ -1,6 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import {
-  ActivityIndicator,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -14,7 +13,6 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 
-import { supabase } from '@/lib/supabase';
 import { colors } from '@/constants/theme';
 import { useAuth } from '@/context/auth';
 import { useWingSwipe } from '@/hooks/use-wing-swipe';
@@ -22,6 +20,12 @@ import { NavHeader } from '@/components/ui/NavHeader';
 import { PhotoRect } from '@/components/ui/PhotoRect';
 import { Pill } from '@/components/ui/Pill';
 import { PurpleButton } from '@/components/ui/PurpleButton';
+import { getDaterContext } from '@/queries/profiles';
+import { getWingPool } from '@/queries/discover';
+import { useSuspenseQuery } from '@/lib/useSuspenseQuery';
+import ScreenSuspense from '@/components/ui/ScreenSuspense';
+
+const PAGE_SIZE = 20;
 
 // ── DaterCallout ──────────────────────────────────────────────────────────────
 
@@ -137,44 +141,46 @@ function EmptyState({ daterName }: { daterName: string }) {
   return (
     <View style={st.centered}>
       <Text style={st.emptyText}>
-        You{"'"}ve gone through everyone in {daterName}{"'"}s area. Check back soon.
+        You{"'"}ve gone through everyone in {daterName}
+        {"'"}s area. Check back soon.
       </Text>
     </View>
   );
 }
 
-// ── WingSwipeScreen ───────────────────────────────────────────────────────────
+// ── WingSwipeContent ──────────────────────────────────────────────────────────
 
-export default function WingSwipeScreen() {
+function WingSwipeContent() {
   const router = useRouter();
   const { session } = useAuth();
   const { daterId } = useLocalSearchParams<{ daterId: string }>();
-
   const wingerId = session!.user.id;
 
-  const [daterName, setDaterName] = useState('');
-  const [daterInterests, setDaterInterests] = useState<string[]>([]);
-  const [noteVisible, setNoteVisible] = useState(false);
+  // Load dater context via Suspense
+  const daterContextFn = useCallback(async () => {
+    const { data, error } = await getDaterContext(daterId);
+    if (error) throw error;
+    return data;
+  }, [daterId]);
+  const daterContext = useSuspenseQuery(daterContextFn);
 
-  const { pool, index, loading, suggest, decline } = useWingSwipe(wingerId, daterId);
+  // Load initial pool via Suspense
+  const initialPoolFn = useCallback(async () => {
+    const { data, error } = await getWingPool(wingerId, daterId, PAGE_SIZE, 0);
+    if (error) throw error;
+    return data ?? [];
+  }, [wingerId, daterId]);
+  const initialPool = useSuspenseQuery(initialPoolFn);
+
+  const { pool, index, suggest, decline } = useWingSwipe(wingerId, daterId, initialPool);
   const card = pool[index] ?? null;
 
-  // Load dater context on mount
-  useEffect(() => {
-    supabase
-      .from('profiles')
-      .select('chosen_name, dating_profiles(interests)')
-      .eq('id', daterId)
-      .single()
-      .then(({ data }) => {
-        if (!data) return;
-        setDaterName(data.chosen_name ?? '');
-        const dp = data.dating_profiles as { interests: string[] } | null;
-        setDaterInterests(dp?.interests ?? []);
-      });
-  }, [daterId]);
-
+  const daterName = daterContext?.chosen_name ?? '';
+  const daterInterests =
+    (daterContext?.dating_profiles as { interests: string[] } | null)?.interests ?? [];
   const firstName = daterName.split(' ')[0] || daterName;
+
+  const [noteVisible, setNoteVisible] = useState(false);
 
   async function handleSuggest(note: string | null) {
     setNoteVisible(false);
@@ -182,7 +188,7 @@ export default function WingSwipeScreen() {
   }
 
   return (
-    <SafeAreaView style={st.safe} edges={['top']}>
+    <>
       <NavHeader
         back
         title={daterName ? `Swiping for ${firstName}` : 'Wing Mode'}
@@ -190,23 +196,17 @@ export default function WingSwipeScreen() {
       />
 
       <View style={st.feedContainer}>
-        {loading ? (
-          <View style={st.centered}>
-            <ActivityIndicator size="large" color={colors.purple} />
-          </View>
-        ) : card != null ? (
+        {card != null ? (
           <WingCardView
             card={card}
-            callout={
-              <DaterCallout name={firstName || 'them'} interests={daterInterests} />
-            }
+            callout={<DaterCallout name={firstName || 'them'} interests={daterInterests} />}
           />
         ) : (
           <EmptyState daterName={firstName || 'them'} />
         )}
       </View>
 
-      {card != null && !loading && (
+      {card != null && (
         <View style={st.actionRow}>
           <TouchableOpacity
             style={[st.actionBtn, st.passBtn]}
@@ -230,6 +230,18 @@ export default function WingSwipeScreen() {
         onSend={handleSuggest}
         onDismiss={() => setNoteVisible(false)}
       />
+    </>
+  );
+}
+
+// ── WingSwipeScreen ───────────────────────────────────────────────────────────
+
+export default function WingSwipeScreen() {
+  return (
+    <SafeAreaView style={st.safe} edges={['top']}>
+      <ScreenSuspense>
+        <WingSwipeContent />
+      </ScreenSuspense>
     </SafeAreaView>
   );
 }

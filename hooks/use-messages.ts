@@ -39,7 +39,9 @@ export function useMessages(matchId: string) {
     load();
   }, [load]);
 
-  // Real-time subscription
+  // Acceptable exception: mount-only guard for a genuine external event.
+  // matchId (URL param) and userId (session) are both stable for this
+  // component's lifetime. The subscription is torn down on unmount.
   useEffect(() => {
     if (!matchId) return;
 

@@ -3,7 +3,7 @@ const fs = require('fs');
 
 const TEAM_ID = process.env.APPLE_TEAM_ID; // e.g. ABCDE12345
 const KEY_ID = process.env.APPLE_KEY_ID; // e.g. 1A2BC3D4E5
-const CLIENT_ID = process.env.APPLE_CLIENT_ID; // Services ID, e.g. com.plabrum.wingmate.auth
+const CLIENT_ID = process.env.APPLE_CLIENT_ID; // Services ID, e.g. com.plabrum.orbit.auth
 const P8_PATH = process.env.APPLE_P8_PATH; // path to .p8
 
 const privateKey = fs.readFileSync(P8_PATH, 'utf8');

@@ -1,19 +1,16 @@
-import { useCallback, useEffect, useState } from 'react';
+import { Suspense, useCallback, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
   Modal,
   Platform,
-  ScrollView,
   StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
 } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import { Controller, useForm } from 'react-hook-form';
+import { toast } from 'sonner-native';
 
 import { supabase } from '@/lib/supabase';
 import { colors } from '@/constants/theme';
@@ -23,18 +20,14 @@ import { NavHeader } from '@/components/ui/NavHeader';
 import { FaceAvatar } from '@/components/ui/FaceAvatar';
 import { PurpleButton } from '@/components/ui/PurpleButton';
 import { getInitials } from '@/components/profile/profile-helpers';
+import { View, Text, TextInput, ScrollView, SafeAreaView, Pressable } from '@/lib/tw';
+import { useSuspenseQuery } from '@/lib/useSuspenseQuery';
 import {
-  getMyWingpeople,
-  getIncomingInvitations,
-  getWingingFor,
-  getWingerWeeklyCount,
+  getWingpeopleWithCounts,
   inviteWingperson,
   acceptInvitation,
   declineInvitation,
   removeWingperson,
-  type Wingperson,
-  type IncomingInvitation,
-  type WingingFor,
 } from '@/queries/contacts';
 import { formatPhoneInput, toE164 } from '@/lib/phoneUtils';
 
@@ -42,93 +35,43 @@ import { formatPhoneInput, toE164 } from '@/lib/phoneUtils';
 
 function SectionHeader({ title, right }: { title: string; right?: React.ReactNode }) {
   return (
-    <View style={st.sectionHeader}>
-      <Text style={st.sectionTitle}>{title}</Text>
+    <View className="flex-row items-center justify-between px-5 pt-6 pb-2">
+      <Text className="text-12 font-semibold text-ink-mid uppercase tracking-[0.6px]">{title}</Text>
       {right}
     </View>
   );
 }
 
-// ── Screen ─────────────────────────────────────────────────────────────────────
+// ── Inner content (Suspense boundary child) ────────────────────────────────────
 
-export default function WingpeopleScreen() {
+interface ContentProps {
+  userId: string;
+  onRefresh: () => void;
+  onOpenInvite: () => void;
+}
+
+function WingpeopleContent({ userId, onRefresh, onOpenInvite }: ContentProps) {
   const router = useRouter();
-  const { session } = useAuth();
-  const { profile } = useProfile();
-  const insets = useSafeAreaInsets();
-  const userId = session!.user.id;
+  const queryFn = useCallback(() => getWingpeopleWithCounts(userId), [userId]);
+  const { wingpeople, invitations, wingingFor, weeklyCounts } = useSuspenseQuery(queryFn);
 
-  const [loading, setLoading] = useState(true);
-  const [wingpeople, setWingpeople] = useState<Wingperson[]>([]);
-  const [invitations, setInvitations] = useState<IncomingInvitation[]>([]);
-  const [wingingFor, setWingingFor] = useState<WingingFor[]>([]);
-  const [weeklyCounts, setWeeklyCounts] = useState<Record<string, number>>({});
-
-  // Invite sheet state
-  const [inviteVisible, setInviteVisible] = useState(false);
-  const [phone, setPhone] = useState('');
-  const [phoneError, setPhoneError] = useState<string | null>(null);
-  const [inviteSending, setInviteSending] = useState(false);
-
-  // ── Data loading ────────────────────────────────────────────────────────────
-
-  const loadData = useCallback(async () => {
-    setLoading(true);
-    const [wpResult, invResult, wfResult] = await Promise.all([
-      getMyWingpeople(userId),
-      getIncomingInvitations(userId),
-      getWingingFor(userId),
-    ]);
-    const wp = wpResult.data ?? [];
-    setWingpeople(wp);
-    setInvitations(invResult.data ?? []);
-    setWingingFor(wfResult.data ?? []);
-
-    // Fetch weekly pick counts for each wingperson in parallel
-    const counts: Record<string, number> = {};
-    await Promise.all(
-      wp.map(async (w) => {
-         
-        const winger = (w as any).winger as { id: string } | null;
-        if (winger?.id) {
-          const { count } = await getWingerWeeklyCount(winger.id, userId);
-          counts[w.id] = count;
-        }
-      })
-    );
-    setWeeklyCounts(counts);
-    setLoading(false);
-  }, [userId]);
-
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
-
-  // ── Mutations ───────────────────────────────────────────────────────────────
+  // ── Mutations ─────────────────────────────────────────────────────────────
 
   const handleAccept = async (contactId: string) => {
-    const inv = invitations.find((i) => i.id === contactId);
-    if (!inv) return;
-    // Optimistic remove from invitations
-    setInvitations((prev) => prev.filter((i) => i.id !== contactId));
     const { error } = await acceptInvitation(contactId, userId);
     if (error) {
-      // Rollback
-      setInvitations((prev) => [inv, ...prev]);
+      toast.error("Couldn't accept invitation. Try again.");
     } else {
-      // Refresh wingpeople section
-      const { data } = await getMyWingpeople(userId);
-      setWingpeople(data ?? []);
+      onRefresh();
     }
   };
 
   const handleDecline = async (contactId: string) => {
-    const inv = invitations.find((i) => i.id === contactId);
-    if (!inv) return;
-    setInvitations((prev) => prev.filter((i) => i.id !== contactId));
     const { error } = await declineInvitation(contactId, userId);
     if (error) {
-      setInvitations((prev) => [inv, ...prev]);
+      toast.error("Couldn't decline invitation. Try again.");
+    } else {
+      onRefresh();
     }
   };
 
@@ -139,234 +82,283 @@ export default function WingpeopleScreen() {
         text: 'Remove',
         style: 'destructive',
         onPress: async () => {
-          const prev = wingpeople.find((w) => w.id === contactId);
-          setWingpeople((wp) => wp.filter((w) => w.id !== contactId));
           const { error } = await removeWingperson(contactId, userId);
-          if (error && prev) {
-            setWingpeople((wp) => [...wp, prev]);
+          if (error) {
+            toast.error("Couldn't remove wingperson. Try again.");
+          } else {
+            onRefresh();
           }
         },
       },
     ]);
   };
 
-  const handleSendInvite = async () => {
-    setPhoneError(null);
-    const e164 = toE164(phone);
-    if (!e164) {
-      setPhoneError('Please enter a valid phone number.');
-      return;
-    }
-    setInviteSending(true);
-    try {
-      const { error: insertError } = await inviteWingperson(userId, e164);
-      if (insertError) {
-        setPhoneError("Couldn't send invite. Try again.");
-        return;
-      }
-
-      // Check if the invitee already has an account
-      const { data: existing } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('phone_number', e164)
-        .maybeSingle();
-
-      if (existing?.id) {
-        // Link them immediately as winger
-        await supabase
-          .from('contacts')
-          .update({ winger_id: existing.id })
-          .eq('user_id', userId)
-          .eq('phone_number', e164);
-      } else {
-        // Send SMS invite via edge function
-        await supabase.functions.invoke('send-wing-invite', {
-          body: { phone: e164, daterName: profile?.chosen_name ?? 'Someone' },
-        });
-      }
-
-      setInviteVisible(false);
-      setPhone('');
-      await loadData();
-    } catch {
-      setPhoneError("Couldn't send invite. Try again.");
-    } finally {
-      setInviteSending(false);
-    }
-  };
-
-  const closeInviteSheet = () => {
-    setInviteVisible(false);
-    setPhone('');
-    setPhoneError(null);
-  };
-
-  // ── Render ──────────────────────────────────────────────────────────────────
-
-  if (loading) {
-    return (
-      <SafeAreaView style={st.safe} edges={['top']}>
-        <NavHeader back title="Wingpeople" onBack={() => router.back()} />
-        <View style={st.loadingWrap}>
-          <ActivityIndicator color={colors.purple} />
-        </View>
-      </SafeAreaView>
-    );
-  }
+  // ── Render ────────────────────────────────────────────────────────────────
 
   return (
-    <SafeAreaView style={st.safe} edges={['top']}>
+    <ScrollView contentContainerClassName="pb-12">
+      {/* ── Section 1: Your Wingpeople ────────────────────────────────────── */}
+      <SectionHeader
+        title="Your Wingpeople"
+        right={
+          wingpeople.length < 5 ? (
+            <Pressable
+              onPress={onOpenInvite}
+              className="px-3 py-[5px] rounded-full bg-purple-pale"
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <Text className="text-13 font-semibold text-purple">+ Invite</Text>
+            </Pressable>
+          ) : null
+        }
+      />
+
+      {wingpeople.length === 0 ? (
+        <Text className="text-14 text-ink-mid px-5 py-[14px] leading-5">
+          No wingpeople yet. Invite a trusted friend to swipe for you.
+        </Text>
+      ) : (
+        wingpeople.map((w) => {
+          const winger = (w as any).winger as { id: string; chosen_name: string | null } | null;
+          const name = winger?.chosen_name ?? 'Unknown';
+          const count = weeklyCounts[w.id] ?? 0;
+          return (
+            <Pressable
+              key={w.id}
+              className="flex-row items-center px-5 py-3 gap-3 bg-white"
+              style={{
+                borderBottomWidth: StyleSheet.hairlineWidth,
+                borderBottomColor: colors.divider,
+              }}
+              onLongPress={() => handleRemove(w.id)}
+              delayLongPress={500}
+            >
+              <FaceAvatar initials={getInitials(name)} size={40} />
+              <View className="flex-1">
+                <Text className="text-15 font-semibold text-ink">{name}</Text>
+                <Text className="text-12 text-ink-mid mt-0.5">
+                  {count} pick{count !== 1 ? 's' : ''} this week
+                </Text>
+              </View>
+            </Pressable>
+          );
+        })
+      )}
+
+      {/* ── Section 2: Invitations ──────────────────────────────────────── */}
+      <SectionHeader title="Invitations" />
+
+      {invitations.length === 0 ? (
+        <Text className="text-14 text-ink-mid px-5 py-[14px] leading-5">
+          No invitations right now.
+        </Text>
+      ) : (
+        invitations.map((inv) => {
+          const dater = (inv as any).dater as { id: string; chosen_name: string | null } | null;
+          const name = dater?.chosen_name ?? 'Unknown';
+          return (
+            <View
+              key={inv.id}
+              className="flex-row items-center px-5 py-3 gap-3 bg-white"
+              style={{
+                borderBottomWidth: StyleSheet.hairlineWidth,
+                borderBottomColor: colors.divider,
+              }}
+            >
+              <FaceAvatar initials={getInitials(name)} size={40} />
+              <Text className="flex-1 text-15 font-semibold text-ink">{name}</Text>
+              <Pressable
+                className="px-[14px] py-2 rounded-full bg-muted"
+                onPress={() => handleDecline(inv.id)}
+              >
+                <Text className="text-13 font-semibold text-ink-mid">Decline</Text>
+              </Pressable>
+              <Pressable
+                className="px-[14px] py-2 rounded-full bg-purple"
+                onPress={() => handleAccept(inv.id)}
+              >
+                <Text className="text-13 font-semibold text-white">Accept</Text>
+              </Pressable>
+            </View>
+          );
+        })
+      )}
+
+      {/* ── Section 3: You're Winging For ──────────────────────────────── */}
+      <SectionHeader title="You're Winging For" />
+
+      {wingingFor.length === 0 ? (
+        <Text className="text-14 text-ink-mid px-5 py-[14px] leading-5">
+          No one has invited you to wing for them yet.
+        </Text>
+      ) : (
+        wingingFor.map((wf) => {
+          const dater = (wf as any).dater as { id: string; chosen_name: string | null } | null;
+          const name = dater?.chosen_name ?? 'Unknown';
+          const firstName = name.split(' ')[0];
+          return (
+            <View
+              key={wf.id}
+              className="flex-row items-center px-5 py-3 gap-3 bg-white"
+              style={{
+                borderBottomWidth: StyleSheet.hairlineWidth,
+                borderBottomColor: colors.divider,
+              }}
+            >
+              <FaceAvatar initials={getInitials(name)} size={40} />
+              <Text className="flex-1 text-15 font-semibold text-ink">{name}</Text>
+              <Pressable
+                className="px-[14px] py-2 rounded-full bg-purple-pale"
+                onPress={() =>
+                  router.push(`/(tabs)/profile/wingpeople/wingswipe?daterId=${dater?.id}` as any)
+                }
+              >
+                <Text className="text-13 font-semibold text-purple">Swipe for {firstName}</Text>
+              </Pressable>
+            </View>
+          );
+        })
+      )}
+    </ScrollView>
+  );
+}
+
+// ── Outer screen (owns modal + form state) ─────────────────────────────────────
+
+type InviteForm = { phone: string };
+
+export default function WingpeopleScreen() {
+  const router = useRouter();
+  const { session } = useAuth();
+  const { profile } = useProfile();
+  const insets = useSafeAreaInsets();
+  const userId = session!.user.id;
+
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [inviteVisible, setInviteVisible] = useState(false);
+
+  const {
+    control,
+    handleSubmit,
+    reset,
+    formState: { isSubmitting, isValid },
+  } = useForm<InviteForm>({
+    defaultValues: { phone: '' },
+    mode: 'onChange',
+  });
+
+  const onRefresh = () => setRefreshKey((k) => k + 1);
+  const onOpenInvite = () => setInviteVisible(true);
+  const closeInviteSheet = () => {
+    setInviteVisible(false);
+    reset();
+  };
+
+  const onSendInvite = handleSubmit(async ({ phone }) => {
+    const e164 = toE164(phone)!;
+
+    const { error: insertError } = await inviteWingperson(userId, e164);
+    if (insertError) {
+      toast.error("Couldn't send invite. Try again.");
+      return;
+    }
+
+    const { data: existing } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('phone_number', e164)
+      .maybeSingle();
+
+    if (existing?.id) {
+      await supabase
+        .from('contacts')
+        .update({ winger_id: existing.id })
+        .eq('user_id', userId)
+        .eq('phone_number', e164);
+    } else {
+      await supabase.functions.invoke('send-wing-invite', {
+        body: { phone: e164, daterName: profile?.chosen_name ?? 'Someone' },
+      });
+    }
+
+    reset();
+    setInviteVisible(false);
+    onRefresh();
+  });
+
+  return (
+    <SafeAreaView className="flex-1 bg-canvas" edges={['top']}>
       <NavHeader back title="Wingpeople" onBack={() => router.back()} />
 
-      <ScrollView contentContainerStyle={st.scroll}>
-        {/* ── Section 1: Your Wingpeople ──────────────────────────────────── */}
-        <SectionHeader
-          title="Your Wingpeople"
-          right={
-            wingpeople.length < 5 ? (
-              <TouchableOpacity
-                onPress={() => setInviteVisible(true)}
-                style={st.inviteChip}
-                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-              >
-                <Text style={st.inviteChipText}>+ Invite</Text>
-              </TouchableOpacity>
-            ) : null
-          }
+      <Suspense
+        fallback={
+          <View className="flex-1 items-center justify-center">
+            <ActivityIndicator color={colors.purple} />
+          </View>
+        }
+      >
+        <WingpeopleContent
+          key={refreshKey}
+          userId={userId}
+          onRefresh={onRefresh}
+          onOpenInvite={onOpenInvite}
         />
+      </Suspense>
 
-        {wingpeople.length === 0 ? (
-          <Text style={st.empty}>
-            No wingpeople yet. Invite a trusted friend to swipe for you.
-          </Text>
-        ) : (
-          wingpeople.map((w) => {
-             
-            const winger = (w as any).winger as { id: string; chosen_name: string | null } | null;
-            const name = winger?.chosen_name ?? 'Unknown';
-            const count = weeklyCounts[w.id] ?? 0;
-            return (
-              <TouchableOpacity
-                key={w.id}
-                style={st.row}
-                onLongPress={() => handleRemove(w.id)}
-                delayLongPress={500}
-                activeOpacity={0.85}
-              >
-                <FaceAvatar initials={getInitials(name)} size={40} />
-                <View style={st.rowText}>
-                  <Text style={st.rowName}>{name}</Text>
-                  <Text style={st.rowSub}>
-                    {count} pick{count !== 1 ? 's' : ''} this week
-                  </Text>
-                </View>
-              </TouchableOpacity>
-            );
-          })
-        )}
-
-        {/* ── Section 2: Invitations ──────────────────────────────────────── */}
-        <SectionHeader title="Invitations" />
-
-        {invitations.length === 0 ? (
-          <Text style={st.empty}>No invitations right now.</Text>
-        ) : (
-          invitations.map((inv) => {
-             
-            const dater = (inv as any).dater as { id: string; chosen_name: string | null } | null;
-            const name = dater?.chosen_name ?? 'Unknown';
-            return (
-              <View key={inv.id} style={st.row}>
-                <FaceAvatar initials={getInitials(name)} size={40} />
-                <Text style={[st.rowName, st.flex1]}>{name}</Text>
-                <TouchableOpacity
-                  style={[st.pill, st.pillDecline]}
-                  onPress={() => handleDecline(inv.id)}
-                >
-                  <Text style={st.pillDeclineText}>Decline</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[st.pill, st.pillAccept]}
-                  onPress={() => handleAccept(inv.id)}
-                >
-                  <Text style={st.pillAcceptText}>Accept</Text>
-                </TouchableOpacity>
-              </View>
-            );
-          })
-        )}
-
-        {/* ── Section 3: You're Winging For ──────────────────────────────── */}
-        <SectionHeader title="You're Winging For" />
-
-        {wingingFor.length === 0 ? (
-          <Text style={st.empty}>No one has invited you to wing for them yet.</Text>
-        ) : (
-          wingingFor.map((wf) => {
-             
-            const dater = (wf as any).dater as { id: string; chosen_name: string | null } | null;
-            const name = dater?.chosen_name ?? 'Unknown';
-            const firstName = name.split(' ')[0];
-            return (
-              <View key={wf.id} style={st.row}>
-                <FaceAvatar initials={getInitials(name)} size={40} />
-                <Text style={[st.rowName, st.flex1]}>{name}</Text>
-                <TouchableOpacity
-                  style={[st.pill, st.pillSwipe, st.pillSwipeActive]}
-                  onPress={() =>
-                    router.push(
-                       
-                      `/(tabs)/profile/wingpeople/wingswipe?daterId=${dater?.id}` as any
-                    )
-                  }
-                >
-                  <Text style={st.pillSwipeText}>Swipe for {firstName}</Text>
-                </TouchableOpacity>
-              </View>
-            );
-          })
-        )}
-      </ScrollView>
-
-      {/* ── Invite Bottom Sheet ─────────────────────────────────────────────── */}
+      {/* ── Invite Bottom Sheet ──────────────────────────────────────────────── */}
       <Modal
         visible={inviteVisible}
         animationType="slide"
         transparent
         onRequestClose={closeInviteSheet}
       >
-        <View style={st.overlay}>
-          <TouchableOpacity style={st.overlayTap} activeOpacity={1} onPress={closeInviteSheet} />
+        <View className="flex-1 bg-black/45">
+          <Pressable className="flex-1" onPress={closeInviteSheet} />
           <KeyboardAvoidingView
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-            style={st.sheetOuter}
+            style={{ position: 'absolute', bottom: 0, left: 0, right: 0 }}
           >
-            <View style={[st.sheet, { paddingBottom: insets.bottom + 20 }]}>
-              <View style={st.handle} />
-              <Text style={st.sheetTitle}>Invite a Wingperson</Text>
-              <Text style={st.sheetSub}>
+            <View
+              className="bg-white rounded-t-[20px] px-6 pt-3"
+              style={{ paddingBottom: insets.bottom + 20 }}
+            >
+              <View className="self-center w-9 h-1 rounded-full bg-ink-ghost mb-5" />
+              <Text className="text-18 font-bold text-ink mb-1.5">Invite a Wingperson</Text>
+              <Text className="text-14 text-ink-mid leading-5 mb-5">
                 Enter their phone number and we{"'"}ll send them an invite to Orbit.
               </Text>
-              <TextInput
-                style={st.input}
-                placeholder="(555) 000-0000"
-                placeholderTextColor={colors.inkGhost}
-                keyboardType="phone-pad"
-                value={phone}
-                onChangeText={(t) => {
-                  setPhoneError(null);
-                  setPhone(formatPhoneInput(t));
+
+              <Controller
+                control={control}
+                name="phone"
+                rules={{
+                  required: true,
+                  validate: (v) => Boolean(toE164(v)) || 'Please enter a valid phone number.',
                 }}
-                autoFocus
+                render={({ field: { value, onChange }, fieldState: { error } }) => (
+                  <>
+                    <TextInput
+                      className="border-[1.5px] border-divider rounded-[12px] px-4 py-[14px] text-16 text-ink bg-white"
+                      placeholder="(555) 000-0000"
+                      placeholderTextColor={colors.inkGhost}
+                      keyboardType="phone-pad"
+                      value={value}
+                      onChangeText={(t) => onChange(formatPhoneInput(t))}
+                      autoFocus
+                    />
+                    {error && (
+                      <Text className="text-[#B91C1C] text-13 mt-1.5">{error.message}</Text>
+                    )}
+                  </>
+                )}
               />
-              {phoneError && <Text style={st.inputError}>{phoneError}</Text>}
-              <View style={st.sheetFooter}>
+
+              <View className="mt-5">
                 <PurpleButton
                   label="Send Invite"
-                  onPress={handleSendInvite}
-                  loading={inviteSending}
-                  disabled={phone.length === 0}
+                  onPress={onSendInvite}
+                  loading={isSubmitting}
+                  disabled={!isValid || isSubmitting}
                 />
               </View>
             </View>
@@ -376,131 +368,3 @@ export default function WingpeopleScreen() {
     </SafeAreaView>
   );
 }
-
-// ── Styles ─────────────────────────────────────────────────────────────────────
-
-const st = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.canvas },
-  loadingWrap: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  scroll: { paddingBottom: 48 },
-  flex1: { flex: 1 },
-
-  // Section headers
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingTop: 24,
-    paddingBottom: 8,
-  },
-  sectionTitle: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: colors.inkMid,
-    textTransform: 'uppercase',
-    letterSpacing: 0.6,
-  },
-  inviteChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-    borderRadius: 20,
-    backgroundColor: colors.purplePale,
-  },
-  inviteChipText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: colors.purple,
-  },
-
-  // Empty states
-  empty: {
-    fontSize: 14,
-    color: colors.inkMid,
-    paddingHorizontal: 20,
-    paddingVertical: 14,
-    lineHeight: 20,
-  },
-
-  // Rows
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    gap: 12,
-    backgroundColor: colors.white,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.divider,
-  },
-  rowText: { flex: 1 },
-  rowName: { fontSize: 15, fontWeight: '600', color: colors.ink },
-  rowSub: { fontSize: 12, color: colors.inkMid, marginTop: 2 },
-
-  // Pill buttons
-  pill: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
-  },
-  pillAccept: { backgroundColor: colors.purple },
-  pillAcceptText: { fontSize: 13, fontWeight: '600', color: colors.white },
-  pillDecline: { backgroundColor: colors.muted },
-  pillDeclineText: { fontSize: 13, fontWeight: '600', color: colors.inkMid },
-  pillSwipe: { backgroundColor: colors.muted },
-  pillSwipeActive: { backgroundColor: colors.purplePale },
-  pillSwipeText: { fontSize: 13, fontWeight: '600', color: colors.purple },
-
-  // Invite sheet
-  overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)' },
-  overlayTap: { flex: 1 },
-  sheetOuter: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-  },
-  sheet: {
-    backgroundColor: colors.white,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    paddingHorizontal: 24,
-    paddingTop: 12,
-  },
-  handle: {
-    alignSelf: 'center',
-    width: 36,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: colors.inkGhost,
-    marginBottom: 20,
-  },
-  sheetTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: colors.ink,
-    marginBottom: 6,
-  },
-  sheetSub: {
-    fontSize: 14,
-    color: colors.inkMid,
-    lineHeight: 20,
-    marginBottom: 20,
-  },
-  input: {
-    borderWidth: 1.5,
-    borderColor: colors.divider,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    fontSize: 16,
-    color: colors.ink,
-    backgroundColor: colors.white,
-  },
-  inputError: {
-    color: '#B91C1C',
-    fontSize: 13,
-    marginTop: 6,
-  },
-  sheetFooter: { marginTop: 20 },
-});
