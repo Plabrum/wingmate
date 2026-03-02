@@ -10,6 +10,20 @@ export function getPromptTemplates() {
   return supabase.from('prompt_templates').select('id, question').order('question');
 }
 
+const ONBOARDING_PROMPT_COUNT = 5;
+
+/**
+ * Fetch a random selection of prompt templates for onboarding.
+ */
+export async function getOnboardingPromptTemplates() {
+  const { data, error } = await getPromptTemplates();
+  if (error) return { data: null, error };
+  const shuffled = [...(data ?? [])]
+    .sort(() => Math.random() - 0.5)
+    .slice(0, ONBOARDING_PROMPT_COUNT);
+  return { data: shuffled, error: null };
+}
+
 // ── Profile prompts ───────────────────────────────────────────────────────────
 
 /**
@@ -41,11 +55,7 @@ export function deleteProfilePrompt(promptId: string) {
  * Wingperson submits a Hinge-style comment on a profile prompt.
  * Starts unapproved (is_approved = false) — profile owner must approve.
  */
-export function addPromptResponse(
-  userId: string,
-  profilePromptId: string,
-  message: string
-) {
+export function addPromptResponse(userId: string, profilePromptId: string, message: string) {
   return supabase
     .from('prompt_responses')
     .insert({ user_id: userId, profile_prompt_id: profilePromptId, message, is_approved: false });
@@ -53,10 +63,7 @@ export function addPromptResponse(
 
 /** Profile owner approves a wingperson comment — it becomes visible on the profile. */
 export function approvePromptResponse(responseId: string) {
-  return supabase
-    .from('prompt_responses')
-    .update({ is_approved: true })
-    .eq('id', responseId);
+  return supabase.from('prompt_responses').update({ is_approved: true }).eq('id', responseId);
 }
 
 /** Profile owner rejects (deletes) a wingperson comment. */

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import { toast } from 'sonner-native';
 
 import { colors } from '@/constants/theme';
 import { useAuth } from '@/context/auth';
@@ -22,6 +23,23 @@ import { PhotosTab } from '@/components/profile/PhotosTab';
 import { PromptsTab } from '@/components/profile/PromptsTab';
 import { ErrorBanner, getInitials } from '@/components/profile/profile-helpers';
 
+// ── Log out button ────────────────────────────────────────────────────────────
+
+function LogOutButton() {
+  const { signOut } = useAuth();
+
+  async function handleLogOut() {
+    const { error } = await signOut();
+    if (error) toast.error('Could not log out. Please try again.');
+  }
+
+  return (
+    <TouchableOpacity onPress={handleLogOut} hitSlop={12}>
+      <Text style={st.logOut}>Log out</Text>
+    </TouchableOpacity>
+  );
+}
+
 // ── Winger view ───────────────────────────────────────────────────────────────
 
 function WingerView({ name }: { name: string | null }) {
@@ -34,7 +52,6 @@ function WingerView({ name }: { name: string | null }) {
       <View style={st.wingerBtn}>
         <PurpleButton
           label="Wingpeople & Invitations"
-           
           onPress={() => router.push('/(tabs)/profile/wingpeople' as any)}
           outline
         />
@@ -91,7 +108,7 @@ export default function ProfileScreen() {
   if (profile?.role === 'winger') {
     return (
       <SafeAreaView style={st.safe} edges={['top']}>
-        <LargeHeader title="My Profile" />
+        <LargeHeader title="My Profile" right={<LogOutButton />} />
         <WingerView name={profile.chosen_name} />
       </SafeAreaView>
     );
@@ -100,7 +117,7 @@ export default function ProfileScreen() {
   if (!localData) {
     return (
       <SafeAreaView style={st.safe} edges={['top']}>
-        <LargeHeader title="My Profile" />
+        <LargeHeader title="My Profile" right={<LogOutButton />} />
         <View style={st.noProfile}>
           <Text style={st.noProfileTxt}>Complete your profile setup to see your profile here.</Text>
         </View>
@@ -108,17 +125,15 @@ export default function ProfileScreen() {
     );
   }
 
-   
   const wingInitials = wingpeople.map((w) => getInitials((w as any).winger?.chosen_name));
 
   return (
     <SafeAreaView style={st.safe} edges={['top']}>
-      <LargeHeader title="My Profile" />
+      <LargeHeader title="My Profile" right={<LogOutButton />} />
 
       {/* Wingpeople row */}
       <TouchableOpacity
         style={st.wingRow}
-         
         onPress={() => router.push('/(tabs)/profile/wingpeople' as any)}
         activeOpacity={0.7}
       >
@@ -201,4 +216,5 @@ const st = StyleSheet.create({
   },
   wingerRole: { fontSize: 14, color: colors.inkMid, marginTop: 4 },
   wingerBtn: { marginTop: 32, width: '100%' },
+  logOut: { fontSize: 15, color: colors.inkMid },
 });

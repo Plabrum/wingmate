@@ -1,22 +1,13 @@
-import { useEffect, useState } from 'react';
-import {
-  FlatList,
-  KeyboardAvoidingView,
-  Modal,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useState } from 'react';
+import { Controller, useForm } from 'react-hook-form';
+import { FlatList, KeyboardAvoidingView, Modal, Platform, StyleSheet } from 'react-native';
+import { toast } from 'sonner-native';
 
 import { colors } from '@/constants/theme';
 import { getPromptTemplates, addProfilePrompt } from '@/queries/prompts';
 import { IconSymbol } from '@/components/ui/icon-symbol';
-import { ErrorBanner } from './profile-helpers';
+import { cn } from '@/lib/cn';
+import { View, Text, TextInput, ScrollView, Pressable, SafeAreaView } from '@/lib/tw';
 
 interface Props {
   visible: boolean;
@@ -35,35 +26,38 @@ export function AddPromptModal({
 }: Props) {
   const [templates, setTemplates] = useState<{ id: string; question: string }[]>([]);
   const [selected, setSelected] = useState<{ id: string; question: string } | null>(null);
-  const [answer, setAnswer] = useState('');
-  const [saving, setSaving] = useState(false);
-  const [err, setErr] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!visible) return;
+  const {
+    control,
+    handleSubmit,
+    reset,
+    watch,
+    formState: { isSubmitting, isValid },
+  } = useForm<{ answer: string }>({
+    defaultValues: { answer: '' },
+    mode: 'onChange',
+  });
+
+  const onOpen = async () => {
+    reset({ answer: '' });
     setSelected(null);
-    setAnswer('');
-    setErr(null);
-    getPromptTemplates().then(({ data }) => {
-      setTemplates((data ?? []).filter((t) => !usedTemplateIds.has(t.id)));
-    });
-  }, [visible, usedTemplateIds]);
-
-  const handleSave = async () => {
-    if (!selected || !answer.trim()) return;
-    setSaving(true);
-    setErr(null);
-    try {
-      const { error } = await addProfilePrompt(datingProfileId, selected.id, answer.trim());
-      if (error) throw error;
-      onAdded();
-      onClose();
-    } catch {
-      setErr('Could not save prompt. Please try again.');
-    } finally {
-      setSaving(false);
-    }
+    const { data } = await getPromptTemplates();
+    setTemplates((data ?? []).filter((t) => !usedTemplateIds.has(t.id)));
   };
+
+  const onSubmit = async (values: { answer: string }) => {
+    if (!selected) return;
+    const { error } = await addProfilePrompt(datingProfileId, selected.id, values.answer.trim());
+    if (error) {
+      toast.error('Could not save prompt. Please try again.');
+      return;
+    }
+    onAdded();
+    onClose();
+  };
+
+  const answerLength = watch('answer').length;
+  const saveDisabled = !selected || !isValid || isSubmitting;
 
   return (
     <Modal
@@ -71,129 +65,105 @@ export function AddPromptModal({
       animationType="slide"
       presentationStyle="pageSheet"
       onRequestClose={onClose}
+      onShow={onOpen}
     >
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={st.root}
+        style={{ flex: 1 }}
       >
-        <SafeAreaView style={st.safe} edges={['top', 'bottom']}>
-          <View style={st.header}>
-            <TouchableOpacity
-              onPress={onClose}
-              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        <View className="flex-1 bg-canvas">
+          <SafeAreaView className="flex-1" edges={['top', 'bottom']}>
+            <View
+              className="flex-row items-center justify-between px-5 py-[14px] bg-white"
+              style={{
+                borderBottomWidth: StyleSheet.hairlineWidth,
+                borderBottomColor: colors.divider,
+              }}
             >
-              <Text style={st.cancel}>Cancel</Text>
-            </TouchableOpacity>
-            <Text style={st.title}>{selected ? 'Write Your Answer' : 'Pick a Prompt'}</Text>
-            <TouchableOpacity
-              onPress={handleSave}
-              disabled={!selected || !answer.trim() || saving}
-              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            >
-              <Text style={[st.save, (!selected || !answer.trim() || saving) && st.saveDim]}>
-                {saving ? 'Saving…' : 'Save'}
+              <Pressable onPress={onClose} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                <Text className="text-15 text-ink-mid">Cancel</Text>
+              </Pressable>
+              <Text className="text-16 font-semibold text-ink">
+                {selected ? 'Write Your Answer' : 'Pick a Prompt'}
               </Text>
-            </TouchableOpacity>
-          </View>
-
-          {err && <ErrorBanner message={err} />}
-
-          {!selected ? (
-            <FlatList
-              data={templates}
-              keyExtractor={(t) => t.id}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={st.templateRow}
-                  onPress={() => setSelected(item)}
-                  activeOpacity={0.7}
-                >
-                  <Text style={st.templateQ}>{item.question}</Text>
-                  <IconSymbol name="chevron.right" size={15} color={colors.inkGhost} />
-                </TouchableOpacity>
-              )}
-              ItemSeparatorComponent={() => <View style={st.sep} />}
-              ListEmptyComponent={
-                <Text style={st.empty}>You{"'"}ve answered all available prompts.</Text>
-              }
-            />
-          ) : (
-            <ScrollView contentContainerStyle={st.answerContent}>
-              <TouchableOpacity
-                onPress={() => setSelected(null)}
-                style={st.backRow}
+              <Pressable
+                onPress={handleSubmit(onSubmit)}
+                disabled={saveDisabled}
                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               >
-                <IconSymbol name="chevron.left" size={13} color={colors.purple} />
-                <Text style={st.backTxt}>Back to prompts</Text>
-              </TouchableOpacity>
-              <Text style={st.questionTxt}>{selected.question}</Text>
-              <TextInput
-                style={st.answerInput}
-                placeholder="Write your answer…"
-                placeholderTextColor={colors.inkGhost}
-                value={answer}
-                onChangeText={setAnswer}
-                multiline
-                autoFocus
-                maxLength={300}
-                textAlignVertical="top"
+                <Text
+                  className={cn('text-15 font-semibold text-purple', saveDisabled && 'opacity-40')}
+                >
+                  {isSubmitting ? 'Saving…' : 'Save'}
+                </Text>
+              </Pressable>
+            </View>
+
+            {!selected ? (
+              <FlatList
+                data={templates}
+                keyExtractor={(t) => t.id}
+                renderItem={({ item }) => (
+                  <Pressable
+                    className="flex-row items-center bg-white px-5 py-4"
+                    onPress={() => setSelected(item)}
+                  >
+                    <Text className="flex-1 text-15 text-ink pr-3">{item.question}</Text>
+                    <IconSymbol name="chevron.right" size={15} color={colors.inkGhost} />
+                  </Pressable>
+                )}
+                ItemSeparatorComponent={() => (
+                  <View
+                    style={{
+                      height: StyleSheet.hairlineWidth,
+                      backgroundColor: colors.divider,
+                      marginLeft: 20,
+                    }}
+                  />
+                )}
+                ListEmptyComponent={
+                  <Text className="p-9 text-center text-ink-mid text-15">
+                    You{"'"}ve answered all available prompts.
+                  </Text>
+                }
               />
-              <Text style={st.charCount}>{answer.length}/300</Text>
-            </ScrollView>
-          )}
-        </SafeAreaView>
+            ) : (
+              <ScrollView contentContainerClassName="p-5">
+                <Pressable
+                  onPress={() => setSelected(null)}
+                  className="flex-row items-center gap-1 mb-4"
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                >
+                  <IconSymbol name="chevron.left" size={13} color={colors.purple} />
+                  <Text className="text-14 text-purple">Back to prompts</Text>
+                </Pressable>
+                <Text className="text-[20px] font-bold text-ink font-serif mb-5 leading-7">
+                  {selected.question}
+                </Text>
+                <Controller
+                  control={control}
+                  name="answer"
+                  rules={{ required: true, validate: (v) => v.trim().length > 0 }}
+                  render={({ field }) => (
+                    <TextInput
+                      className="bg-white rounded-14 p-4 text-16 text-ink min-h-[130px] leading-6"
+                      placeholder="Write your answer…"
+                      placeholderTextColor={colors.inkGhost}
+                      value={field.value}
+                      onChangeText={field.onChange}
+                      multiline
+                      autoFocus
+                      maxLength={300}
+                      textAlignVertical="top"
+                    />
+                  )}
+                />
+                <Text className="text-12 text-ink-ghost text-right mt-1.5">{answerLength}/300</Text>
+              </ScrollView>
+            )}
+          </SafeAreaView>
+        </View>
       </KeyboardAvoidingView>
     </Modal>
   );
 }
-
-const st = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.canvas },
-  safe: { flex: 1 },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 14,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.divider,
-    backgroundColor: colors.white,
-  },
-  title: { fontSize: 16, fontWeight: '600', color: colors.ink },
-  cancel: { fontSize: 15, color: colors.inkMid },
-  save: { fontSize: 15, fontWeight: '600', color: colors.purple },
-  saveDim: { opacity: 0.4 },
-  templateRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.white,
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-  },
-  templateQ: { flex: 1, fontSize: 15, color: colors.ink, paddingRight: 12 },
-  sep: { height: StyleSheet.hairlineWidth, backgroundColor: colors.divider, marginLeft: 20 },
-  empty: { padding: 36, textAlign: 'center', color: colors.inkMid, fontSize: 15 },
-  answerContent: { padding: 20 },
-  backRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 16 },
-  backTxt: { fontSize: 14, color: colors.purple },
-  questionTxt: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: colors.ink,
-    fontFamily: 'Georgia',
-    marginBottom: 20,
-    lineHeight: 28,
-  },
-  answerInput: {
-    backgroundColor: colors.white,
-    borderRadius: 14,
-    padding: 16,
-    fontSize: 16,
-    color: colors.ink,
-    minHeight: 130,
-    lineHeight: 24,
-  },
-  charCount: { fontSize: 12, color: colors.inkGhost, textAlign: 'right', marginTop: 6 },
-});

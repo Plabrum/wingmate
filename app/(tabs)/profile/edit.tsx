@@ -1,22 +1,17 @@
-import { useCallback, useEffect, useState } from 'react';
-import {
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Controller, useForm } from 'react-hook-form';
+import { KeyboardAvoidingView, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
+import { toast } from 'sonner-native';
 
 import { colors } from '@/constants/theme';
 import { useAuth } from '@/context/auth';
 import { useOwnProfile } from '@/hooks/use-own-profile';
 import { updateDatingProfile } from '@/queries/profiles';
+import type { OwnDatingProfile } from '@/queries/profiles';
 import type { Database } from '@/types/database';
+import { CITIES, GENDERS, RELIGIONS, INTERESTS } from '@/constants/enums';
+import { View, Text, TextInput, ScrollView, SafeAreaView, Pressable } from '@/lib/tw';
+import { cn } from '@/lib/cn';
 
 import { NavHeader } from '@/components/ui/NavHeader';
 import { PurpleButton } from '@/components/ui/PurpleButton';
@@ -26,41 +21,16 @@ type Religion = Database['public']['Enums']['religion'];
 type City = Database['public']['Enums']['city'];
 type Interest = Database['public']['Enums']['interest'];
 
-const GENDERS: Gender[] = ['Male', 'Female', 'Non-Binary'];
-
-const RELIGIONS: Religion[] = [
-  'Muslim',
-  'Christian',
-  'Jewish',
-  'Hindu',
-  'Buddhist',
-  'Sikh',
-  'Agnostic',
-  'Atheist',
-  'Other',
-  'Prefer not to say',
-];
-
-const CITIES: City[] = ['London', 'Manchester', 'Birmingham', 'Leeds', 'Glasgow'];
-
-const INTERESTS: Interest[] = [
-  'Travel',
-  'Fitness',
-  'Cooking',
-  'Music',
-  'Art',
-  'Movies',
-  'Books',
-  'Gaming',
-  'Outdoors',
-  'Sports',
-  'Technology',
-  'Fashion',
-  'Food',
-  'Photography',
-  'Dance',
-  'Volunteering',
-];
+type FormValues = {
+  bio: string;
+  city: City | null;
+  ageFrom: string;
+  ageTo: string;
+  interestedGender: Gender[];
+  religion: Religion | null;
+  religiousPref: Religion | null;
+  interests: Interest[];
+};
 
 const RELIGIOUS_PREFS: { value: Religion | null; label: string }[] = [
   { value: null, label: 'No preference' },
@@ -75,7 +45,11 @@ const RELIGIOUS_PREFS: { value: Religion | null; label: string }[] = [
 // ── Mini components ───────────────────────────────────────────────────────────
 
 function SectionLabel({ label }: { label: string }) {
-  return <Text style={st.sectionLabel}>{label}</Text>;
+  return (
+    <Text className="text-[12px] font-bold text-ink-dim uppercase tracking-[0.6px] mt-5 mb-2.5">
+      {label}
+    </Text>
+  );
 }
 
 function PickerRow<T extends string>({
@@ -90,20 +64,22 @@ function PickerRow<T extends string>({
   getLabel?: (v: T) => string;
 }) {
   return (
-    <View style={st.pickerGrid}>
+    <View className="flex-row flex-wrap gap-2">
       {options.map((opt) => {
         const active = value === opt;
         return (
-          <TouchableOpacity
+          <Pressable
             key={opt}
             onPress={() => onChange(opt)}
-            style={[st.pickerChip, active && st.pickerChipActive]}
-            activeOpacity={0.7}
+            className={cn(
+              'rounded-[20px] px-3.5 py-2 bg-white border-[1.5px] border-divider',
+              active && 'bg-purple-pale border-purple'
+            )}
           >
-            <Text style={[st.pickerChipTxt, active && st.pickerChipTxtActive]}>
+            <Text className={cn('text-[14px] text-ink-mid font-medium', active && 'text-purple')}>
               {getLabel ? getLabel(opt) : opt}
             </Text>
-          </TouchableOpacity>
+          </Pressable>
         );
       })}
     </View>
@@ -123,231 +99,270 @@ function MultiPickerRow<T extends string>({
     onChange(values.includes(opt) ? values.filter((v) => v !== opt) : [...values, opt]);
   };
   return (
-    <View style={st.pickerGrid}>
+    <View className="flex-row flex-wrap gap-2">
       {options.map((opt) => {
         const active = values.includes(opt);
         return (
-          <TouchableOpacity
+          <Pressable
             key={opt}
             onPress={() => toggle(opt)}
-            style={[st.pickerChip, active && st.pickerChipActive]}
-            activeOpacity={0.7}
+            className={cn(
+              'rounded-[20px] px-3.5 py-2 bg-white border-[1.5px] border-divider',
+              active && 'bg-purple-pale border-purple'
+            )}
           >
-            <Text style={[st.pickerChipTxt, active && st.pickerChipTxtActive]}>{opt}</Text>
-          </TouchableOpacity>
+            <Text className={cn('text-[14px] text-ink-mid font-medium', active && 'text-purple')}>
+              {opt}
+            </Text>
+          </Pressable>
         );
       })}
     </View>
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ── Form ──────────────────────────────────────────────────────────────────────
 
-export default function EditProfileScreen() {
-  const router = useRouter();
-  const { session } = useAuth();
-  const { data, refresh } = useOwnProfile();
+function EditProfileForm({
+  data,
+  refresh,
+  userId,
+  router,
+}: {
+  data: OwnDatingProfile;
+  refresh: () => Promise<void>;
+  userId: string;
+  router: ReturnType<typeof useRouter>;
+}) {
+  const {
+    control,
+    handleSubmit,
+    watch,
+    formState: { isSubmitting },
+  } = useForm<FormValues>({
+    mode: 'onChange',
+    defaultValues: {
+      bio: data.bio ?? '',
+      city: data.city as City | null,
+      ageFrom: String(data.age_from),
+      ageTo: data.age_to ? String(data.age_to) : '',
+      interestedGender: data.interested_gender as Gender[],
+      religion: data.religion as Religion | null,
+      religiousPref: (data.religious_preference as Religion | null) ?? null,
+      interests: data.interests as Interest[],
+    },
+  });
 
-  const [bio, setBio] = useState('');
-  const [city, setCity] = useState<City | null>(null);
-  const [ageFrom, setAgeFrom] = useState('18');
-  const [ageTo, setAgeTo] = useState('');
-  const [interestedGender, setInterestedGender] = useState<Gender[]>([]);
-  const [religion, setReligion] = useState<Religion | null>(null);
-  const [religiousPref, setReligiousPref] = useState<Religion | null>(null);
-  const [interests, setInterests] = useState<Interest[]>([]);
-
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const userId = session!.user.id;
-
-  // Populate from loaded profile
-  useEffect(() => {
-    if (!data) return;
-    setBio(data.bio ?? '');
-    setCity(data.city);
-    setAgeFrom(String(data.age_from));
-    setAgeTo(data.age_to ? String(data.age_to) : '');
-    setInterestedGender(data.interested_gender as Gender[]);
-    setReligion(data.religion);
-    setReligiousPref((data.religious_preference as Religion | null) ?? null);
-    setInterests(data.interests as Interest[]);
-  }, [data]);
-
-  const handleSave = useCallback(async () => {
-    if (!city || !religion) {
-      setError('City and religion are required.');
+  const handleSave = handleSubmit(async (values) => {
+    if (!values.city || !values.religion) {
+      toast.error('City and religion are required.');
       return;
     }
-    const fromNum = parseInt(ageFrom, 10);
-    const toNum = ageTo ? parseInt(ageTo, 10) : null;
+    const fromNum = parseInt(values.ageFrom, 10);
+    const toNum = values.ageTo ? parseInt(values.ageTo, 10) : null;
     if (isNaN(fromNum) || fromNum < 18) {
-      setError('Age from must be 18 or above.');
+      toast.error('Age from must be 18 or above.');
       return;
     }
     if (toNum !== null && toNum <= fromNum) {
-      setError('Age to must be greater than age from.');
+      toast.error('Age to must be greater than age from.');
       return;
     }
 
-    setSaving(true);
-    setError(null);
-    try {
-      const { error: err } = await updateDatingProfile(userId, {
-        bio: bio.trim() || undefined,
-        city,
-        age_from: fromNum,
-        age_to: toNum,
-        interested_gender: interestedGender,
-        religion,
-        religious_preference: religiousPref,
-        interests,
-      });
-      if (err) throw err;
-      await refresh();
-      router.back();
-    } catch {
-      setError('Could not save changes. Please try again.');
-    } finally {
-      setSaving(false);
+    const { error } = await updateDatingProfile(userId, {
+      bio: values.bio.trim() || undefined,
+      city: values.city,
+      age_from: fromNum,
+      age_to: toNum,
+      interested_gender: values.interestedGender,
+      religion: values.religion,
+      religious_preference: values.religiousPref,
+      interests: values.interests,
+    });
+
+    if (error) {
+      toast.error('Could not save changes. Please try again.');
+      return;
     }
-  }, [
-    bio,
-    city,
-    ageFrom,
-    ageTo,
-    interestedGender,
-    religion,
-    religiousPref,
-    interests,
-    userId,
-    refresh,
-    router,
-  ]);
+    await refresh();
+    router.back();
+  });
+
+  const bioValue = watch('bio');
 
   const saveButton = (
-    <TouchableOpacity onPress={handleSave} disabled={saving} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-      <Text style={[st.saveBtn, saving && st.saveBtnDim]}>{saving ? 'Saving…' : 'Save'}</Text>
-    </TouchableOpacity>
+    <Pressable
+      onPress={handleSave}
+      disabled={isSubmitting}
+      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+    >
+      <Text className={cn('text-[15px] font-semibold text-purple', isSubmitting && 'opacity-40')}>
+        {isSubmitting ? 'Saving…' : 'Save'}
+      </Text>
+    </Pressable>
   );
 
   return (
-    <SafeAreaView style={st.safe} edges={['top', 'bottom']}>
+    <SafeAreaView className="flex-1 bg-canvas" edges={['top', 'bottom']}>
       <NavHeader back title="Edit Profile" onBack={() => router.back()} right={saveButton} />
 
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={st.flex1}
+        style={{ flex: 1 }}
       >
         <ScrollView
-          contentContainerStyle={st.content}
+          contentContainerClassName="p-5 pb-12"
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          {error && (
-            <View style={st.errorBanner}>
-              <Text style={st.errorTxt}>{error}</Text>
-            </View>
-          )}
-
           {/* Bio */}
           <SectionLabel label="Bio" />
-          <TextInput
-            style={[st.input, st.bioInput]}
-            placeholder="Tell people a bit about yourself…"
-            placeholderTextColor={colors.inkGhost}
-            value={bio}
-            onChangeText={setBio}
-            multiline
-            maxLength={500}
-            textAlignVertical="top"
+          <Controller
+            control={control}
+            name="bio"
+            render={({ field }) => (
+              <TextInput
+                className="bg-white rounded-[12px] px-3.5 py-3 text-[15px] text-ink min-h-[100px]"
+                style={{ textAlignVertical: 'top', lineHeight: 22 }}
+                placeholder="Tell people a bit about yourself…"
+                placeholderTextColor={colors.inkGhost}
+                value={field.value}
+                onChangeText={field.onChange}
+                multiline
+                maxLength={500}
+              />
+            )}
           />
-          <Text style={st.charCount}>{bio.length}/500</Text>
+          <Text className="text-[12px] text-ink-ghost text-right mt-1">{bioValue.length}/500</Text>
 
           {/* City */}
           <SectionLabel label="City" />
-          <PickerRow<City>
-            options={CITIES}
-            value={city}
-            onChange={setCity}
+          <Controller
+            control={control}
+            name="city"
+            render={({ field }) => (
+              <PickerRow<City> options={CITIES} value={field.value} onChange={field.onChange} />
+            )}
           />
 
           {/* Age range */}
           <SectionLabel label="Age Range" />
-          <View style={st.ageRow}>
-            <View style={st.ageField}>
-              <Text style={st.ageFieldLabel}>From</Text>
-              <TextInput
-                style={st.ageInput}
-                value={ageFrom}
-                onChangeText={setAgeFrom}
-                keyboardType="number-pad"
-                maxLength={2}
-                placeholderTextColor={colors.inkGhost}
+          <View className="flex-row items-center gap-3">
+            <View className="flex-1">
+              <Text className="text-[12px] text-ink-mid mb-1.5">From</Text>
+              <Controller
+                control={control}
+                name="ageFrom"
+                render={({ field }) => (
+                  <TextInput
+                    className="bg-white rounded-[12px] px-3.5 py-3 text-[16px] text-ink text-center"
+                    value={field.value}
+                    onChangeText={field.onChange}
+                    keyboardType="number-pad"
+                    maxLength={2}
+                    placeholderTextColor={colors.inkGhost}
+                  />
+                )}
               />
             </View>
-            <Text style={st.ageDash}>–</Text>
-            <View style={st.ageField}>
-              <Text style={st.ageFieldLabel}>To (optional)</Text>
-              <TextInput
-                style={st.ageInput}
-                value={ageTo}
-                onChangeText={setAgeTo}
-                keyboardType="number-pad"
-                maxLength={2}
-                placeholder="—"
-                placeholderTextColor={colors.inkGhost}
+            <Text className="text-[20px] text-ink-ghost mt-5">–</Text>
+            <View className="flex-1">
+              <Text className="text-[12px] text-ink-mid mb-1.5">To (optional)</Text>
+              <Controller
+                control={control}
+                name="ageTo"
+                render={({ field }) => (
+                  <TextInput
+                    className="bg-white rounded-[12px] px-3.5 py-3 text-[16px] text-ink text-center"
+                    value={field.value}
+                    onChangeText={field.onChange}
+                    keyboardType="number-pad"
+                    maxLength={2}
+                    placeholder="—"
+                    placeholderTextColor={colors.inkGhost}
+                  />
+                )}
               />
             </View>
           </View>
 
           {/* Interested in */}
           <SectionLabel label="Interested In" />
-          <MultiPickerRow<Gender>
-            options={GENDERS}
-            values={interestedGender}
-            onChange={setInterestedGender}
+          <Controller
+            control={control}
+            name="interestedGender"
+            render={({ field }) => (
+              <MultiPickerRow<Gender>
+                options={GENDERS}
+                values={field.value}
+                onChange={field.onChange}
+              />
+            )}
           />
 
           {/* Religion */}
           <SectionLabel label="My Religion" />
-          <PickerRow<Religion>
-            options={RELIGIONS}
-            value={religion}
-            onChange={setReligion}
+          <Controller
+            control={control}
+            name="religion"
+            render={({ field }) => (
+              <PickerRow<Religion>
+                options={RELIGIONS}
+                value={field.value}
+                onChange={field.onChange}
+              />
+            )}
           />
 
           {/* Religious preference */}
           <SectionLabel label="Partner's Religion (optional)" />
-          <View style={st.pickerGrid}>
-            {RELIGIOUS_PREFS.map((opt) => {
-              const active = religiousPref === opt.value;
-              return (
-                <TouchableOpacity
-                  key={String(opt.value)}
-                  onPress={() => setReligiousPref(opt.value)}
-                  style={[st.pickerChip, active && st.pickerChipActive]}
-                  activeOpacity={0.7}
-                >
-                  <Text style={[st.pickerChipTxt, active && st.pickerChipTxtActive]}>
-                    {opt.label}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
+          <Controller
+            control={control}
+            name="religiousPref"
+            render={({ field }) => (
+              <View className="flex-row flex-wrap gap-2">
+                {RELIGIOUS_PREFS.map((opt) => {
+                  const active = field.value === opt.value;
+                  return (
+                    <Pressable
+                      key={String(opt.value)}
+                      onPress={() => field.onChange(opt.value)}
+                      className={cn(
+                        'rounded-[20px] px-3.5 py-2 bg-white border-[1.5px] border-divider',
+                        active && 'bg-purple-pale border-purple'
+                      )}
+                    >
+                      <Text
+                        className={cn(
+                          'text-[14px] text-ink-mid font-medium',
+                          active && 'text-purple'
+                        )}
+                      >
+                        {opt.label}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            )}
+          />
 
           {/* Interests */}
           <SectionLabel label="Interests" />
-          <MultiPickerRow<Interest>
-            options={INTERESTS}
-            values={interests}
-            onChange={setInterests}
+          <Controller
+            control={control}
+            name="interests"
+            render={({ field }) => (
+              <MultiPickerRow<Interest>
+                options={INTERESTS}
+                values={field.value}
+                onChange={field.onChange}
+              />
+            )}
           />
 
-          <View style={st.bottomBtn}>
-            <PurpleButton label="Save Changes" onPress={handleSave} loading={saving} />
+          <View className="mt-8">
+            <PurpleButton label="Save Changes" onPress={handleSave} loading={isSubmitting} />
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -355,65 +370,22 @@ export default function EditProfileScreen() {
   );
 }
 
-const st = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.canvas },
-  flex1: { flex: 1 },
-  content: { padding: 20, paddingBottom: 48 },
-  saveBtn: { fontSize: 15, fontWeight: '600', color: colors.purple },
-  saveBtnDim: { opacity: 0.4 },
-  errorBanner: {
-    backgroundColor: '#FEE2E2',
-    borderRadius: 10,
-    padding: 12,
-    marginBottom: 16,
-  },
-  errorTxt: { color: '#B91C1C', fontSize: 13, fontWeight: '500' },
-  sectionLabel: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: colors.inkDim,
-    textTransform: 'uppercase',
-    letterSpacing: 0.6,
-    marginTop: 20,
-    marginBottom: 10,
-  },
-  input: {
-    backgroundColor: colors.white,
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    fontSize: 15,
-    color: colors.ink,
-  },
-  bioInput: { minHeight: 100, textAlignVertical: 'top', lineHeight: 22 },
-  charCount: { fontSize: 12, color: colors.inkGhost, textAlign: 'right', marginTop: 4 },
-  ageRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  ageField: { flex: 1 },
-  ageFieldLabel: { fontSize: 12, color: colors.inkMid, marginBottom: 6 },
-  ageInput: {
-    backgroundColor: colors.white,
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    fontSize: 16,
-    color: colors.ink,
-    textAlign: 'center',
-  },
-  ageDash: { fontSize: 20, color: colors.inkGhost, marginTop: 20 },
-  pickerGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  pickerChip: {
-    borderRadius: 20,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    backgroundColor: colors.white,
-    borderWidth: 1.5,
-    borderColor: colors.divider,
-  },
-  pickerChipActive: {
-    backgroundColor: colors.purplePale,
-    borderColor: colors.purple,
-  },
-  pickerChipTxt: { fontSize: 14, color: colors.inkMid, fontWeight: '500' },
-  pickerChipTxtActive: { color: colors.purple },
-  bottomBtn: { marginTop: 32 },
-});
+// ── Orchestrator ──────────────────────────────────────────────────────────────
+
+export default function EditProfileScreen() {
+  const router = useRouter();
+  const { session } = useAuth();
+  const { data, refresh } = useOwnProfile();
+
+  if (!data) {
+    return (
+      <SafeAreaView className="flex-1 bg-canvas" edges={['top', 'bottom']}>
+        <NavHeader back title="Edit Profile" onBack={() => router.back()} />
+      </SafeAreaView>
+    );
+  }
+
+  return (
+    <EditProfileForm data={data} refresh={refresh} userId={session!.user.id} router={router} />
+  );
+}

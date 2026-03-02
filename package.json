@@ -1,5 +1,5 @@
 {
-  "name": "wingmate",
+  "name": "hane",
   "main": "expo-router/entry",
   "version": "1.0.6",
   "scripts": {
@@ -25,7 +25,9 @@
     "build:local": "EAS_BUILD_NO_EXPO_GO_WARNING=true eas build --platform ios --profile production --local --output builds/app.ipa",
     "build:dev-sim": "EAS_BUILD_NO_EXPO_GO_WARNING=true eas build --platform ios --profile development-simulator --local --output builds/dev-sim.app",
     "build:device": "expo run:ios --device",
-    "submit:local": "eas submit --platform ios --profile production --path builds/app.ipa"
+    "submit:local": "eas submit --platform ios --profile production --path builds/app.ipa",
+    "seed:prod": "npx tsx --env-file .env.local scripts/seed-prod.ts",
+    "prepare": "husky"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
@@ -70,6 +72,7 @@
     "react-native-url-polyfill": "^3.0.0",
     "react-native-web": "~0.21.0",
     "react-native-worklets": "0.5.1",
+    "sonner-native": "^0.23.1",
     "tailwind-merge": "^3.5.0",
     "tailwindcss": "^4.2.1"
   },
@@ -77,9 +80,18 @@
     "@types/react": "~19.1.0",
     "eslint": "^9.25.0",
     "eslint-config-expo": "~10.0.0",
+    "husky": "^9.1.7",
     "jsonwebtoken": "^9.0.3",
+    "lint-staged": "^16.3.1",
     "prettier": "^3.8.1",
     "typescript": "~5.9.2"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "eslint --fix --no-warn-ignored",
+      "prettier --write"
+    ],
+    "*.{js,json,md,css}": "prettier --write"
   },
   "private": true,
   "overrides": {

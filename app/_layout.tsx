@@ -5,6 +5,7 @@ import { Stack, router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { ActivityIndicator, View } from 'react-native';
 import 'react-native-reanimated';
+import { Toaster } from 'sonner-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useEffect } from 'react';
 
@@ -19,34 +20,34 @@ export const unstable_settings = {
 function RootNavigator() {
   const colorScheme = useColorScheme();
   const { session, loading } = useAuth();
-  const { profile, loadingProfile } = useProfile();
+  const { profile } = useProfile();
 
-  // After successful login + profile load, check for a pending deep-link invite
+  // After successful login, check for a pending deep-link invite.
+  // ProfileProvider Suspense guarantees profile is loaded before RootNavigator renders.
   useEffect(() => {
-    if (!session || loadingProfile) return;
+    if (!session) return;
     AsyncStorage.getItem('pending_invite').then((val) => {
       if (val) {
         AsyncStorage.removeItem('pending_invite');
-         
+
         router.replace('/(tabs)/profile/wingpeople/' as any);
       }
     });
-  }, [session, loadingProfile]);
+  }, [session]);
 
   useEffect(() => {
     if (loading) return;
-    if (session && loadingProfile) return;
 
     let redirect: string;
     if (!session) redirect = '/(auth)/login';
-    else if (!profile?.chosen_name) redirect = '/(onboarding)/role';
+    else if (!profile?.chosen_name) redirect = '/(onboarding)';
     else if (profile.role === 'winger') redirect = '/(tabs)/profile';
     else redirect = '/(tabs)/discover';
 
     router.replace(redirect as any);
-  }, [loading, session, loadingProfile, profile]);
+  }, [loading, session, profile]);
 
-  if (loading || (session && loadingProfile)) {
+  if (loading) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <ActivityIndicator />
@@ -62,6 +63,7 @@ function RootNavigator() {
         <Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
         <Stack.Screen name="invite" options={{ headerShown: false }} />
       </Stack>
+      <Toaster position="bottom-center" richColors />
       <StatusBar style="auto" />
     </ThemeProvider>
   );

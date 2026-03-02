@@ -1,11 +1,26 @@
-import { ActivityIndicator, Dimensions, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Dimensions,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import * as ImageManipulator from 'expo-image-manipulator';
+import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import { useState } from 'react';
 
 import { colors } from '@/constants/theme';
 import type { OwnDatingProfile } from '@/queries/profiles';
-import { approvePhoto, rejectPhoto, uploadPhoto, insertPhoto, getPhotoUrl, reorderPhotos } from '@/queries/photos';
+import {
+  approvePhoto,
+  rejectPhoto,
+  uploadPhoto,
+  insertPhoto,
+  getPhotoUrl,
+  reorderPhotos,
+} from '@/queries/photos';
 
 import { PhotoRect } from '@/components/ui/PhotoRect';
 import { IconSymbol } from '@/components/ui/icon-symbol';
@@ -16,18 +31,14 @@ const PHOTO_COL = (Dimensions.get('window').width - 20 * 2 - 8) / 2;
 interface Props extends OptimisticHandlers {
   data: OwnDatingProfile;
   userId: string;
-  onRefresh: () => void;
+  onRefresh: () => Promise<void>;
 }
 
 export function PhotosTab({ data, userId, onOptimistic, onRollback, onError, onRefresh }: Props) {
   const [uploading, setUploading] = useState(false);
 
-  const selfPhotos = data.photos.filter(
-    (p) => p.suggester_id === null && p.approved_at !== null
-  );
-  const pending = data.photos.filter(
-    (p) => p.suggester_id !== null && p.approved_at === null
-  );
+  const selfPhotos = data.photos.filter((p) => p.suggester_id === null && p.approved_at !== null);
+  const pending = data.photos.filter((p) => p.suggester_id !== null && p.approved_at === null);
 
   const handleApprove = async (photoId: string) => {
     const prev = data.photos;
@@ -87,20 +98,17 @@ export function PhotosTab({ data, userId, onOptimistic, onRollback, onError, onR
 
     setUploading(true);
     try {
-      const { uri } = result.assets[0];
-      const compressed = await ImageManipulator.manipulateAsync(
-        uri,
-        [{ resize: { width: 1200 } }],
-        { compress: 0.8, format: ImageManipulator.SaveFormat.JPEG }
-      );
-      const res = await fetch(compressed.uri);
-      const blob = await res.blob();
+      const asset = result.assets[0];
+      const ctx = ImageManipulator.manipulate(asset.uri);
+      ctx.resize({ width: 1200 });
+      const imageRef = await ctx.renderAsync();
+      const saved = await imageRef.saveAsync({ compress: 0.8, format: SaveFormat.JPEG });
       const filename = `${Date.now()}.jpg`;
-      const { path, error: upErr } = await uploadPhoto(userId, blob, filename);
+      const { path, error: upErr } = await uploadPhoto(userId, saved.uri, filename);
       if (upErr) throw upErr;
       const { error: insErr } = await insertPhoto(data.id, path, selfPhotos.length, null);
       if (insErr) throw insErr;
-      onRefresh();
+      await onRefresh();
     } catch {
       onError('Failed to upload photo. Please try again.');
     } finally {
@@ -114,7 +122,6 @@ export function PhotosTab({ data, userId, onOptimistic, onRollback, onError, onR
         <>
           <Text style={st.sectionLabel}>Suggested by Wingpeople</Text>
           {pending.map((photo) => {
-             
             const suggesterName = (photo as any).suggester?.chosen_name ?? 'your wingperson';
             return (
               <View key={photo.id} style={st.pendingCard}>

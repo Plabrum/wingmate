@@ -1,55 +1,34 @@
-import { useEffect, useRef, useState } from 'react';
-import { getDiscoverPool, type DiscoverCard } from '@/queries/discover';
+import { useRef, useState } from 'react';
+import { type DiscoverCard } from '@/queries/discover';
 import {
   recordDecision,
   actOnSuggestion as actOnSuggestionQuery,
   checkMutualMatch,
 } from '@/queries/decisions';
-import { useAuth } from '@/context/auth';
 
 const PAGE_SIZE = 20;
 
-export function useDiscover(filterWingerId: string | null) {
-  const { session } = useAuth();
-  const userId = session?.user.id ?? null;
+export type PoolFetcher = (
+  userId: string,
+  pageSize: number,
+  offset: number
+) => Promise<{ data: DiscoverCard[] | null; error: Error | null }>;
 
-  const [pool, setPool] = useState<DiscoverCard[]>([]);
+export function useDiscover(
+  fetchPool: PoolFetcher,
+  userId: string | null,
+  initialPool: DiscoverCard[]
+) {
+  const [pool, setPool] = useState(initialPool);
   const [index, setIndex] = useState(0);
-  const [loading, setLoading] = useState(false);
 
-  const offsetRef = useRef(0);
+  const offsetRef = useRef(initialPool.length);
   const loadingMoreRef = useRef(false);
-
-  // Reset and fetch initial pool whenever filterWingerId (or user) changes
-  useEffect(() => {
-    if (!userId) return;
-
-    setPool([]);
-    setIndex(0);
-    offsetRef.current = 0;
-    setLoading(true);
-
-    getDiscoverPool(userId, filterWingerId, PAGE_SIZE, 0).then(({ data }) => {
-      const cards = data ?? [];
-      setPool(cards);
-      offsetRef.current = cards.length;
-      setLoading(false);
-    });
-  }, [userId, filterWingerId]);
-
-  // Prefetch next page when approaching the end of the pool
-  useEffect(() => {
-    if (pool.length === 0) return;
-    if (index >= pool.length - 3) {
-      loadMore();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [index, pool.length]);
 
   async function loadMore() {
     if (!userId || loadingMoreRef.current) return;
     loadingMoreRef.current = true;
-    const { data } = await getDiscoverPool(userId, filterWingerId, PAGE_SIZE, offsetRef.current);
+    const { data } = await fetchPool(userId, PAGE_SIZE, offsetRef.current);
     if (data && data.length > 0) {
       setPool((prev) => [...prev, ...data]);
       offsetRef.current += data.length;
@@ -62,8 +41,10 @@ export function useDiscover(filterWingerId: string | null) {
     const card = pool[index];
     if (!card) return 'error';
 
-    // Optimistic advance
-    setIndex((prev) => prev + 1);
+    // Optimistic advance; trigger prefetch when nearing the end
+    const newIndex = index + 1;
+    setIndex(newIndex);
+    if (newIndex >= pool.length - 3) loadMore();
 
     let error: unknown;
     if (card.suggested_by) {
@@ -89,8 +70,10 @@ export function useDiscover(filterWingerId: string | null) {
     const card = pool[index];
     if (!card) return;
 
-    // Optimistic advance
-    setIndex((prev) => prev + 1);
+    // Optimistic advance; trigger prefetch when nearing the end
+    const newIndex = index + 1;
+    setIndex(newIndex);
+    if (newIndex >= pool.length - 3) loadMore();
 
     if (card.suggested_by) {
       await actOnSuggestionQuery(userId, card.profile_id, 'declined');
@@ -104,5 +87,5 @@ export function useDiscover(filterWingerId: string | null) {
     return pass();
   }
 
-  return { pool, index, loading, like, pass, actOnSuggestion };
+  return { pool, index, like, pass, actOnSuggestion };
 }

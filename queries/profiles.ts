@@ -10,11 +10,7 @@ type ProfileRow = Database['public']['Tables']['profiles']['Row'];
  * Used by ProfileContext on mount and after onboarding steps.
  */
 export function getOwnProfile(userId: string) {
-  return supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', userId)
-    .single();
+  return supabase.from('profiles').select('*').eq('id', userId).single();
 }
 
 /**
@@ -47,9 +43,29 @@ export function getOwnDatingProfile(userId: string) {
     .maybeSingle();
 }
 
-export type OwnDatingProfile = NonNullable<
-  Awaited<ReturnType<typeof getOwnDatingProfile>>['data']
->;
+export type OwnDatingProfile = NonNullable<Awaited<ReturnType<typeof getOwnDatingProfile>>['data']>;
+
+// ── Context helpers ───────────────────────────────────────────────────────────
+
+/** Fetch a dater's name + interests for the Wing Mode swipe screen. */
+export function getDaterContext(daterId: string) {
+  return supabase
+    .from('profiles')
+    .select('chosen_name, dating_profiles(interests)')
+    .eq('id', daterId)
+    .single();
+}
+
+export type ProfileData = {
+  profile: ProfileRow | null;
+  datingProfile: OwnDatingProfile | null;
+};
+
+/** Combined fetch used by ProfileProvider to load own profile + dating profile in parallel. */
+export async function getProfileData(userId: string): Promise<ProfileData> {
+  const [p, d] = await Promise.all([getOwnProfile(userId), getOwnDatingProfile(userId)]);
+  return { profile: p.data ?? null, datingProfile: d.data ?? null };
+}
 
 // ── Onboarding writes ─────────────────────────────────────────────────────────
 
@@ -77,8 +93,11 @@ export function createDatingProfile(data: {
   interests: string[];
   dating_status?: string;
 }) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return supabase.from('dating_profiles').insert(data as any).select().single();
+  return supabase
+    .from('dating_profiles')
+    .insert(data as any)
+    .select()
+    .single();
 }
 
 // ── Profile edits ─────────────────────────────────────────────────────────────
@@ -99,6 +118,8 @@ export function updateDatingProfile(
     is_active?: boolean;
   }
 ) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return supabase.from('dating_profiles').update(data as any).eq('user_id', userId);
+  return supabase
+    .from('dating_profiles')
+    .update(data as any)
+    .eq('user_id', userId);
 }

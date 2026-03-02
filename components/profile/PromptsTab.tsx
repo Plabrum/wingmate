@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, StyleSheet } from 'react-native';
 
 import { colors } from '@/constants/theme';
 import type { OwnDatingProfile } from '@/queries/profiles';
@@ -11,6 +11,7 @@ import {
 
 import { FaceAvatar } from '@/components/ui/FaceAvatar';
 import { IconSymbol } from '@/components/ui/icon-symbol';
+import { ScrollView, Text, View, Pressable } from '@/lib/tw';
 import { AddPromptModal } from './AddPromptModal';
 import { getInitials, type OptimisticHandlers } from './profile-helpers';
 
@@ -28,7 +29,8 @@ export function PromptsTab({ data, onOptimistic, onRollback, onError, onRefresh 
   const toggle = (id: string) =>
     setExpanded((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id); else next.add(id);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
       return next;
     });
 
@@ -59,9 +61,7 @@ export function PromptsTab({ data, onOptimistic, onRollback, onError, onRefresh 
     const prev = data.prompts;
     onOptimistic({
       prompts: data.prompts.map((p) =>
-        p.id === promptId
-          ? { ...p, responses: p.responses.filter((r) => r.id !== responseId) }
-          : p
+        p.id === promptId ? { ...p, responses: p.responses.filter((r) => r.id !== responseId) } : p
       ),
     });
     try {
@@ -86,11 +86,13 @@ export function PromptsTab({ data, onOptimistic, onRollback, onError, onRefresh 
   };
 
   return (
-    <ScrollView contentContainerStyle={st.content} showsVerticalScrollIndicator={false}>
+    <ScrollView contentContainerClassName="p-5 pb-12" showsVerticalScrollIndicator={false}>
       {data.prompts.length === 0 && (
-        <View style={st.emptyBox}>
-          <Text style={st.emptyTitle}>No prompts yet.</Text>
-          <Text style={st.emptySub}>Add one to give people something to connect with.</Text>
+        <View className="bg-white rounded-14 p-7 items-center mb-[14px]">
+          <Text className="text-15 font-semibold text-ink">No prompts yet.</Text>
+          <Text className="text-13 text-ink-mid mt-1.5 text-center">
+            Add one to give people something to connect with.
+          </Text>
         </View>
       )}
 
@@ -100,19 +102,25 @@ export function PromptsTab({ data, onOptimistic, onRollback, onError, onRefresh 
         const isExpanded = expanded.has(prompt.id);
 
         return (
-          <View key={prompt.id} style={st.card}>
-            <Text style={st.question}>{prompt.template.question}</Text>
-            <Text style={st.answer}>{prompt.answer}</Text>
+          <View key={prompt.id} className="bg-white rounded-14 p-4 mb-[14px]">
+            <Text className="text-13 font-semibold text-purple mb-1.5">
+              {prompt.template.question}
+            </Text>
+            <Text className="text-16 text-ink leading-[22px] font-serif">{prompt.answer}</Text>
 
             {/* Approved wing comments */}
             {approvedR.map((r) => (
-              <View key={r.id} style={st.approvedRow}>
-                { }
+              <View
+                key={r.id}
+                className="flex-row gap-2.5 mt-[14px] pt-3"
+                style={{ borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.divider }}
+              >
                 <FaceAvatar initials={getInitials((r as any).author?.chosen_name)} size={28} />
-                <View style={st.flex1}>
-                  { }
-                  <Text style={st.commentAuthor}>{(r as any).author?.chosen_name ?? 'Wingperson'}</Text>
-                  <Text style={st.commentText}>{r.message}</Text>
+                <View className="flex-1">
+                  <Text className="text-12 font-semibold text-ink-mid mb-[3px]">
+                    {(r as any).author?.chosen_name ?? 'Wingperson'}
+                  </Text>
+                  <Text className="text-14 text-ink leading-5">{r.message}</Text>
                 </View>
               </View>
             ))}
@@ -120,11 +128,15 @@ export function PromptsTab({ data, onOptimistic, onRollback, onError, onRefresh 
             {/* Pending responses */}
             {pendingR.length > 0 && (
               <>
-                <TouchableOpacity
-                  style={st.pendingToggle}
+                <Pressable
+                  className="flex-row items-center gap-1.5 mt-[14px] pt-3"
+                  style={{
+                    borderTopWidth: StyleSheet.hairlineWidth,
+                    borderTopColor: colors.divider,
+                  }}
                   onPress={() => toggle(prompt.id)}
                 >
-                  <Text style={st.pendingToggleTxt}>
+                  <Text className="flex-1 text-13 font-semibold text-purple">
                     {pendingR.length} wingperson comment{pendingR.length > 1 ? 's' : ''} waiting
                   </Text>
                   <IconSymbol
@@ -132,27 +144,29 @@ export function PromptsTab({ data, onOptimistic, onRollback, onError, onRefresh 
                     size={13}
                     color={colors.purple}
                   />
-                </TouchableOpacity>
+                </Pressable>
                 {isExpanded &&
                   pendingR.map((r) => (
-                    <View key={r.id} style={st.pendingResponseRow}>
-                      { }
-                      <FaceAvatar initials={getInitials((r as any).author?.chosen_name)} size={28} />
-                      <View style={st.flex1}>
-                        <Text style={st.commentText}>{r.message}</Text>
-                        <View style={st.responseActions}>
-                          <TouchableOpacity
-                            style={[st.respBtn, st.approveRespBtn]}
+                    <View key={r.id} className="flex-row gap-2.5 mt-3">
+                      <FaceAvatar
+                        initials={getInitials((r as any).author?.chosen_name)}
+                        size={28}
+                      />
+                      <View className="flex-1">
+                        <Text className="text-14 text-ink leading-5">{r.message}</Text>
+                        <View className="flex-row gap-2 mt-2">
+                          <Pressable
+                            className="px-3 py-1.5 rounded-lg bg-purple"
                             onPress={() => handleApproveResponse(prompt.id, r.id)}
                           >
-                            <Text style={st.approveRespTxt}>Approve</Text>
-                          </TouchableOpacity>
-                          <TouchableOpacity
-                            style={[st.respBtn, st.rejectRespBtn]}
+                            <Text className="text-white text-13 font-semibold">Approve</Text>
+                          </Pressable>
+                          <Pressable
+                            className="px-3 py-1.5 rounded-lg bg-muted"
                             onPress={() => handleRejectResponse(prompt.id, r.id)}
                           >
-                            <Text style={st.rejectRespTxt}>Reject</Text>
-                          </TouchableOpacity>
+                            <Text className="text-ink text-13 font-semibold">Reject</Text>
+                          </Pressable>
                         </View>
                       </View>
                     </View>
@@ -161,8 +175,9 @@ export function PromptsTab({ data, onOptimistic, onRollback, onError, onRefresh 
             )}
 
             {/* Delete prompt */}
-            <TouchableOpacity
-              style={st.deleteRow}
+            <Pressable
+              className="mt-[14px] pt-3"
+              style={{ borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.divider }}
               onPress={() =>
                 Alert.alert('Remove prompt?', 'This cannot be undone.', [
                   { text: 'Cancel', style: 'cancel' },
@@ -174,16 +189,20 @@ export function PromptsTab({ data, onOptimistic, onRollback, onError, onRefresh 
                 ])
               }
             >
-              <Text style={st.deleteTxt}>Remove prompt</Text>
-            </TouchableOpacity>
+              <Text className="text-13 text-[#EF4444] font-medium">Remove prompt</Text>
+            </Pressable>
           </View>
         );
       })}
 
-      <TouchableOpacity style={st.addBtn} onPress={() => setModalVisible(true)} activeOpacity={0.75}>
+      <Pressable
+        className="flex-row items-center justify-center gap-2 rounded-14 py-[14px] min-h-[52px]"
+        style={{ borderWidth: 1.5, borderColor: colors.purple, borderStyle: 'dashed' }}
+        onPress={() => setModalVisible(true)}
+      >
         <IconSymbol name="plus" size={18} color={colors.purple} />
-        <Text style={st.addBtnTxt}>Add Prompt</Text>
-      </TouchableOpacity>
+        <Text className="text-15 font-semibold text-purple">Add Prompt</Text>
+      </Pressable>
 
       <AddPromptModal
         visible={modalVisible}
@@ -195,67 +214,3 @@ export function PromptsTab({ data, onOptimistic, onRollback, onError, onRefresh 
     </ScrollView>
   );
 }
-
-const st = StyleSheet.create({
-  content: { padding: 20, paddingBottom: 48 },
-  flex1: { flex: 1 },
-  emptyBox: {
-    backgroundColor: colors.white,
-    borderRadius: 14,
-    padding: 28,
-    alignItems: 'center',
-    marginBottom: 14,
-  },
-  emptyTitle: { fontSize: 15, fontWeight: '600', color: colors.ink },
-  emptySub: { fontSize: 13, color: colors.inkMid, marginTop: 6, textAlign: 'center' },
-  card: { backgroundColor: colors.white, borderRadius: 14, padding: 16, marginBottom: 14 },
-  question: { fontSize: 13, fontWeight: '600', color: colors.purple, marginBottom: 6 },
-  answer: { fontSize: 16, color: colors.ink, lineHeight: 22, fontFamily: 'Georgia' },
-  approvedRow: {
-    flexDirection: 'row',
-    gap: 10,
-    marginTop: 14,
-    paddingTop: 12,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: colors.divider,
-  },
-  commentAuthor: { fontSize: 12, fontWeight: '600', color: colors.inkMid, marginBottom: 3 },
-  commentText: { fontSize: 14, color: colors.ink, lineHeight: 20 },
-  pendingToggle: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginTop: 14,
-    paddingTop: 12,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: colors.divider,
-  },
-  pendingToggleTxt: { flex: 1, fontSize: 13, fontWeight: '600', color: colors.purple },
-  pendingResponseRow: { flexDirection: 'row', gap: 10, marginTop: 12 },
-  responseActions: { flexDirection: 'row', gap: 8, marginTop: 8 },
-  respBtn: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 },
-  approveRespBtn: { backgroundColor: colors.purple },
-  approveRespTxt: { color: colors.white, fontSize: 13, fontWeight: '600' },
-  rejectRespBtn: { backgroundColor: colors.muted },
-  rejectRespTxt: { color: colors.ink, fontSize: 13, fontWeight: '600' },
-  deleteRow: {
-    marginTop: 14,
-    paddingTop: 12,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: colors.divider,
-  },
-  deleteTxt: { fontSize: 13, color: '#EF4444', fontWeight: '500' },
-  addBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    borderWidth: 1.5,
-    borderColor: colors.purple,
-    borderStyle: 'dashed',
-    borderRadius: 14,
-    paddingVertical: 14,
-    minHeight: 52,
-  },
-  addBtnTxt: { fontSize: 15, fontWeight: '600', color: colors.purple },
-});
