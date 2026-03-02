@@ -1,19 +1,11 @@
 import { Controller, useForm } from 'react-hook-form';
 import { toast } from 'sonner-native';
-import {
-  StyleSheet,
-  TextInput,
-  TouchableOpacity,
-  ScrollView,
-  KeyboardAvoidingView,
-  Platform,
-  ActivityIndicator,
-} from 'react-native';
-import { View, Text } from '@/lib/tw';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { colors, Fonts } from '@/constants/theme';
+import { KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
+import { View, Text, SafeAreaView, TextInput, ScrollView, Pressable } from '@/lib/tw';
 import DateInput from '@/components/ui/DateInput';
 import { GENDERS, CITIES } from '@/constants/enums';
+import { colors } from '@/constants/theme';
+import { cn } from '@/lib/cn';
 import type { Database } from '@/types/database';
 
 type Role = Database['public']['Enums']['user_role'];
@@ -76,26 +68,33 @@ export default function ProfileStep({ role, defaultPhoneNumber, onNext }: Props)
   });
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView className="flex-1 bg-canvas">
       <KeyboardAvoidingView
-        style={styles.flex}
+        style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView
-          style={styles.scroll}
-          contentContainerStyle={styles.scrollContent}
+          className="flex-1"
+          contentContainerClassName="p-6 pb-12"
           keyboardShouldPersistTaps="handled"
         >
-          <Text style={styles.title}>Tell us about yourself</Text>
+          <Text className="font-serif text-28 font-semibold text-ink mb-7">
+            Tell us about yourself
+          </Text>
 
-          <Text style={styles.label}>Your name</Text>
+          <Text className="text-13 font-semibold text-ink-mid uppercase tracking-[0.5px] mb-2 mt-5">
+            Your name
+          </Text>
           <Controller
             control={control}
             name="chosenName"
             rules={{ required: true }}
             render={({ field: { onChange, value } }) => (
               <TextInput
-                style={[styles.input, errors.chosenName && styles.inputError]}
+                className={cn(
+                  'bg-white rounded-[12px] border-[1.5px] border-divider px-4 py-[14px] text-16 text-ink',
+                  errors.chosenName && 'border-[#EF4444]'
+                )}
                 placeholder="First name or nickname"
                 placeholderTextColor={colors.inkGhost}
                 value={value}
@@ -106,7 +105,9 @@ export default function ProfileStep({ role, defaultPhoneNumber, onNext }: Props)
             )}
           />
 
-          <Text style={styles.label}>Date of birth</Text>
+          <Text className="text-13 font-semibold text-ink-mid uppercase tracking-[0.5px] mb-2 mt-5">
+            Date of birth
+          </Text>
           <Controller
             control={control}
             name="dateOfBirth"
@@ -116,35 +117,47 @@ export default function ProfileStep({ role, defaultPhoneNumber, onNext }: Props)
             )}
           />
 
-          <Text style={styles.label}>Gender</Text>
+          <Text className="text-13 font-semibold text-ink-mid uppercase tracking-[0.5px] mb-2 mt-5">
+            Gender
+          </Text>
           <Controller
             control={control}
             name="gender"
             rules={{ required: true }}
             render={({ field: { onChange, value } }) => (
-              <View style={styles.chips}>
+              <View className="flex-row flex-wrap gap-2">
                 {GENDERS.map((g) => (
-                  <TouchableOpacity
+                  <Pressable
                     key={g}
-                    style={[styles.chip, value === g && styles.chipSelected]}
+                    className={cn(
+                      'px-4 py-[10px] rounded-[24px] border-[1.5px] border-divider bg-white',
+                      value === g && 'border-purple bg-purple-pale'
+                    )}
                     onPress={() => onChange(g)}
                   >
-                    <Text style={[styles.chipText, value === g && styles.chipTextSelected]}>
+                    <Text
+                      className={cn(
+                        'text-15 text-ink-mid font-medium',
+                        value === g && 'text-purple'
+                      )}
+                    >
                       {g}
                     </Text>
-                  </TouchableOpacity>
+                  </Pressable>
                 ))}
               </View>
             )}
           />
 
-          <Text style={styles.label}>Phone number</Text>
+          <Text className="text-13 font-semibold text-ink-mid uppercase tracking-[0.5px] mb-2 mt-5">
+            Phone number
+          </Text>
           <Controller
             control={control}
             name="phoneNumber"
             render={({ field: { onChange, value } }) => (
               <TextInput
-                style={styles.input}
+                className="bg-white rounded-[12px] border-[1.5px] border-divider px-4 py-[14px] text-16 text-ink"
                 placeholder="+44 7700 000000"
                 placeholderTextColor={colors.inkGhost}
                 value={value}
@@ -156,35 +169,47 @@ export default function ProfileStep({ role, defaultPhoneNumber, onNext }: Props)
 
           {isDater && (
             <>
-              <Text style={styles.label}>City</Text>
+              <Text className="text-13 font-semibold text-ink-mid uppercase tracking-[0.5px] mb-2 mt-5">
+                City
+              </Text>
               <Controller
                 control={control}
                 name="city"
                 rules={{ required: isDater }}
                 render={({ field: { onChange, value } }) => (
-                  <View style={styles.chips}>
+                  <View className="flex-row flex-wrap gap-2">
                     {CITIES.map((c) => (
-                      <TouchableOpacity
+                      <Pressable
                         key={c}
-                        style={[styles.chip, value === c && styles.chipSelected]}
+                        className={cn(
+                          'px-4 py-[10px] rounded-[24px] border-[1.5px] border-divider bg-white',
+                          value === c && 'border-purple bg-purple-pale'
+                        )}
                         onPress={() => onChange(c)}
                       >
-                        <Text style={[styles.chipText, value === c && styles.chipTextSelected]}>
+                        <Text
+                          className={cn(
+                            'text-15 text-ink-mid font-medium',
+                            value === c && 'text-purple'
+                          )}
+                        >
                           {c}
                         </Text>
-                      </TouchableOpacity>
+                      </Pressable>
                     ))}
                   </View>
                 )}
               />
 
-              <Text style={styles.label}>Bio (optional)</Text>
+              <Text className="text-13 font-semibold text-ink-mid uppercase tracking-[0.5px] mb-2 mt-5">
+                Bio (optional)
+              </Text>
               <Controller
                 control={control}
                 name="bio"
                 render={({ field: { onChange, value } }) => (
                   <TextInput
-                    style={[styles.input, styles.bioInput]}
+                    className="bg-white rounded-[12px] border-[1.5px] border-divider px-4 pt-[14px] text-16 text-ink h-[100px]"
                     placeholder="A little about you (optional)"
                     placeholderTextColor={colors.inkGhost}
                     value={value}
@@ -198,76 +223,22 @@ export default function ProfileStep({ role, defaultPhoneNumber, onNext }: Props)
             </>
           )}
 
-          <TouchableOpacity
-            style={[styles.button, (!isValid || isSubmitting) && styles.buttonDisabled]}
+          <Pressable
+            className={cn(
+              'bg-purple rounded-14 py-4 items-center mt-8',
+              (!isValid || isSubmitting) && 'opacity-40'
+            )}
             onPress={onSubmit}
             disabled={!isValid || isSubmitting}
           >
             {isSubmitting ? (
               <ActivityIndicator color={colors.white} />
             ) : (
-              <Text style={styles.buttonText}>Continue</Text>
+              <Text className="text-white text-17 font-semibold">Continue</Text>
             )}
-          </TouchableOpacity>
+          </Pressable>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  flex: { flex: 1 },
-  safe: { flex: 1, backgroundColor: colors.canvas },
-  scroll: { flex: 1 },
-  scrollContent: { padding: 24, paddingBottom: 48 },
-  title: {
-    fontFamily: Fonts?.serif ?? 'serif',
-    fontSize: 28,
-    fontWeight: '600',
-    color: colors.ink,
-    lineHeight: 36,
-    marginBottom: 28,
-  },
-  label: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: colors.inkMid,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: 8,
-    marginTop: 20,
-  },
-  input: {
-    backgroundColor: colors.white,
-    borderRadius: 12,
-    borderWidth: 1.5,
-    borderColor: colors.divider,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    fontSize: 16,
-    color: colors.ink,
-  },
-  inputError: { borderColor: '#EF4444' },
-  bioInput: { height: 100, paddingTop: 14 },
-  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  chip: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 24,
-    borderWidth: 1.5,
-    borderColor: colors.divider,
-    backgroundColor: colors.white,
-  },
-  chipSelected: { borderColor: colors.purple, backgroundColor: colors.purplePale },
-  chipText: { fontSize: 15, color: colors.inkMid, fontWeight: '500' },
-  chipTextSelected: { color: colors.purple },
-  button: {
-    backgroundColor: colors.purple,
-    borderRadius: 14,
-    paddingVertical: 16,
-    alignItems: 'center',
-    marginTop: 32,
-  },
-  buttonDisabled: { opacity: 0.4 },
-  buttonText: { color: colors.white, fontSize: 17, fontWeight: '600' },
-});

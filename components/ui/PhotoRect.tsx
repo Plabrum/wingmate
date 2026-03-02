@@ -1,6 +1,5 @@
-import { StyleSheet, View } from 'react-native';
+import { View } from '@/lib/tw';
 import { Image } from 'expo-image';
-import { colors } from '@/constants/theme';
 
 type Props = {
   uri: string | null;
@@ -11,29 +10,18 @@ type Props = {
 
 export function PhotoRect({ uri, ratio = 4 / 5, blur = false, style }: Props) {
   return (
-    <View style={[styles.container, { aspectRatio: ratio }, style]}>
+    <View className="bg-muted overflow-hidden rounded-xl" style={[{ aspectRatio: ratio }, style]}>
       {uri ? (
         <Image
           source={{ uri }}
-          style={StyleSheet.absoluteFill}
+          style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0 }}
           contentFit="cover"
           blurRadius={blur ? 20 : 0}
           transition={200}
         />
       ) : (
-        <View style={[StyleSheet.absoluteFill, styles.placeholder]} />
+        <View className="absolute inset-0 bg-divider" />
       )}
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    backgroundColor: colors.muted,
-    overflow: 'hidden',
-    borderRadius: 12,
-  },
-  placeholder: {
-    backgroundColor: colors.divider,
-  },
-});

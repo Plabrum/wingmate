@@ -1,4 +1,4 @@
-import { Pressable, Text, View } from 'react-native';
+import { View, Text, Pressable } from '@/lib/tw';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -8,22 +8,15 @@ export default function LoginScreen() {
 
   return (
     <View
-      style={{
-        flex: 1,
-        backgroundColor: '#fff',
-        paddingTop: insets.top,
-        paddingBottom: insets.bottom + 24,
-        paddingHorizontal: 24,
-      }}
+      className="flex-1 bg-white px-6"
+      style={{ paddingTop: insets.top, paddingBottom: insets.bottom + 24 }}
     >
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', gap: 12 }}>
-        <Text style={{ fontSize: 42, fontWeight: '800', letterSpacing: -1 }}>Orbit</Text>
-        <Text style={{ fontSize: 16, color: '#666', textAlign: 'center' }}>
-          Your personal aviation companion
-        </Text>
+      <View className="flex-1 justify-center items-center gap-3">
+        <Text className="text-[42px] font-extrabold tracking-[-1px]">Orbit</Text>
+        <Text className="text-16 text-[#666] text-center">Your personal aviation companion</Text>
       </View>
 
-      <View style={{ gap: 12 }}>
+      <View className="gap-3">
         <Pressable
           style={({ pressed }) => ({
             backgroundColor: pressed ? '#1a1a1a' : '#000',
@@ -35,9 +28,7 @@ export default function LoginScreen() {
           })}
           onPress={() => router.push('/(auth)/apple')}
         >
-          <Text style={{ color: '#fff', fontWeight: '600', fontSize: 16 }}>
-            {' \uF8FF '}Continue with Apple
-          </Text>
+          <Text className="text-white font-semibold text-16">{' \uF8FF '}Continue with Apple</Text>
         </Pressable>
 
         <Pressable
@@ -51,10 +42,10 @@ export default function LoginScreen() {
           })}
           onPress={() => router.push('/(auth)/sms')}
         >
-          <Text style={{ color: '#000', fontWeight: '600', fontSize: 16 }}>Continue with SMS</Text>
+          <Text className="text-[#000] font-semibold text-16">Continue with SMS</Text>
         </Pressable>
 
-        <Text style={{ textAlign: 'center', color: '#aaa', fontSize: 12, marginTop: 4 }}>
+        <Text className="text-center text-[#aaa] text-12 mt-1">
           By continuing, you agree to our Terms of Service
         </Text>
       </View>

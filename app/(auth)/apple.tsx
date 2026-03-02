@@ -1,5 +1,6 @@
 import * as AppleAuthentication from 'expo-apple-authentication';
-import { Platform, ScrollView, Text, View } from 'react-native';
+import { Platform } from 'react-native';
+import { ScrollView, Text, View } from '@/lib/tw';
 import { supabase } from '@/lib/supabase';
 
 export default function AppleModal() {
@@ -46,11 +47,11 @@ export default function AppleModal() {
   return (
     <ScrollView
       contentInsetAdjustmentBehavior="automatic"
-      contentContainerStyle={{ flex: 1, padding: 24, justifyContent: 'center', gap: 20 }}
+      contentContainerClassName="flex-1 p-6 justify-center gap-5"
     >
-      <View style={{ alignItems: 'center', gap: 8 }}>
-        <Text style={{ fontSize: 20, fontWeight: '700' }}>Welcome to Orbit</Text>
-        <Text style={{ fontSize: 15, color: '#666', textAlign: 'center' }}>
+      <View className="items-center gap-2">
+        <Text className="text-[20px] font-bold">Welcome to Orbit</Text>
+        <Text className="text-15 text-[#666] text-center">
           Use your Apple ID to securely sign in. No password required.
         </Text>
       </View>
@@ -64,7 +65,7 @@ export default function AppleModal() {
           onPress={handleSignIn}
         />
       ) : (
-        <Text style={{ textAlign: 'center', color: '#999', fontSize: 14 }}>
+        <Text className="text-center text-[#999] text-14">
           Apple Sign In is only available on iOS.
         </Text>
       )}

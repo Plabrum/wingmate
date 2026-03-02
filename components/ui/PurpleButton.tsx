@@ -1,4 +1,6 @@
-import { ActivityIndicator, StyleSheet, Text, TouchableOpacity } from 'react-native';
+import { ActivityIndicator } from 'react-native';
+import { Text, Pressable } from '@/lib/tw';
+import { cn } from '@/lib/cn';
 import { colors } from '@/constants/theme';
 
 type Props = {
@@ -17,54 +19,22 @@ export function PurpleButton({
   loading = false,
 }: Props) {
   return (
-    <TouchableOpacity
+    <Pressable
       onPress={onPress}
       disabled={disabled || loading}
-      style={[
-        styles.btn,
-        outline ? styles.outline : styles.solid,
-        (disabled || loading) && styles.dimmed,
-      ]}
-      activeOpacity={0.75}
+      className={cn(
+        'rounded-14 py-[15px] px-6 items-center justify-center',
+        outline ? 'bg-transparent border-[1.5px] border-purple' : 'bg-purple',
+        (disabled || loading) && 'opacity-50'
+      )}
     >
       {loading ? (
-        <ActivityIndicator color={outline ? colors.purple : colors.white} size="small" />
+        <ActivityIndicator color={outline ? colors.purple : 'white'} size="small" />
       ) : (
-        <Text style={[styles.label, outline ? styles.outlineText : styles.solidText]}>
+        <Text className={cn('text-16 font-semibold', outline ? 'text-purple' : 'text-white')}>
           {label}
         </Text>
       )}
-    </TouchableOpacity>
+    </Pressable>
   );
 }
-
-const styles = StyleSheet.create({
-  btn: {
-    borderRadius: 14,
-    paddingVertical: 15,
-    paddingHorizontal: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  solid: {
-    backgroundColor: colors.purple,
-  },
-  outline: {
-    backgroundColor: 'transparent',
-    borderWidth: 1.5,
-    borderColor: colors.purple,
-  },
-  dimmed: {
-    opacity: 0.5,
-  },
-  label: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  solidText: {
-    color: colors.white,
-  },
-  outlineText: {
-    color: colors.purple,
-  },
-});

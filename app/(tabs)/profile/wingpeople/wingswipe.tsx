@@ -1,21 +1,12 @@
 import { useCallback, useState } from 'react';
-import {
-  KeyboardAvoidingView,
-  Modal,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { KeyboardAvoidingView, Modal, Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 
 import { colors } from '@/constants/theme';
 import { useAuth } from '@/context/auth';
 import { useWingSwipe } from '@/hooks/use-wing-swipe';
+import { View, Text, Pressable, ScrollView, TextInput, SafeAreaView } from '@/lib/tw';
 import { NavHeader } from '@/components/ui/NavHeader';
 import { PhotoRect } from '@/components/ui/PhotoRect';
 import { Pill } from '@/components/ui/Pill';
@@ -31,10 +22,10 @@ const PAGE_SIZE = 20;
 
 function DaterCallout({ name, interests }: { name: string; interests: string[] }) {
   return (
-    <View style={st.callout}>
-      <Text style={st.calloutTitle}>You think {name} would like this?</Text>
+    <View className="bg-purple-pale rounded-xl p-[14px] mb-4 gap-[10px]">
+      <Text className="text-14 font-semibold text-purple">You think {name} would like this?</Text>
       {interests.length > 0 && (
-        <View style={st.calloutPills}>
+        <View className="flex-row flex-wrap gap-2">
           {interests.map((interest) => (
             <Pill key={interest} label={interest} />
           ))}
@@ -60,22 +51,24 @@ type WingCardViewProps = {
 
 function WingCardView({ card, callout }: WingCardViewProps) {
   return (
-    <ScrollView style={st.cardScroll} showsVerticalScrollIndicator={false}>
+    <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
       <PhotoRect uri={card.first_photo} ratio={4 / 5} />
-      <View style={st.cardBody}>
-        <Text style={st.cardName}>
+      <View className="p-4">
+        <Text className="text-[28px] font-serif text-ink font-bold">
           {card.chosen_name}, {card.age}
         </Text>
-        <Text style={st.cardCity}>{card.city}</Text>
+        <Text className="text-15 text-ink-mid mt-1 mb-3">{card.city}</Text>
         {callout}
         {card.interests.length > 0 && (
-          <View style={st.pills}>
+          <View className="flex-row flex-wrap gap-2 mb-4">
             {card.interests.map((interest) => (
               <Pill key={interest} label={interest} />
             ))}
           </View>
         )}
-        {card.bio != null && <Text style={st.cardBio}>{card.bio}</Text>}
+        {card.bio != null && (
+          <Text className="text-15 text-ink-mid leading-[22px]">{card.bio}</Text>
+        )}
       </View>
     </ScrollView>
   );
@@ -102,20 +95,23 @@ function NoteModal({
 
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onDismiss}>
-      <View style={st.modalOverlay}>
-        <TouchableOpacity style={st.modalDismiss} activeOpacity={1} onPress={onDismiss} />
+      <View className="flex-1 bg-[rgba(0,0,0,0.45)]">
+        <Pressable className="flex-1" onPress={onDismiss} />
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={st.modalOuter}
+          style={{ position: 'absolute', bottom: 0, left: 0, right: 0 }}
         >
-          <View style={[st.modalSheet, { paddingBottom: insets.bottom + 20 }]}>
-            <View style={st.handle} />
-            <Text style={st.modalTitle}>Add a note?</Text>
-            <Text style={st.modalSub}>
+          <View
+            className="bg-white rounded-tl-[20px] rounded-tr-[20px] px-6 pt-3"
+            style={{ paddingBottom: insets.bottom + 20 }}
+          >
+            <View className="self-center w-9 h-1 rounded-[2px] bg-ink-ghost mb-5" />
+            <Text className="text-18 font-bold text-ink mb-1.5">Add a note?</Text>
+            <Text className="text-14 text-ink-mid leading-5 mb-4">
               Let them know why you think they{"'"}d get along. (Optional)
             </Text>
             <TextInput
-              style={st.noteInput}
+              className="border-[1.5px] border-divider rounded-xl px-4 py-[14px] text-15 text-ink bg-white min-h-[100px]"
               placeholder="She loves hiking and has a great laugh..."
               placeholderTextColor={colors.inkGhost}
               multiline
@@ -124,7 +120,7 @@ function NoteModal({
               onChangeText={setNote}
               textAlignVertical="top"
             />
-            <View style={st.modalActions}>
+            <View className="mt-4 gap-[10px]">
               <PurpleButton label="Skip & Send" onPress={() => handleSend(false)} outline />
               <PurpleButton label="Add Note & Send" onPress={() => handleSend(true)} />
             </View>
@@ -139,8 +135,8 @@ function NoteModal({
 
 function EmptyState({ daterName }: { daterName: string }) {
   return (
-    <View style={st.centered}>
-      <Text style={st.emptyText}>
+    <View className="flex-1 justify-center items-center p-6">
+      <Text className="text-16 text-ink-mid text-center leading-6">
         You{"'"}ve gone through everyone in {daterName}
         {"'"}s area. Check back soon.
       </Text>
@@ -195,7 +191,7 @@ function WingSwipeContent() {
         onBack={() => router.back()}
       />
 
-      <View style={st.feedContainer}>
+      <View className="flex-1">
         {card != null ? (
           <WingCardView
             card={card}
@@ -207,21 +203,33 @@ function WingSwipeContent() {
       </View>
 
       {card != null && (
-        <View style={st.actionRow}>
-          <TouchableOpacity
-            style={[st.actionBtn, st.passBtn]}
+        <View className="flex-row justify-center items-center gap-[40px] py-5 pb-7">
+          <Pressable
+            className="w-16 h-16 rounded-[32px] justify-center items-center bg-white"
+            style={{
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.12,
+              shadowRadius: 6,
+              elevation: 4,
+            }}
             onPress={decline}
-            activeOpacity={0.8}
           >
-            <Text style={st.passBtnText}>✕</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[st.actionBtn, st.likeBtn]}
+            <Text className="text-[24px] text-ink-mid">✕</Text>
+          </Pressable>
+          <Pressable
+            className="w-16 h-16 rounded-[32px] justify-center items-center bg-purple"
+            style={{
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.12,
+              shadowRadius: 6,
+              elevation: 4,
+            }}
             onPress={() => setNoteVisible(true)}
-            activeOpacity={0.8}
           >
-            <Text style={st.likeBtnText}>♥</Text>
-          </TouchableOpacity>
+            <Text className="text-[24px] text-white">♥</Text>
+          </Pressable>
         </View>
       )}
 
@@ -238,155 +246,10 @@ function WingSwipeContent() {
 
 export default function WingSwipeScreen() {
   return (
-    <SafeAreaView style={st.safe} edges={['top']}>
+    <SafeAreaView className="flex-1 bg-canvas" edges={['top']}>
       <ScreenSuspense>
         <WingSwipeContent />
       </ScreenSuspense>
     </SafeAreaView>
   );
 }
-
-// ── Styles ────────────────────────────────────────────────────────────────────
-
-const st = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.canvas },
-  feedContainer: { flex: 1 },
-  centered: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 24,
-  },
-
-  // Card
-  cardScroll: { flex: 1 },
-  cardBody: { padding: 16 },
-  cardName: {
-    fontSize: 28,
-    fontFamily: 'Georgia',
-    color: colors.ink,
-    fontWeight: '700',
-  },
-  cardCity: {
-    fontSize: 15,
-    color: colors.inkMid,
-    marginTop: 4,
-    marginBottom: 12,
-  },
-  pills: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginBottom: 16,
-  },
-  cardBio: {
-    fontSize: 15,
-    color: colors.inkMid,
-    lineHeight: 22,
-  },
-
-  // Dater callout
-  callout: {
-    backgroundColor: colors.purplePale,
-    borderRadius: 12,
-    padding: 14,
-    marginBottom: 16,
-    gap: 10,
-  },
-  calloutTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.purple,
-  },
-  calloutPills: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-
-  // Action row
-  actionRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 40,
-    paddingVertical: 20,
-    paddingBottom: 28,
-  },
-  actionBtn: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.12,
-    shadowRadius: 6,
-    elevation: 4,
-  },
-  passBtn: { backgroundColor: colors.white },
-  likeBtn: { backgroundColor: colors.purple },
-  passBtnText: { fontSize: 24, color: colors.inkMid },
-  likeBtnText: { fontSize: 24, color: colors.white },
-
-  // Note modal
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)' },
-  modalDismiss: { flex: 1 },
-  modalOuter: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-  },
-  modalSheet: {
-    backgroundColor: colors.white,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    paddingHorizontal: 24,
-    paddingTop: 12,
-  },
-  handle: {
-    alignSelf: 'center',
-    width: 36,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: colors.inkGhost,
-    marginBottom: 20,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: colors.ink,
-    marginBottom: 6,
-  },
-  modalSub: {
-    fontSize: 14,
-    color: colors.inkMid,
-    lineHeight: 20,
-    marginBottom: 16,
-  },
-  noteInput: {
-    borderWidth: 1.5,
-    borderColor: colors.divider,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    fontSize: 15,
-    color: colors.ink,
-    backgroundColor: colors.white,
-    minHeight: 100,
-  },
-  modalActions: {
-    marginTop: 16,
-    gap: 10,
-  },
-
-  // Empty state
-  emptyText: {
-    fontSize: 16,
-    color: colors.inkMid,
-    textAlign: 'center',
-    lineHeight: 24,
-  },
-});

@@ -1,12 +1,4 @@
-import {
-  ActivityIndicator,
-  Dimensions,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { ActivityIndicator, Dimensions } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import { useState } from 'react';
@@ -22,6 +14,7 @@ import {
   reorderPhotos,
 } from '@/queries/photos';
 
+import { ScrollView, Text, Pressable, View } from '@/lib/tw';
 import { PhotoRect } from '@/components/ui/PhotoRect';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import type { OptimisticHandlers } from './profile-helpers';
@@ -117,37 +110,41 @@ export function PhotosTab({ data, userId, onOptimistic, onRollback, onError, onR
   };
 
   return (
-    <ScrollView contentContainerStyle={st.content} showsVerticalScrollIndicator={false}>
+    <ScrollView contentContainerClassName="p-5 pb-12" showsVerticalScrollIndicator={false}>
       {pending.length > 0 && (
         <>
-          <Text style={st.sectionLabel}>Suggested by Wingpeople</Text>
+          <Text className="text-12 font-bold text-ink-dim uppercase tracking-[0.6px] mb-[10px] mt-1">
+            Suggested by Wingpeople
+          </Text>
           {pending.map((photo) => {
             const suggesterName = (photo as any).suggester?.chosen_name ?? 'your wingperson';
             return (
-              <View key={photo.id} style={st.pendingCard}>
+              <View key={photo.id} className="bg-white rounded-14 overflow-hidden mb-3">
                 <PhotoRect
                   uri={getPhotoUrl(photo.storage_url)}
                   ratio={4 / 3}
                   blur
-                  style={st.pendingPhotoOverride}
+                  style={{ borderRadius: 0 }}
                 />
-                <View style={st.pendingMeta}>
-                  <Text style={st.pendingName}>From {suggesterName}</Text>
-                  <Text style={st.pendingHint}>Approve to add this to your profile.</Text>
+                <View className="p-3">
+                  <Text className="text-15 font-semibold text-ink">From {suggesterName}</Text>
+                  <Text className="text-13 text-ink-mid mt-0.5">
+                    Approve to add this to your profile.
+                  </Text>
                 </View>
-                <View style={st.pendingActions}>
-                  <TouchableOpacity
-                    style={[st.actionBtn, st.approveBtn]}
+                <View className="flex-row gap-2 px-3 pb-3">
+                  <Pressable
+                    className="flex-1 py-[10px] rounded-[10px] items-center bg-purple"
                     onPress={() => handleApprove(photo.id)}
                   >
-                    <Text style={st.approveTxt}>Approve</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[st.actionBtn, st.rejectBtn]}
+                    <Text className="text-white font-semibold text-14">Approve</Text>
+                  </Pressable>
+                  <Pressable
+                    className="flex-1 py-[10px] rounded-[10px] items-center bg-muted"
                     onPress={() => handleReject(photo.id, photo.storage_url)}
                   >
-                    <Text style={st.rejectTxt}>Reject</Text>
-                  </TouchableOpacity>
+                    <Text className="text-ink font-semibold text-14">Reject</Text>
+                  </Pressable>
                 </View>
               </View>
             );
@@ -155,125 +152,55 @@ export function PhotosTab({ data, userId, onOptimistic, onRollback, onError, onR
         </>
       )}
 
-      <Text style={st.sectionLabel}>
+      <Text className="text-12 font-bold text-ink-dim uppercase tracking-[0.6px] mb-[10px] mt-1">
         My Photos{selfPhotos.length > 0 ? ` (${selfPhotos.length})` : ''}
       </Text>
 
       {selfPhotos.length === 0 ? (
-        <View style={st.emptyBox}>
-          <Text style={st.emptyTitle}>No photos yet.</Text>
-          <Text style={st.emptySub}>Add at least one so people can see you.</Text>
+        <View className="bg-white rounded-14 p-7 items-center mb-4">
+          <Text className="text-15 font-semibold text-ink">No photos yet.</Text>
+          <Text className="text-13 text-ink-mid mt-1.5 text-center">
+            Add at least one so people can see you.
+          </Text>
         </View>
       ) : (
-        <View style={st.grid}>
+        <View className="flex-row flex-wrap gap-2">
           {selfPhotos.map((photo, idx) => (
-            <View key={photo.id} style={st.photoWrap}>
+            <View key={photo.id} style={{ width: PHOTO_COL, position: 'relative' }}>
               <PhotoRect uri={getPhotoUrl(photo.storage_url)} ratio={4 / 5} />
               {idx === 0 ? (
-                <View style={st.primaryBadge}>
-                  <Text style={st.primaryBadgeTxt}>Primary</Text>
+                <View className="absolute top-2 left-2 bg-purple rounded-md px-[7px] py-[3px]">
+                  <Text className="text-white text-11 font-semibold">Primary</Text>
                 </View>
               ) : (
-                <TouchableOpacity
-                  style={st.moveBtn}
+                <Pressable
+                  className="absolute top-2 left-2 rounded-lg p-[5px]"
+                  style={{ backgroundColor: 'rgba(0,0,0,0.45)' }}
                   onPress={() => handleMoveUp(idx)}
                   hitSlop={{ top: 4, bottom: 4, left: 4, right: 4 }}
                 >
                   <IconSymbol name="arrow.up" size={13} color={colors.white} />
-                </TouchableOpacity>
+                </Pressable>
               )}
             </View>
           ))}
         </View>
       )}
 
-      <TouchableOpacity
-        style={st.addBtn}
+      <Pressable
+        className="flex-row items-center justify-center gap-2 border-[1.5px] border-purple border-dashed rounded-14 py-[14px] mt-4 min-h-[52px]"
         onPress={handleAddPhoto}
         disabled={uploading}
-        activeOpacity={0.75}
       >
         {uploading ? (
           <ActivityIndicator color={colors.purple} size="small" />
         ) : (
           <>
             <IconSymbol name="plus" size={18} color={colors.purple} />
-            <Text style={st.addBtnTxt}>Add Photo</Text>
+            <Text className="text-15 font-semibold text-purple">Add Photo</Text>
           </>
         )}
-      </TouchableOpacity>
+      </Pressable>
     </ScrollView>
   );
 }
-
-const st = StyleSheet.create({
-  content: { padding: 20, paddingBottom: 48 },
-  sectionLabel: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: colors.inkDim,
-    textTransform: 'uppercase',
-    letterSpacing: 0.6,
-    marginBottom: 10,
-    marginTop: 4,
-  },
-  pendingCard: {
-    backgroundColor: colors.white,
-    borderRadius: 14,
-    overflow: 'hidden',
-    marginBottom: 12,
-  },
-  pendingPhotoOverride: { borderRadius: 0 },
-  pendingMeta: { padding: 12 },
-  pendingName: { fontSize: 15, fontWeight: '600', color: colors.ink },
-  pendingHint: { fontSize: 13, color: colors.inkMid, marginTop: 2 },
-  pendingActions: { flexDirection: 'row', gap: 8, paddingHorizontal: 12, paddingBottom: 12 },
-  actionBtn: { flex: 1, paddingVertical: 10, borderRadius: 10, alignItems: 'center' },
-  approveBtn: { backgroundColor: colors.purple },
-  approveTxt: { color: colors.white, fontWeight: '600', fontSize: 14 },
-  rejectBtn: { backgroundColor: colors.muted },
-  rejectTxt: { color: colors.ink, fontWeight: '600', fontSize: 14 },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  photoWrap: { width: PHOTO_COL, position: 'relative' },
-  moveBtn: {
-    position: 'absolute',
-    top: 8,
-    left: 8,
-    backgroundColor: 'rgba(0,0,0,0.45)',
-    borderRadius: 8,
-    padding: 5,
-  },
-  primaryBadge: {
-    position: 'absolute',
-    top: 8,
-    left: 8,
-    backgroundColor: colors.purple,
-    borderRadius: 6,
-    paddingHorizontal: 7,
-    paddingVertical: 3,
-  },
-  primaryBadgeTxt: { color: colors.white, fontSize: 11, fontWeight: '600' },
-  emptyBox: {
-    backgroundColor: colors.white,
-    borderRadius: 14,
-    padding: 28,
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  emptyTitle: { fontSize: 15, fontWeight: '600', color: colors.ink },
-  emptySub: { fontSize: 13, color: colors.inkMid, marginTop: 6, textAlign: 'center' },
-  addBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    borderWidth: 1.5,
-    borderColor: colors.purple,
-    borderStyle: 'dashed',
-    borderRadius: 14,
-    paddingVertical: 14,
-    marginTop: 16,
-    minHeight: 52,
-  },
-  addBtnTxt: { fontSize: 15, fontWeight: '600', color: colors.purple },
-});

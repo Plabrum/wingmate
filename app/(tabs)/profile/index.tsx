@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ActivityIndicator, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { toast } from 'sonner-native';
 
@@ -11,6 +10,7 @@ import { useOwnProfile } from '@/hooks/use-own-profile';
 import type { OwnDatingProfile } from '@/queries/profiles';
 import { getMyWingpeople, type Wingperson } from '@/queries/contacts';
 
+import { View, Text, Pressable, SafeAreaView } from '@/lib/tw';
 import { LargeHeader } from '@/components/ui/LargeHeader';
 import { TextTabBar } from '@/components/ui/TextTabBar';
 import { WingStack } from '@/components/ui/WingStack';
@@ -34,9 +34,9 @@ function LogOutButton() {
   }
 
   return (
-    <TouchableOpacity onPress={handleLogOut} hitSlop={12}>
-      <Text style={st.logOut}>Log out</Text>
-    </TouchableOpacity>
+    <Pressable onPress={handleLogOut} hitSlop={12}>
+      <Text className="text-15 text-ink-mid">Log out</Text>
+    </Pressable>
   );
 }
 
@@ -45,11 +45,11 @@ function LogOutButton() {
 function WingerView({ name }: { name: string | null }) {
   const router = useRouter();
   return (
-    <View style={st.wingerContainer}>
+    <View className="flex-1 items-center justify-center p-10">
       <FaceAvatar initials={getInitials(name)} size={72} />
-      <Text style={st.wingerName}>{name ?? 'Winger'}</Text>
-      <Text style={st.wingerRole}>Winger</Text>
-      <View style={st.wingerBtn}>
+      <Text className="text-[24px] font-bold text-ink mt-4 font-serif">{name ?? 'Winger'}</Text>
+      <Text className="text-14 text-ink-mid mt-1">Winger</Text>
+      <View className="mt-8 w-full">
         <PurpleButton
           label="Wingpeople & Invitations"
           onPress={() => router.push('/(tabs)/profile/wingpeople' as any)}
@@ -97,8 +97,8 @@ export default function ProfileScreen() {
 
   if (loading && !localData) {
     return (
-      <SafeAreaView style={st.safe} edges={['top']}>
-        <View style={st.loading}>
+      <SafeAreaView className="flex-1 bg-canvas" edges={['top']}>
+        <View className="flex-1 items-center justify-center">
           <ActivityIndicator color={colors.purple} />
         </View>
       </SafeAreaView>
@@ -107,7 +107,7 @@ export default function ProfileScreen() {
 
   if (profile?.role === 'winger') {
     return (
-      <SafeAreaView style={st.safe} edges={['top']}>
+      <SafeAreaView className="flex-1 bg-canvas" edges={['top']}>
         <LargeHeader title="My Profile" right={<LogOutButton />} />
         <WingerView name={profile.chosen_name} />
       </SafeAreaView>
@@ -116,10 +116,12 @@ export default function ProfileScreen() {
 
   if (!localData) {
     return (
-      <SafeAreaView style={st.safe} edges={['top']}>
+      <SafeAreaView className="flex-1 bg-canvas" edges={['top']}>
         <LargeHeader title="My Profile" right={<LogOutButton />} />
-        <View style={st.noProfile}>
-          <Text style={st.noProfileTxt}>Complete your profile setup to see your profile here.</Text>
+        <View className="flex-1 items-center justify-center p-10">
+          <Text className="text-16 text-ink-mid text-center">
+            Complete your profile setup to see your profile here.
+          </Text>
         </View>
       </SafeAreaView>
     );
@@ -128,27 +130,27 @@ export default function ProfileScreen() {
   const wingInitials = wingpeople.map((w) => getInitials((w as any).winger?.chosen_name));
 
   return (
-    <SafeAreaView style={st.safe} edges={['top']}>
+    <SafeAreaView className="flex-1 bg-canvas" edges={['top']}>
       <LargeHeader title="My Profile" right={<LogOutButton />} />
 
       {/* Wingpeople row */}
-      <TouchableOpacity
-        style={st.wingRow}
+      <Pressable
+        className="flex-row items-center px-5 py-[10px] gap-[10px]"
+        style={{ borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.divider }}
         onPress={() => router.push('/(tabs)/profile/wingpeople' as any)}
-        activeOpacity={0.7}
       >
         {wingInitials.length > 0 ? (
           <>
             <WingStack initials={wingInitials} size={30} />
-            <Text style={st.wingCount}>
+            <Text className="flex-1 text-14 font-semibold text-ink">
               {wingpeople.length} wingperson{wingpeople.length !== 1 ? 'e' : ''}
             </Text>
           </>
         ) : (
-          <Text style={st.wingEmpty}>No wingpeople yet — tap to invite one</Text>
+          <Text className="flex-1 text-14 text-ink-mid">No wingpeople yet — tap to invite one</Text>
         )}
         <IconSymbol name="chevron.right" size={13} color={colors.inkGhost} />
-      </TouchableOpacity>
+      </Pressable>
 
       <TextTabBar
         tabs={['About Me', 'Photos', 'Prompts']}
@@ -189,32 +191,3 @@ export default function ProfileScreen() {
     </SafeAreaView>
   );
 }
-
-const st = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.canvas },
-  loading: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  noProfile: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 40 },
-  noProfileTxt: { fontSize: 16, color: colors.inkMid, textAlign: 'center' },
-  wingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    gap: 10,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.divider,
-  },
-  wingCount: { flex: 1, fontSize: 14, fontWeight: '600', color: colors.ink },
-  wingEmpty: { flex: 1, fontSize: 14, color: colors.inkMid },
-  wingerContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 40 },
-  wingerName: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: colors.ink,
-    marginTop: 16,
-    fontFamily: 'Georgia',
-  },
-  wingerRole: { fontSize: 14, color: colors.inkMid, marginTop: 4 },
-  wingerBtn: { marginTop: 32, width: '100%' },
-  logOut: { fontSize: 15, color: colors.inkMid },
-});

@@ -1,4 +1,6 @@
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet } from 'react-native';
+import { View, Text, Pressable, ScrollView } from '@/lib/tw';
+import { cn } from '@/lib/cn';
 import { colors } from '@/constants/theme';
 
 type Props = {
@@ -10,84 +12,42 @@ type Props = {
 
 export function TextTabBar({ tabs, active, setActive, badges }: Props) {
   return (
-    <View style={styles.wrapper}>
+    <View
+      style={{ borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.divider }}
+    >
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.container}
+        contentContainerClassName="px-5 flex-row gap-7"
       >
         {tabs.map((tab, i) => {
           const badgeCount = badges?.[i] ?? 0;
           return (
-            <TouchableOpacity key={tab} onPress={() => setActive(i)} style={styles.tab}>
-              <View style={styles.labelRow}>
-                <Text style={[styles.label, i === active && styles.activeLabel]}>{tab}</Text>
+            <Pressable key={tab} onPress={() => setActive(i)} className="pb-2.5 pt-1 items-center">
+              <View className="flex-row items-center gap-1.5">
+                <Text
+                  className={cn(
+                    'text-15 font-medium text-ink-mid',
+                    i === active && 'text-ink font-semibold'
+                  )}
+                >
+                  {tab}
+                </Text>
                 {badgeCount > 0 && (
-                  <View style={styles.badge}>
-                    <Text style={styles.badgeText}>{badgeCount}</Text>
+                  <View className="bg-purple rounded-9 min-w-[18px] h-[18px] justify-center items-center px-1">
+                    <Text className="text-white text-11 font-bold leading-[13px]">
+                      {badgeCount}
+                    </Text>
                   </View>
                 )}
               </View>
-              {i === active && <View style={styles.underline} />}
-            </TouchableOpacity>
+              {i === active && (
+                <View className="h-0.5 bg-purple rounded-[1px] absolute bottom-0 left-0 right-0" />
+              )}
+            </Pressable>
           );
         })}
       </ScrollView>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  wrapper: {
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.divider,
-  },
-  container: {
-    paddingHorizontal: 20,
-    flexDirection: 'row',
-    gap: 28,
-  },
-  tab: {
-    paddingBottom: 10,
-    paddingTop: 4,
-    alignItems: 'center',
-  },
-  labelRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  label: {
-    fontSize: 15,
-    fontWeight: '500',
-    color: colors.inkMid,
-  },
-  activeLabel: {
-    color: colors.ink,
-    fontWeight: '600',
-  },
-  badge: {
-    backgroundColor: colors.purple,
-    borderRadius: 9,
-    minWidth: 18,
-    height: 18,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 4,
-  },
-  badgeText: {
-    color: '#fff',
-    fontSize: 11,
-    fontWeight: '700',
-    lineHeight: 13,
-  },
-  underline: {
-    height: 2,
-    backgroundColor: colors.purple,
-    borderRadius: 1,
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-  },
-});

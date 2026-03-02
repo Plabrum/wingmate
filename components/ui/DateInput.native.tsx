@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Modal, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Modal, Platform, StyleSheet } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { View, Text, Pressable } from '@/lib/tw';
 import { colors } from '@/constants/theme';
 
 type Props = {
@@ -19,11 +20,15 @@ export default function DateInput({ value, onChange, style }: Props) {
 
   return (
     <>
-      <TouchableOpacity style={[styles.input, style]} onPress={() => setShow(true)}>
-        <Text style={value ? styles.value : styles.placeholder}>
+      <Pressable
+        className="bg-white rounded-xl border-[1.5px] border-divider px-4 py-[14px] justify-center"
+        style={style}
+        onPress={() => setShow(true)}
+      >
+        <Text className={value ? 'text-16 text-ink' : 'text-16 text-ink-ghost'}>
           {value ? formatDate(value) : 'Date of birth'}
         </Text>
-      </TouchableOpacity>
+      </Pressable>
 
       {Platform.OS === 'android' && show && (
         <DateTimePicker
@@ -40,12 +45,18 @@ export default function DateInput({ value, onChange, style }: Props) {
 
       {Platform.OS === 'ios' && (
         <Modal visible={show} transparent animationType="slide">
-          <View style={styles.overlay}>
-            <View style={styles.sheet}>
-              <View style={styles.header}>
-                <TouchableOpacity onPress={() => setShow(false)}>
-                  <Text style={styles.done}>Done</Text>
-                </TouchableOpacity>
+          <View className="flex-1 justify-end bg-[rgba(0,0,0,0.3)]">
+            <View className="bg-white rounded-tl-[20px] rounded-tr-[20px] pb-8">
+              <View
+                className="flex-row justify-end p-4"
+                style={{
+                  borderBottomWidth: StyleSheet.hairlineWidth,
+                  borderBottomColor: colors.divider,
+                }}
+              >
+                <Pressable onPress={() => setShow(false)}>
+                  <Text className="text-purple text-17 font-semibold">Done</Text>
+                </Pressable>
               </View>
               <DateTimePicker
                 value={value ?? temp}
@@ -66,32 +77,3 @@ export default function DateInput({ value, onChange, style }: Props) {
     </>
   );
 }
-
-const styles = StyleSheet.create({
-  input: {
-    backgroundColor: colors.white,
-    borderRadius: 12,
-    borderWidth: 1.5,
-    borderColor: colors.divider,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    justifyContent: 'center',
-  },
-  value: { fontSize: 16, color: colors.ink },
-  placeholder: { fontSize: 16, color: colors.inkGhost },
-  overlay: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.3)' },
-  sheet: {
-    backgroundColor: colors.white,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    paddingBottom: 32,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.divider,
-  },
-  done: { color: colors.purple, fontSize: 17, fontWeight: '600' },
-});

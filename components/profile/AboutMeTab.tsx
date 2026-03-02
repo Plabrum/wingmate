@@ -1,4 +1,5 @@
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet } from 'react-native';
+import { ScrollView, Text, Pressable, View } from '@/lib/tw';
 import { useRouter } from 'expo-router';
 
 import { colors } from '@/constants/theme';
@@ -53,69 +54,96 @@ export function AboutMeTab({ data, userId, onOptimistic, onRollback, onError }: 
 
   return (
     <ScrollView
-      contentContainerStyle={st.content}
+      contentContainerClassName="p-5 pb-12"
       showsVerticalScrollIndicator={false}
       keyboardShouldPersistTaps="handled"
     >
-      <Text style={st.sectionLabel}>Dating Status</Text>
-      <View style={st.card}>
+      <Text className="text-12 font-bold text-ink-dim uppercase tracking-[0.6px] mt-5 mb-2">
+        Dating Status
+      </Text>
+      <View className="bg-white rounded-14 overflow-hidden">
         {STATUS_OPTIONS.map((opt, i) => {
           const active = data.dating_status === opt.key;
           return (
-            <TouchableOpacity
+            <Pressable
               key={opt.key}
               onPress={() => handleStatus(opt.key)}
-              style={[st.statusRow, i < STATUS_OPTIONS.length - 1 && st.rowBorder]}
-              activeOpacity={0.7}
+              className="flex-row items-center px-[14px] py-[13px]"
+              style={
+                i < STATUS_OPTIONS.length - 1
+                  ? {
+                      borderBottomWidth: StyleSheet.hairlineWidth,
+                      borderBottomColor: colors.divider,
+                    }
+                  : undefined
+              }
             >
-              <View style={st.flex1}>
-                <Text style={[st.statusLabel, active && st.statusLabelActive]}>{opt.label}</Text>
-                <Text style={st.statusSub}>{opt.sub}</Text>
+              <View className="flex-1">
+                <Text className={'text-15 font-medium ' + (active ? 'text-purple' : 'text-ink')}>
+                  {opt.label}
+                </Text>
+                <Text className="text-12 text-ink-dim mt-px">{opt.sub}</Text>
               </View>
-              <View style={[st.radio, active && st.radioActive]}>
-                {active && <View style={st.radioDot} />}
+              <View
+                className={
+                  'w-5 h-5 rounded-[10px] border-2 items-center justify-center ' +
+                  (active ? 'border-purple' : 'border-ink-ghost')
+                }
+              >
+                {active && <View className="w-[10px] h-[10px] rounded-[5px] bg-purple" />}
               </View>
-            </TouchableOpacity>
+            </Pressable>
           );
         })}
       </View>
 
       {data.dating_status !== 'open' && (
-        <View style={st.callout}>
+        <View className="flex-row items-start gap-2 bg-purple-pale rounded-[10px] p-3 mt-[10px]">
           <IconSymbol name="eye.slash" size={15} color={colors.purple} />
-          <Text style={st.calloutText}>
+          <Text className="flex-1 text-13 text-purple leading-[18px]">
             Your profile is hidden from Discover while you{"'"}re{' '}
             {data.dating_status === 'break' ? 'on a break' : 'just winging'}.
           </Text>
         </View>
       )}
 
-      <Text style={st.sectionLabel}>Details</Text>
-      <View style={st.card}>
+      <Text className="text-12 font-bold text-ink-dim uppercase tracking-[0.6px] mt-5 mb-2">
+        Details
+      </Text>
+      <View className="bg-white rounded-14 overflow-hidden">
         {detailRows.map((row, i) => (
           <View
             key={row.label}
-            style={[st.detailRow, i < detailRows.length - 1 && st.rowBorder]}
+            className="flex-row items-center justify-between px-[14px] py-[13px]"
+            style={
+              i < detailRows.length - 1
+                ? { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.divider }
+                : undefined
+            }
           >
-            <Text style={st.detailLabel}>{row.label}</Text>
-            <Text style={st.detailValue}>{row.value}</Text>
+            <Text className="text-15 text-ink-mid">{row.label}</Text>
+            <Text className="text-15 font-medium text-ink">{row.value}</Text>
           </View>
         ))}
       </View>
 
       {data.bio ? (
         <>
-          <Text style={st.sectionLabel}>Bio</Text>
-          <View style={[st.card, st.bioPad]}>
-            <Text style={st.bioText}>{data.bio}</Text>
+          <Text className="text-12 font-bold text-ink-dim uppercase tracking-[0.6px] mt-5 mb-2">
+            Bio
+          </Text>
+          <View className="bg-white rounded-14 overflow-hidden p-[14px]">
+            <Text className="text-15 text-ink leading-[22px]">{data.bio}</Text>
           </View>
         </>
       ) : null}
 
       {data.interests.length > 0 && (
         <>
-          <Text style={st.sectionLabel}>Interests</Text>
-          <View style={st.pillsRow}>
+          <Text className="text-12 font-bold text-ink-dim uppercase tracking-[0.6px] mt-5 mb-2">
+            Interests
+          </Text>
+          <View className="flex-row flex-wrap gap-2">
             {data.interests.map((interest) => (
               <Pill key={interest} label={interest} />
             ))}
@@ -123,10 +151,9 @@ export function AboutMeTab({ data, userId, onOptimistic, onRollback, onError }: 
         </>
       )}
 
-      <View style={st.editBtn}>
+      <View className="mt-7">
         <PurpleButton
           label="Edit Profile"
-           
           onPress={() => router.push('/(tabs)/profile/edit' as any)}
           outline
         />
@@ -134,62 +161,3 @@ export function AboutMeTab({ data, userId, onOptimistic, onRollback, onError }: 
     </ScrollView>
   );
 }
-
-const st = StyleSheet.create({
-  content: { padding: 20, paddingBottom: 48 },
-  flex1: { flex: 1 },
-  sectionLabel: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: colors.inkDim,
-    textTransform: 'uppercase',
-    letterSpacing: 0.6,
-    marginTop: 20,
-    marginBottom: 8,
-  },
-  card: { backgroundColor: colors.white, borderRadius: 14, overflow: 'hidden' },
-  rowBorder: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.divider },
-  statusRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 14,
-    paddingVertical: 13,
-  },
-  statusLabel: { fontSize: 15, fontWeight: '500', color: colors.ink },
-  statusLabelActive: { color: colors.purple },
-  statusSub: { fontSize: 12, color: colors.inkDim, marginTop: 1 },
-  radio: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    borderWidth: 2,
-    borderColor: colors.inkGhost,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  radioActive: { borderColor: colors.purple },
-  radioDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: colors.purple },
-  callout: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 8,
-    backgroundColor: colors.purplePale,
-    borderRadius: 10,
-    padding: 12,
-    marginTop: 10,
-  },
-  calloutText: { flex: 1, fontSize: 13, color: colors.purple, lineHeight: 18 },
-  detailRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 14,
-    paddingVertical: 13,
-  },
-  detailLabel: { fontSize: 15, color: colors.inkMid },
-  detailValue: { fontSize: 15, fontWeight: '500', color: colors.ink },
-  bioPad: { padding: 14 },
-  bioText: { fontSize: 15, color: colors.ink, lineHeight: 22 },
-  pillsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  editBtn: { marginTop: 28 },
-});

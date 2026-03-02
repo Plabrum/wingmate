@@ -3,7 +3,8 @@ import 'react-native-url-polyfill/auto';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack, router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator } from 'react-native';
+import { View } from '@/lib/tw';
 import 'react-native-reanimated';
 import { Toaster } from 'sonner-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -49,7 +50,7 @@ function RootNavigator() {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      <View className="flex-1 justify-center items-center">
         <ActivityIndicator />
       </View>
     );

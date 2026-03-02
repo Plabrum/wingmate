@@ -1,5 +1,4 @@
-import { StyleSheet, Text, View } from 'react-native';
-import { colors } from '@/constants/theme';
+import { View, Text } from '@/lib/tw';
 
 type Props = {
   title: string;
@@ -8,26 +7,9 @@ type Props = {
 
 export function LargeHeader({ title, right }: Props) {
   return (
-    <View style={styles.row}>
-      <Text style={styles.title}>{title}</Text>
+    <View className="flex-row items-center justify-between px-5 pt-2 pb-3">
+      <Text className="text-[32px] font-bold text-ink font-serif">{title}</Text>
       {right != null && <View>{right}</View>}
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingTop: 8,
-    paddingBottom: 12,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: colors.ink,
-    fontFamily: 'Georgia',
-  },
-});

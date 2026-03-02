@@ -1,14 +1,14 @@
 import { useState, useEffect } from 'react';
-import { StyleSheet, TouchableOpacity, Alert, ActivityIndicator, Dimensions } from 'react-native';
-import { View, Text } from '@/lib/tw';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Alert, ActivityIndicator, Dimensions } from 'react-native';
+import { View, Text, SafeAreaView, Pressable } from '@/lib/tw';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import { createDatingProfile, getOwnDatingProfile } from '@/queries/profiles';
 import { uploadPhoto, insertPhoto, deleteOwnPhoto, getPhotoUrl } from '@/queries/photos';
-import { colors, Fonts } from '@/constants/theme';
+import { colors } from '@/constants/theme';
 import { toast } from 'sonner-native';
+import { cn } from '@/lib/cn';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const PADDING = 24;
@@ -33,8 +33,10 @@ export default function PhotosStep({ userId, dpId: initialDpId, onDpCreated, onN
   // Only true when app was killed mid-flow and we need to (re)create the dating profile
   const [initializing, setInitializing] = useState(!initialDpId);
 
+  // mount-only guard — genuine app-kill-resume case where dating-profile creation
+  // was interrupted before completing; CLAUDE.md explicitly allows this exception.
   useEffect(() => {
-    if (initialDpId) return; // normal flow — dpId already set by parent
+    if (initialDpId) return;
     createDatingProfile({
       user_id: userId,
       city: 'Boston',
@@ -128,7 +130,7 @@ export default function PhotosStep({ userId, dpId: initialDpId, onDpCreated, onN
 
   if (initializing) {
     return (
-      <SafeAreaView style={[styles.safe, styles.center]}>
+      <SafeAreaView className="flex-1 bg-canvas justify-center items-center">
         <ActivityIndicator size="large" color={colors.purple} />
       </SafeAreaView>
     );
@@ -138,130 +140,78 @@ export default function PhotosStep({ userId, dpId: initialDpId, onDpCreated, onN
   const canAddMore = photos.length < MAX_PHOTOS && !uploading;
 
   return (
-    <SafeAreaView style={styles.safe}>
-      <View style={styles.container}>
-        <Text style={styles.title}>Add your photos</Text>
-        <Text style={styles.subtitle}>Add at least one so people can see you.</Text>
+    <SafeAreaView className="flex-1 bg-canvas">
+      <View className="flex-1 p-6">
+        <Text className="font-serif text-28 font-semibold text-ink mb-2">Add your photos</Text>
+        <Text className="text-15 text-ink-mid mb-7">Add at least one so people can see you.</Text>
 
-        <View style={styles.grid}>
+        <View className="flex-row flex-wrap gap-[10px]">
           {photos.map((photo) => (
-            <View key={photo.id} style={styles.slot}>
-              <Image source={{ uri: photo.uri }} style={styles.photo} contentFit="cover" />
-              <TouchableOpacity
-                style={styles.deleteBtn}
+            <View
+              key={photo.id}
+              className="rounded-[12px] overflow-hidden relative"
+              style={{ width: SLOT_SIZE, height: SLOT_SIZE }}
+            >
+              <Image
+                source={{ uri: photo.uri }}
+                style={{ width: '100%', height: '100%' }}
+                contentFit="cover"
+              />
+              <Pressable
+                className="absolute top-[6px] right-[6px] rounded-[12px] w-6 h-6 justify-center items-center"
+                style={{ backgroundColor: 'rgba(0,0,0,0.65)' }}
                 onPress={() => handleDeletePhoto(photo)}
                 hitSlop={{ top: 6, right: 6, bottom: 6, left: 6 }}
               >
-                <Text style={styles.deleteBtnText}>✕</Text>
-              </TouchableOpacity>
+                <Text className="text-white text-11 font-bold">✕</Text>
+              </Pressable>
             </View>
           ))}
 
           {uploading && (
-            <View style={[styles.slot, styles.uploadingSlot]}>
+            <View
+              className="rounded-[12px] overflow-hidden relative bg-muted justify-center items-center"
+              style={{ width: SLOT_SIZE, height: SLOT_SIZE }}
+            >
               <ActivityIndicator color={colors.purple} />
             </View>
           )}
 
           {canAddMore && (
-            <TouchableOpacity
-              style={[styles.slot, styles.emptySlot]}
+            <Pressable
+              className="rounded-[12px] overflow-hidden relative bg-white border-[1.5px] border-divider border-dashed justify-center items-center active:opacity-70"
+              style={{ width: SLOT_SIZE, height: SLOT_SIZE }}
               onPress={handleAddPhoto}
-              activeOpacity={0.7}
             >
-              <Text style={styles.plusIcon}>+</Text>
-            </TouchableOpacity>
+              <Text className="text-[32px] text-ink-ghost leading-9">+</Text>
+            </Pressable>
           )}
         </View>
 
         {photos.length === 0 && !uploading && (
-          <Text style={styles.emptyHint}>Add at least one photo so people can see you.</Text>
+          <Text className="text-14 text-ink-dim text-center mt-6 leading-5">
+            Add at least one photo so people can see you.
+          </Text>
         )}
 
-        <View style={styles.footer}>
-          <TouchableOpacity onPress={onNext} style={styles.skipBtn} disabled={disabled}>
-            <Text style={[styles.skipText, disabled && styles.textDisabled]}>Skip</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.button, disabled && styles.buttonDisabled]}
+        <View className="flex-row items-center justify-between mt-auto pt-6">
+          <Pressable className="py-[14px] pr-2" onPress={onNext} disabled={disabled}>
+            <Text className={cn('text-16 text-ink-mid font-medium', disabled && 'opacity-40')}>
+              Skip
+            </Text>
+          </Pressable>
+          <Pressable
+            className={cn(
+              'bg-purple rounded-14 py-[14px] px-8 items-center',
+              disabled && 'opacity-40'
+            )}
             onPress={onNext}
             disabled={disabled}
           >
-            <Text style={styles.buttonText}>Continue</Text>
-          </TouchableOpacity>
+            <Text className="text-white text-17 font-semibold">Continue</Text>
+          </Pressable>
         </View>
       </View>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.canvas },
-  center: { justifyContent: 'center', alignItems: 'center' },
-  container: { flex: 1, padding: PADDING },
-  title: {
-    fontFamily: Fonts?.serif ?? 'serif',
-    fontSize: 28,
-    fontWeight: '600',
-    color: colors.ink,
-    marginBottom: 8,
-  },
-  subtitle: { fontSize: 15, color: colors.inkMid, marginBottom: 28 },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: GAP },
-  slot: {
-    width: SLOT_SIZE,
-    height: SLOT_SIZE,
-    borderRadius: 12,
-    overflow: 'hidden',
-    position: 'relative',
-  },
-  photo: { width: '100%', height: '100%' },
-  deleteBtn: {
-    position: 'absolute',
-    top: 6,
-    right: 6,
-    backgroundColor: 'rgba(0,0,0,0.65)',
-    borderRadius: 12,
-    width: 24,
-    height: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  deleteBtnText: { color: colors.white, fontSize: 11, fontWeight: '700' },
-  uploadingSlot: { backgroundColor: colors.muted, justifyContent: 'center', alignItems: 'center' },
-  emptySlot: {
-    backgroundColor: colors.white,
-    borderWidth: 1.5,
-    borderColor: colors.divider,
-    borderStyle: 'dashed',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  plusIcon: { fontSize: 32, color: colors.inkGhost, lineHeight: 36 },
-  emptyHint: {
-    fontSize: 14,
-    color: colors.inkDim,
-    textAlign: 'center',
-    marginTop: 24,
-    lineHeight: 20,
-  },
-  footer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: 'auto',
-    paddingTop: 24,
-  },
-  skipBtn: { paddingVertical: 14, paddingRight: 8 },
-  skipText: { fontSize: 16, color: colors.inkMid, fontWeight: '500' },
-  textDisabled: { opacity: 0.4 },
-  button: {
-    backgroundColor: colors.purple,
-    borderRadius: 14,
-    paddingVertical: 14,
-    paddingHorizontal: 32,
-    alignItems: 'center',
-  },
-  buttonDisabled: { opacity: 0.4 },
-  buttonText: { color: colors.white, fontSize: 17, fontWeight: '600' },
-});
