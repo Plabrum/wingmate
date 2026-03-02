@@ -21,7 +21,7 @@ Cut a release by following these steps **in order**, running all git commands in
 
 3. **Bump version**: Run `npm version <bump-type> --no-git-tag-version` to update `package.json` only (no auto-commit or tag from npm).
 
-4. **Commit**: Stage `package.json` and commit with message `bump version to <new-version>` (no Co-Authored-By line needed for release commits).
+4. **Commit**: Run `git add package.json` then commit with message `bump version to <new-version>` (no Co-Authored-By line needed for release commits).
 
 5. **Tag**: Create an annotated git tag `v<new-version>` with message `Release v<new-version>`.
 
