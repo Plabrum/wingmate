@@ -32,8 +32,7 @@ export async function getMatches(userId: string) {
     `
     )
     .or(`user_a_id.eq.${userId},user_b_id.eq.${userId}`)
-    .order('created_at', { ascending: false })
-    .order('display_order', { referencedTable: 'profile_photos', ascending: true });
+    .order('created_at', { ascending: false });
 }
 
 export type MatchRow = NonNullable<Awaited<ReturnType<typeof getMatches>>['data']>[number];
