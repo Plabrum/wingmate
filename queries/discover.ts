@@ -1,3 +1,4 @@
+import { useSuspenseQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 
 // Shape returned by the get_discover_pool and get_wing_pool RPCs.
@@ -142,4 +143,44 @@ export async function getWingerTabs(daterId: string): Promise<WingerTab[]> {
     }
   }
   return distinct;
+}
+
+export function useWingerTabs(userId: string) {
+  return useSuspenseQuery({
+    queryKey: ['winger-tabs', userId],
+    queryFn: () => getWingerTabs(userId),
+    staleTime: 5 * 60_000,
+  });
+}
+
+export function useInitialPool(
+  userId: string,
+  mode: 'likesYou' | 'discover',
+  wingerId: string | null,
+  pageSize: number
+) {
+  return useSuspenseQuery({
+    queryKey: ['pool', userId, mode, wingerId],
+    queryFn: async () => {
+      const result =
+        mode === 'likesYou'
+          ? await getLikesYouPool(userId, pageSize, 0)
+          : await getDiscoverPool(userId, wingerId, pageSize, 0);
+      if (result.error) throw result.error;
+      return result.data ?? [];
+    },
+    staleTime: 0,
+  });
+}
+
+export function useWingPool(wingerId: string, daterId: string, pageSize: number) {
+  return useSuspenseQuery({
+    queryKey: ['wing-pool', wingerId, daterId],
+    queryFn: async () => {
+      const { data, error } = await getWingPool(wingerId, daterId, pageSize, 0);
+      if (error) throw error;
+      return data ?? [];
+    },
+    staleTime: 0,
+  });
 }

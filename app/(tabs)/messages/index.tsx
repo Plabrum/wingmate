@@ -1,16 +1,15 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { SectionList, StyleSheet } from 'react-native';
 import { router } from 'expo-router';
 
 import { useAuth } from '@/context/auth';
-import { getConversations, type ConversationRow } from '@/queries/messages';
+import { useConversationsData, type ConversationRow } from '@/queries/messages';
 import { getInitials } from '@/components/profile/profile-helpers';
 import { FaceAvatar } from '@/components/ui/FaceAvatar';
 import { LargeHeader } from '@/components/ui/LargeHeader';
 import ScreenSuspense from '@/components/ui/ScreenSuspense';
 import { colors } from '@/constants/theme';
 import { useMessagesListPresence } from '@/hooks/use-messages-list-presence';
-import { useSuspenseQuery, useQueryRefresh } from '@/lib/useSuspenseQuery';
 import { View, Text, Pressable, SafeAreaView } from '@/lib/tw';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -124,14 +123,7 @@ type ContentProps = {
 };
 
 function MessagesContent({ userId, onlineIds }: ContentProps) {
-  const queryFn = useCallback(async () => {
-    const { data, error } = await getConversations(userId);
-    if (error) throw new Error(error.message);
-    return data ?? [];
-  }, [userId]);
-
-  const convos = useSuspenseQuery(queryFn);
-  const [refresh, isRefreshing] = useQueryRefresh(queryFn);
+  const { data: convos, refetch, isRefetching } = useConversationsData(userId);
 
   const sections: Section[] = useMemo(() => {
     const active = convos.filter(hasMessages);
@@ -146,8 +138,8 @@ function MessagesContent({ userId, onlineIds }: ContentProps) {
     <SectionList
       sections={sections}
       keyExtractor={(item) => item.id}
-      onRefresh={refresh}
-      refreshing={isRefreshing}
+      onRefresh={refetch}
+      refreshing={isRefetching}
       ListHeaderComponent={<LargeHeader title="Messages" />}
       ListEmptyComponent={
         <View className="flex-1 items-center justify-center p-10 pt-20">
@@ -198,8 +190,7 @@ function MessagesContent({ userId, onlineIds }: ContentProps) {
 // ── Screen ────────────────────────────────────────────────────────────────────
 
 export default function MessagesScreen() {
-  const { session } = useAuth();
-  const userId = session?.user.id ?? '';
+  const { userId } = useAuth();
   const onlineIds = useMessagesListPresence(userId);
 
   return (

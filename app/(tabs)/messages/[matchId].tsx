@@ -74,8 +74,7 @@ export default function ChatScreen() {
     otherName?: string;
     otherUserId?: string;
   }>();
-  const { session } = useAuth();
-  const userId = session?.user.id ?? '';
+  const { userId } = useAuth();
 
   const { messages, loading, error, send, reload } = useMessages(matchId);
   const isOnline = usePresence(otherUserId ?? null, userId);

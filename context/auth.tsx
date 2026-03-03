@@ -6,12 +6,21 @@ import { supabase } from '@/lib/supabase';
 type AuthContextValue = {
   session: Session | null;
   loading: boolean;
-  sendOTP: (phone: string) => Promise<{ error: Error | null }>;
-  verifyOTP: (phone: string, token: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<{ error: Error | null }>;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
+
+// Plain functions — no React state needed
+export async function sendOTP(phone: string) {
+  const { error } = await supabase.auth.signInWithOtp({ phone });
+  return { error };
+}
+
+export async function verifyOTP(phone: string, token: string) {
+  const { error } = await supabase.auth.verifyOtp({ phone, token, type: 'sms' });
+  return { error };
+}
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
@@ -40,30 +49,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  async function sendOTP(phone: string) {
-    const { error } = await supabase.auth.signInWithOtp({ phone });
-    return { error };
-  }
-
-  async function verifyOTP(phone: string, token: string) {
-    const { error } = await supabase.auth.verifyOtp({ phone, token, type: 'sms' });
-    return { error };
-  }
-
   async function signOut() {
     const { error } = await supabase.auth.signOut();
     return { error };
   }
 
   return (
-    <AuthContext.Provider value={{ session, loading, sendOTP, verifyOTP, signOut }}>
-      {children}
-    </AuthContext.Provider>
+    <AuthContext.Provider value={{ session, loading, signOut }}>{children}</AuthContext.Provider>
   );
 }
 
+// For the routing layer — session may be null
+export function useSession() {
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error('useSession must be used within AuthProvider');
+  return ctx;
+}
+
+// For authenticated screens — throws if called without a session
 export function useAuth() {
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error('useAuth must be used within AuthProvider');
-  return ctx;
+  if (!ctx.session) throw new Error('useAuth called outside authenticated context');
+  return {
+    userId: ctx.session.user.id,
+    session: ctx.session,
+    signOut: ctx.signOut,
+  };
 }

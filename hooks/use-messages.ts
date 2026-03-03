@@ -9,8 +9,7 @@ import {
 } from '@/queries/messages';
 
 export function useMessages(matchId: string) {
-  const { session } = useAuth();
-  const userId = session?.user.id ?? '';
+  const { userId } = useAuth();
 
   const [messages, setMessages] = useState<MessageWithSender[]>([]);
   const [loading, setLoading] = useState(true);

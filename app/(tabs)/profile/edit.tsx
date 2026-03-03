@@ -5,14 +5,14 @@ import { toast } from 'sonner-native';
 
 import { colors } from '@/constants/theme';
 import { useAuth } from '@/context/auth';
-import { useOwnProfile } from '@/hooks/use-own-profile';
-import { updateDatingProfile } from '@/queries/profiles';
+import { updateDatingProfile, useProfileData } from '@/queries/profiles';
 import type { OwnDatingProfile } from '@/queries/profiles';
 import type { Database } from '@/types/database';
 import { CITIES, GENDERS, RELIGIONS, INTERESTS } from '@/constants/enums';
 import { View, Text, TextInput, ScrollView, SafeAreaView, Pressable } from '@/lib/tw';
 import { cn } from '@/lib/cn';
 
+import ScreenSuspense from '@/components/ui/ScreenSuspense';
 import { NavHeader } from '@/components/ui/NavHeader';
 import { PurpleButton } from '@/components/ui/PurpleButton';
 
@@ -130,7 +130,7 @@ function EditProfileForm({
   router,
 }: {
   data: OwnDatingProfile;
-  refresh: () => Promise<void>;
+  refresh: () => unknown;
   userId: string;
   router: ReturnType<typeof useRouter>;
 }) {
@@ -184,7 +184,7 @@ function EditProfileForm({
       toast.error('Could not save changes. Please try again.');
       return;
     }
-    await refresh();
+    refresh();
     router.back();
   });
 
@@ -372,12 +372,15 @@ function EditProfileForm({
 
 // ── Orchestrator ──────────────────────────────────────────────────────────────
 
-export default function EditProfileScreen() {
+function EditProfileScreenInner() {
   const router = useRouter();
-  const { session } = useAuth();
-  const { data, refresh } = useOwnProfile();
+  const { userId } = useAuth();
+  const {
+    data: { datingProfile },
+    refetch,
+  } = useProfileData(userId);
 
-  if (!data) {
+  if (!datingProfile) {
     return (
       <SafeAreaView className="flex-1 bg-canvas" edges={['top', 'bottom']}>
         <NavHeader back title="Edit Profile" onBack={() => router.back()} />
@@ -385,7 +388,13 @@ export default function EditProfileScreen() {
     );
   }
 
+  return <EditProfileForm data={datingProfile} refresh={refetch} userId={userId} router={router} />;
+}
+
+export default function EditProfileScreen() {
   return (
-    <EditProfileForm data={data} refresh={refresh} userId={session!.user.id} router={router} />
+    <ScreenSuspense>
+      <EditProfileScreenInner />
+    </ScreenSuspense>
   );
 }

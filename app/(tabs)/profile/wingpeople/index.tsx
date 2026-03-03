@@ -1,4 +1,4 @@
-import { Suspense, useCallback, useState } from 'react';
+import { Suspense, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -12,18 +12,18 @@ import { useRouter } from 'expo-router';
 import { Controller, useForm } from 'react-hook-form';
 import { toast } from 'sonner-native';
 
+import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { colors } from '@/constants/theme';
 import { useAuth } from '@/context/auth';
-import { useProfile } from '@/context/profile';
 import { NavHeader } from '@/components/ui/NavHeader';
 import { FaceAvatar } from '@/components/ui/FaceAvatar';
 import { PurpleButton } from '@/components/ui/PurpleButton';
 import { getInitials } from '@/components/profile/profile-helpers';
 import { View, Text, TextInput, ScrollView, SafeAreaView, Pressable } from '@/lib/tw';
-import { useSuspenseQuery } from '@/lib/useSuspenseQuery';
+import { useProfileData } from '@/queries/profiles';
 import {
-  getWingpeopleWithCounts,
+  useWingpeopleData,
   inviteWingperson,
   acceptInvitation,
   declineInvitation,
@@ -46,14 +46,15 @@ function SectionHeader({ title, right }: { title: string; right?: React.ReactNod
 
 interface ContentProps {
   userId: string;
-  onRefresh: () => void;
   onOpenInvite: () => void;
 }
 
-function WingpeopleContent({ userId, onRefresh, onOpenInvite }: ContentProps) {
+function WingpeopleContent({ userId, onOpenInvite }: ContentProps) {
   const router = useRouter();
-  const queryFn = useCallback(() => getWingpeopleWithCounts(userId), [userId]);
-  const { wingpeople, invitations, wingingFor, weeklyCounts } = useSuspenseQuery(queryFn);
+  const {
+    data: { wingpeople, invitations, wingingFor, weeklyCounts },
+    refetch,
+  } = useWingpeopleData(userId);
 
   // ── Mutations ─────────────────────────────────────────────────────────────
 
@@ -62,7 +63,7 @@ function WingpeopleContent({ userId, onRefresh, onOpenInvite }: ContentProps) {
     if (error) {
       toast.error("Couldn't accept invitation. Try again.");
     } else {
-      onRefresh();
+      refetch();
     }
   };
 
@@ -71,7 +72,7 @@ function WingpeopleContent({ userId, onRefresh, onOpenInvite }: ContentProps) {
     if (error) {
       toast.error("Couldn't decline invitation. Try again.");
     } else {
-      onRefresh();
+      refetch();
     }
   };
 
@@ -86,7 +87,7 @@ function WingpeopleContent({ userId, onRefresh, onOpenInvite }: ContentProps) {
           if (error) {
             toast.error("Couldn't remove wingperson. Try again.");
           } else {
-            onRefresh();
+            refetch();
           }
         },
       },
@@ -229,12 +230,13 @@ type InviteForm = { phone: string };
 
 export default function WingpeopleScreen() {
   const router = useRouter();
-  const { session } = useAuth();
-  const { profile } = useProfile();
+  const { userId } = useAuth();
   const insets = useSafeAreaInsets();
-  const userId = session!.user.id;
+  const queryClient = useQueryClient();
+  const {
+    data: { profile },
+  } = useProfileData(userId);
 
-  const [refreshKey, setRefreshKey] = useState(0);
   const [inviteVisible, setInviteVisible] = useState(false);
 
   const {
@@ -247,7 +249,6 @@ export default function WingpeopleScreen() {
     mode: 'onChange',
   });
 
-  const onRefresh = () => setRefreshKey((k) => k + 1);
   const onOpenInvite = () => setInviteVisible(true);
   const closeInviteSheet = () => {
     setInviteVisible(false);
@@ -281,9 +282,8 @@ export default function WingpeopleScreen() {
       });
     }
 
-    reset();
-    setInviteVisible(false);
-    onRefresh();
+    queryClient.invalidateQueries({ queryKey: ['wingpeople', userId] });
+    closeInviteSheet();
   });
 
   return (
@@ -297,12 +297,7 @@ export default function WingpeopleScreen() {
           </View>
         }
       >
-        <WingpeopleContent
-          key={refreshKey}
-          userId={userId}
-          onRefresh={onRefresh}
-          onOpenInvite={onOpenInvite}
-        />
+        <WingpeopleContent userId={userId} onOpenInvite={onOpenInvite} />
       </Suspense>
 
       {/* ── Invite Bottom Sheet ──────────────────────────────────────────────── */}

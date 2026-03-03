@@ -1,3 +1,4 @@
+import { useSuspenseQuery } from '@tanstack/react-query';
 import type { RealtimeChannel, RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import type { Database } from '@/types/database';
@@ -50,6 +51,18 @@ export function getConversations(userId: string) {
 export type ConversationRow = NonNullable<
   Awaited<ReturnType<typeof getConversations>>['data']
 >[number];
+
+export function useConversationsData(userId: string) {
+  return useSuspenseQuery({
+    queryKey: ['conversations', userId],
+    queryFn: async () => {
+      const { data, error } = await getConversations(userId);
+      if (error) throw error;
+      return data ?? [];
+    },
+    staleTime: 30_000,
+  });
+}
 
 // ── Write ─────────────────────────────────────────────────────────────────────
 

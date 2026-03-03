@@ -3,13 +3,12 @@ import { ActivityIndicator, FlatList, KeyboardAvoidingView, Modal, Platform } fr
 import { router } from 'expo-router';
 
 import { useAuth } from '@/context/auth';
-import { useSuspenseQuery, useQueryRefresh } from '@/lib/useSuspenseQuery';
 import { View, Text, Pressable, ScrollView, TextInput, SafeAreaView } from '@/lib/tw';
 import { cn } from '@/lib/cn';
 import ScreenSuspense from '@/components/ui/ScreenSuspense';
 import {
-  getMatches,
-  getMatchSheetData,
+  useMatchesData,
+  useMatchSheetData,
   getOtherProfile,
   getFirstPhoto,
   hasMessages,
@@ -85,10 +84,9 @@ function MatchCard({ match, currentUserId, onPress }: MatchCardProps) {
 
 function SheetBody({ match, currentUserId }: { match: MatchRow; currentUserId: string }) {
   const other = getOtherProfile(match, currentUserId);
-  const { wingNote, prompts } = useSuspenseQuery(
-    () => getMatchSheetData(currentUserId, other.id),
-    ['sheet-data', match.id]
-  );
+  const {
+    data: { wingNote, prompts },
+  } = useMatchSheetData(currentUserId, other.id);
   const [promptStates, setPromptStates] = useState<Record<string, PromptState>>({});
 
   function setPromptField(promptId: string, patch: Partial<PromptState>) {
@@ -320,13 +318,7 @@ function MatchSheet({ match, currentUserId, visible, onClose }: MatchSheetProps)
 // ── MatchesList ───────────────────────────────────────────────────────────────
 
 function MatchesList({ userId }: { userId: string }) {
-  const KEY = ['matches', userId] as const;
-  const matches = useSuspenseQuery(async () => {
-    const { data, error } = await getMatches(userId);
-    if (error) throw new Error(error.message);
-    return data ?? [];
-  }, KEY);
-  const [refresh, isRefreshing] = useQueryRefresh(KEY);
+  const { data: matches, refetch, isRefetching } = useMatchesData(userId);
   const [selectedMatch, setSelectedMatch] = useState<MatchRow | null>(null);
 
   return (
@@ -337,8 +329,8 @@ function MatchesList({ userId }: { userId: string }) {
         numColumns={2}
         columnWrapperStyle={{ gap: 12 }}
         contentContainerStyle={{ padding: 16, gap: 12 }}
-        onRefresh={refresh}
-        refreshing={isRefreshing}
+        onRefresh={refetch}
+        refreshing={isRefetching}
         ListHeaderComponent={<LargeHeader title="Matches" />}
         ListEmptyComponent={
           <View className="flex-1 items-center justify-center p-8">
@@ -366,8 +358,7 @@ function MatchesList({ userId }: { userId: string }) {
 // ── MatchesScreen ─────────────────────────────────────────────────────────────
 
 export default function MatchesScreen() {
-  const { session } = useAuth();
-  const userId = session?.user.id ?? '';
+  const { userId } = useAuth();
   return (
     <ScreenSuspense>
       <MatchesList userId={userId} />

@@ -35,6 +35,7 @@ export async function uploadPhoto(userId: string, uri: string, filename: string)
  * The bucket is public so no signed URL is needed.
  */
 export function getPhotoUrl(storagePath: string): string {
+  if (storagePath.startsWith('http')) return storagePath;
   const { data } = supabase.storage.from('profile-photos').getPublicUrl(storagePath);
   return data.publicUrl;
 }

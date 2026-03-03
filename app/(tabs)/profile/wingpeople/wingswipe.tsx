@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useState } from 'react';
 import { KeyboardAvoidingView, Modal, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -11,9 +11,8 @@ import { NavHeader } from '@/components/ui/NavHeader';
 import { PhotoRect } from '@/components/ui/PhotoRect';
 import { Pill } from '@/components/ui/Pill';
 import { PurpleButton } from '@/components/ui/PurpleButton';
-import { getDaterContext } from '@/queries/profiles';
-import { getWingPool } from '@/queries/discover';
-import { useSuspenseQuery } from '@/lib/useSuspenseQuery';
+import { useDaterContext } from '@/queries/profiles';
+import { useWingPool } from '@/queries/discover';
 import ScreenSuspense from '@/components/ui/ScreenSuspense';
 
 const PAGE_SIZE = 20;
@@ -148,25 +147,11 @@ function EmptyState({ daterName }: { daterName: string }) {
 
 function WingSwipeContent() {
   const router = useRouter();
-  const { session } = useAuth();
+  const { userId: wingerId } = useAuth();
   const { daterId } = useLocalSearchParams<{ daterId: string }>();
-  const wingerId = session!.user.id;
 
-  // Load dater context via Suspense
-  const daterContextFn = useCallback(async () => {
-    const { data, error } = await getDaterContext(daterId);
-    if (error) throw error;
-    return data;
-  }, [daterId]);
-  const daterContext = useSuspenseQuery(daterContextFn);
-
-  // Load initial pool via Suspense
-  const initialPoolFn = useCallback(async () => {
-    const { data, error } = await getWingPool(wingerId, daterId, PAGE_SIZE, 0);
-    if (error) throw error;
-    return data ?? [];
-  }, [wingerId, daterId]);
-  const initialPool = useSuspenseQuery(initialPoolFn);
+  const { data: daterContext } = useDaterContext(daterId);
+  const { data: initialPool } = useWingPool(wingerId, daterId, PAGE_SIZE);
 
   const { pool, index, suggest, decline } = useWingSwipe(wingerId, daterId, initialPool);
   const card = pool[index] ?? null;

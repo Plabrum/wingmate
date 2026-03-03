@@ -1,12 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { toast } from 'sonner-native';
 
 import { colors } from '@/constants/theme';
 import { useAuth } from '@/context/auth';
-import { useProfile } from '@/context/profile';
-import { useOwnProfile } from '@/hooks/use-own-profile';
+import { useProfileData } from '@/queries/profiles';
 import type { OwnDatingProfile } from '@/queries/profiles';
 import { getMyWingpeople, type Wingperson } from '@/queries/contacts';
 
@@ -17,6 +16,7 @@ import { WingStack } from '@/components/ui/WingStack';
 import { FaceAvatar } from '@/components/ui/FaceAvatar';
 import { PurpleButton } from '@/components/ui/PurpleButton';
 import { IconSymbol } from '@/components/ui/icon-symbol';
+import ScreenSuspense from '@/components/ui/ScreenSuspense';
 
 import { AboutMeTab } from '@/components/profile/AboutMeTab';
 import { PhotosTab } from '@/components/profile/PhotosTab';
@@ -62,22 +62,19 @@ function WingerView({ name }: { name: string | null }) {
 
 // ── Root screen ───────────────────────────────────────────────────────────────
 
-export default function ProfileScreen() {
+function ProfileScreenInner() {
   const router = useRouter();
-  const { session } = useAuth();
-  const { profile } = useProfile();
-  const { data: remoteData, loading, refresh } = useOwnProfile();
+  const { userId } = useAuth();
+
+  const {
+    data: { profile, datingProfile },
+    refetch,
+  } = useProfileData(userId);
 
   const [activeTab, setActiveTab] = useState(0);
-  const [localData, setLocalData] = useState<OwnDatingProfile | null>(null);
+  const [localData, setLocalData] = useState<OwnDatingProfile | null>(() => datingProfile);
   const [error, setError] = useState<string | null>(null);
   const [wingpeople, setWingpeople] = useState<Wingperson[]>([]);
-
-  const userId = session!.user.id;
-
-  useEffect(() => {
-    setLocalData(remoteData);
-  }, [remoteData]);
 
   useEffect(() => {
     getMyWingpeople(userId).then(({ data }) => setWingpeople(data ?? []));
@@ -94,16 +91,6 @@ export default function ProfileScreen() {
 
   // Roll back is the same operation — overwrite with the previous snapshot
   const handleRollback = handleOptimistic;
-
-  if (loading && !localData) {
-    return (
-      <SafeAreaView className="flex-1 bg-canvas" edges={['top']}>
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator color={colors.purple} />
-        </View>
-      </SafeAreaView>
-    );
-  }
 
   if (profile?.role === 'winger') {
     return (
@@ -176,7 +163,7 @@ export default function ProfileScreen() {
           onOptimistic={handleOptimistic}
           onRollback={handleRollback}
           onError={showError}
-          onRefresh={refresh}
+          onRefresh={refetch}
         />
       )}
       {activeTab === 2 && (
@@ -185,9 +172,17 @@ export default function ProfileScreen() {
           onOptimistic={handleOptimistic}
           onRollback={handleRollback}
           onError={showError}
-          onRefresh={refresh}
+          onRefresh={refetch}
         />
       )}
     </SafeAreaView>
+  );
+}
+
+export default function ProfileScreen() {
+  return (
+    <ScreenSuspense>
+      <ProfileScreenInner />
+    </ScreenSuspense>
   );
 }

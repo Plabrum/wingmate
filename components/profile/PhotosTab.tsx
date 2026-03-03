@@ -24,7 +24,7 @@ const PHOTO_COL = (Dimensions.get('window').width - 20 * 2 - 8) / 2;
 interface Props extends OptimisticHandlers {
   data: OwnDatingProfile;
   userId: string;
-  onRefresh: () => Promise<void>;
+  onRefresh: () => Promise<unknown>;
 }
 
 export function PhotosTab({ data, userId, onOptimistic, onRollback, onError, onRefresh }: Props) {

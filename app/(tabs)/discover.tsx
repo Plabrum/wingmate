@@ -5,17 +5,17 @@ import { toast } from 'sonner-native';
 
 import { View, Text, ScrollView, SafeAreaView, Pressable } from '@/lib/tw';
 import { useAuth } from '@/context/auth';
-import { useProfile } from '@/context/profile';
 import { useDiscover, type PoolFetcher } from '@/hooks/use-discover';
 import {
   getDiscoverPool,
   getLikesYouPool,
   getLikesYouCount,
-  getWingerTabs,
+  useWingerTabs,
+  useInitialPool,
   type DiscoverCard,
   type WingerTab,
 } from '@/queries/discover';
-import { updateDatingProfile } from '@/queries/profiles';
+import { updateDatingProfile, useProfileData } from '@/queries/profiles';
 import { LargeHeader } from '@/components/ui/LargeHeader';
 import { TextTabBar } from '@/components/ui/TextTabBar';
 import { PhotoRect } from '@/components/ui/PhotoRect';
@@ -23,16 +23,20 @@ import { Pill } from '@/components/ui/Pill';
 import { PurpleButton } from '@/components/ui/PurpleButton';
 import { WingStack } from '@/components/ui/WingStack';
 import { colors } from '@/constants/theme';
-import { useSuspenseQuery } from '@/lib/useSuspenseQuery';
 import ScreenSuspense from '@/components/ui/ScreenSuspense';
 
 const PAGE_SIZE = 20;
 
 // ── DiscoverPausedScreen ──────────────────────────────────────────────────────
 
-function DiscoverPausedScreen({ status }: { status: 'break' | 'winging' }) {
-  const { session } = useAuth();
-  const { refreshProfile } = useProfile();
+function DiscoverPausedScreen({
+  status,
+  onResume,
+}: {
+  status: 'break' | 'winging';
+  onResume: () => void;
+}) {
+  const { userId } = useAuth();
   const {
     handleSubmit,
     formState: { isSubmitting },
@@ -44,13 +48,12 @@ function DiscoverPausedScreen({ status }: { status: 'break' | 'winging' }) {
       : "You're in winging mode. You can't browse Discover while winging for someone else.";
 
   async function resume() {
-    if (!session?.user.id) return;
-    const { error: err } = await updateDatingProfile(session.user.id, { dating_status: 'open' });
+    const { error: err } = await updateDatingProfile(userId, { dating_status: 'open' });
     if (err) {
       toast.error('Something went wrong. Please try again.');
       return;
     }
-    await refreshProfile();
+    onResume();
   }
 
   return (
@@ -224,14 +227,11 @@ function DiscoverPool({
     [activeTabIndex, wingerTabs, tabs.length]
   );
 
-  // Initial pool loaded via Suspense — no effect needed.
-  // loadInitialPoolFn is a stable wrapper that passes the required args to fetchPool.
-  const loadInitialPoolFn = useCallback(async () => {
-    const { data, error } = await fetchPool(userId, PAGE_SIZE, 0);
-    if (error) throw error;
-    return data ?? [];
-  }, [fetchPool, userId]);
-  const initialPool = useSuspenseQuery(loadInitialPoolFn);
+  const mode = activeTabIndex === 0 ? 'likesYou' : 'discover';
+  const isAll = activeTabIndex === tabs.length - 1;
+  const wingerId =
+    !isAll && activeTabIndex >= 2 ? (wingerTabs[activeTabIndex - 2]?.id ?? null) : null;
+  const { data: initialPool } = useInitialPool(userId, mode, wingerId, PAGE_SIZE);
 
   const { pool, index, like, pass } = useDiscover(fetchPool, userId, initialPool);
   const [matchCard, setMatchCard] = useState<DiscoverCard | null>(null);
@@ -304,8 +304,7 @@ function DiscoverPool({
 // ── DiscoverContent ───────────────────────────────────────────────────────────
 
 function DiscoverContent({ userId }: { userId: string }) {
-  const wingerTabsFn = useCallback(() => getWingerTabs(userId), [userId]);
-  const wingerTabs = useSuspenseQuery(wingerTabsFn);
+  const { data: wingerTabs } = useWingerTabs(userId);
   const [activeTabIndex, setActiveTabIndex] = useState(0);
   const [likesYouCount, setLikesYouCount] = useState(0);
 
@@ -355,17 +354,20 @@ function DiscoverContent({ userId }: { userId: string }) {
 // ── DiscoverScreen ────────────────────────────────────────────────────────────
 
 export default function DiscoverScreen() {
-  const { session } = useAuth();
-  const { datingProfile } = useProfile();
+  const { userId } = useAuth();
+  const {
+    data: { datingProfile },
+    refetch: refreshProfile,
+  } = useProfileData(userId);
 
   if (datingProfile?.dating_status !== 'open') {
     const status = (datingProfile?.dating_status as 'break' | 'winging') ?? 'break';
-    return <DiscoverPausedScreen status={status} />;
+    return <DiscoverPausedScreen status={status} onResume={refreshProfile} />;
   }
 
   return (
     <ScreenSuspense>
-      <DiscoverContent userId={session!.user.id} />
+      <DiscoverContent userId={userId} />
     </ScreenSuspense>
   );
 }

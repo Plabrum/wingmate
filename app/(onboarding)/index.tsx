@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { router } from 'expo-router';
+import { useQueryClient } from '@tanstack/react-query';
 import ScreenSuspense from '@/components/ui/ScreenSuspense';
 import { useAuth } from '@/context/auth';
-import { useProfile } from '@/context/profile';
-import { updateBaseProfile, createDatingProfile } from '@/queries/profiles';
+import { updateBaseProfile, createDatingProfile, useProfileData } from '@/queries/profiles';
 import type { Database } from '@/types/database';
 import RoleStep from '@/components/onboarding/RoleStep';
 import ProfileStep, { type ProfileFields } from '@/components/onboarding/ProfileStep';
@@ -23,9 +23,11 @@ function deriveInitialStep(
 }
 
 export default function OnboardingScreen() {
-  const { session } = useAuth();
-  const { profile, datingProfile, refreshProfile } = useProfile();
-  const userId = session?.user.id ?? '';
+  const { userId, session } = useAuth();
+  const queryClient = useQueryClient();
+  const {
+    data: { profile, datingProfile },
+  } = useProfileData(userId);
 
   const [step, setStep] = useState<Step>(() => deriveInitialStep(profile, datingProfile));
   const [selectedRole, setSelectedRole] = useState<Role | null>((profile?.role as Role) ?? null);
@@ -49,7 +51,7 @@ export default function OnboardingScreen() {
 
     switch (role) {
       case 'winger': {
-        await refreshProfile();
+        queryClient.invalidateQueries({ queryKey: ['profile', userId] });
         return router.replace('/(tabs)/profile' as any);
       }
       case 'dater': {
@@ -82,7 +84,7 @@ export default function OnboardingScreen() {
       return (
         <ProfileStep
           role={selectedRole!}
-          defaultPhoneNumber={session?.user.phone ?? ''}
+          defaultPhoneNumber={session.user.phone ?? ''}
           onNext={onProfileComplete}
         />
       );

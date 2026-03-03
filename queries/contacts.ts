@@ -1,3 +1,4 @@
+import { useSuspenseQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 
 // ── Reading the wingperson roster ─────────────────────────────────────────────
@@ -134,6 +135,14 @@ export async function getWingpeopleWithCounts(daterId: string) {
   }
 
   return { wingpeople, invitations, wingingFor, weeklyCounts };
+}
+
+export function useWingpeopleData(userId: string) {
+  return useSuspenseQuery({
+    queryKey: ['wingpeople', userId],
+    queryFn: () => getWingpeopleWithCounts(userId),
+    staleTime: 2 * 60_000,
+  });
 }
 
 // ── Mutations ─────────────────────────────────────────────────────────────────

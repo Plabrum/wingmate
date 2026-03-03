@@ -1,3 +1,4 @@
+import { useSuspenseQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 
 // ── Prompt templates ──────────────────────────────────────────────────────────
@@ -15,13 +16,25 @@ const ONBOARDING_PROMPT_COUNT = 5;
 /**
  * Fetch a random selection of prompt templates for onboarding.
  */
-export async function getOnboardingPromptTemplates() {
+async function getOnboardingPromptTemplatesQuery() {
   const { data, error } = await getPromptTemplates();
   if (error) return { data: null, error };
   const shuffled = [...(data ?? [])]
     .sort(() => Math.random() - 0.5)
     .slice(0, ONBOARDING_PROMPT_COUNT);
   return { data: shuffled, error: null };
+}
+
+export function useOnboardingPromptTemplates() {
+  return useSuspenseQuery({
+    queryKey: ['prompt-templates'],
+    queryFn: async () => {
+      const { data, error } = await getOnboardingPromptTemplatesQuery();
+      if (error) throw error;
+      return data ?? [];
+    },
+    staleTime: Infinity,
+  });
 }
 
 // ── Profile prompts ───────────────────────────────────────────────────────────

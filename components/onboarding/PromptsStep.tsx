@@ -1,9 +1,8 @@
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { useSupabaseSuspenseQuery } from '@/lib/useSuspenseQuery';
 import { KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
 import { View, Text, ScrollView, TextInput, Pressable, SafeAreaView } from '@/lib/tw';
-import { getOnboardingPromptTemplates, addProfilePrompt } from '@/queries/prompts';
+import { useOnboardingPromptTemplates, addProfilePrompt } from '@/queries/prompts';
 import { colors } from '@/constants/theme';
 import { toast } from 'sonner-native';
 
@@ -13,7 +12,7 @@ type AddedPrompt = { question: string; answer: string };
 type Props = { dpId: string; onFinish: () => void };
 
 export default function PromptsStep({ dpId, onFinish }: Props) {
-  const templates = useSupabaseSuspenseQuery(getOnboardingPromptTemplates);
+  const { data: templates } = useOnboardingPromptTemplates();
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [addedPrompts, setAddedPrompts] = useState<AddedPrompt[]>([]);
   const [addedIds, setAddedIds] = useState<Set<string>>(new Set());

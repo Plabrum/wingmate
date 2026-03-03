@@ -10,14 +10,13 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { useAuth } from '@/context/auth';
+import { sendOTP, verifyOTP } from '@/context/auth';
 import { formatPhoneInput, toE164 } from '@/lib/phoneUtils';
 
 type PhoneFields = { phone: string };
 type OtpFields = { code: string };
 
 export default function SmsModal() {
-  const { sendOTP, verifyOTP } = useAuth();
   const [step, setStep] = useState<'phone' | 'otp'>('phone');
   const [e164Phone, setE164Phone] = useState('');
 

@@ -1,3 +1,4 @@
+import { useSuspenseQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 
 // ── Match list ────────────────────────────────────────────────────────────────
@@ -117,6 +118,26 @@ export async function getMatchSheetData(userId: string, otherUserId: string) {
   const raw = dp?.profile_prompts ?? [];
   const prompts = (Array.isArray(raw) ? raw : [raw]) as Prompt[];
   return { wingNote: noteResult.data as WingNote | null, prompts };
+}
+
+export function useMatchesData(userId: string) {
+  return useSuspenseQuery({
+    queryKey: ['matches', userId],
+    queryFn: async () => {
+      const { data, error } = await getMatches(userId);
+      if (error) throw error;
+      return data ?? [];
+    },
+    staleTime: 60_000,
+  });
+}
+
+export function useMatchSheetData(userId: string, otherId: string) {
+  return useSuspenseQuery({
+    queryKey: ['match-sheet', userId, otherId],
+    queryFn: () => getMatchSheetData(userId, otherId),
+    staleTime: 10 * 60_000,
+  });
 }
 
 // ── Wing note on a match ──────────────────────────────────────────────────────
