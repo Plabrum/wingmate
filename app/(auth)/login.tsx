@@ -8,29 +8,28 @@ export default function LoginScreen() {
 
   return (
     <View
-      className="flex-1 bg-white px-6"
+      className="flex-1 bg-canvas px-6"
       style={{ paddingTop: insets.top, paddingBottom: insets.bottom + 24 }}
     >
       <View className="flex-1 justify-center items-center gap-3">
-        <Text className="text-[42px] font-extrabold tracking-[-1px]">Orbit</Text>
-        <Text className="text-16 text-ink-mid text-center">Your personal aviation companion</Text>
+        <Text className="text-42 font-extrabold tracking-[-1px] text-ink">Wyng</Text>
       </View>
 
       <View className="gap-3">
         <Pressable
-          className="bg-black active:bg-[#1a1a1a] rounded-[14px] h-[54px] items-center justify-center"
-          style={{ borderCurve: 'continuous' }}
+          className="bg-ink rounded-radius-14 items-center justify-center"
+          style={{ borderCurve: 'continuous', height: 54 }}
           onPress={() => router.push('/(auth)/apple')}
         >
-          <Text className="text-white font-semibold text-16">{' \uF8FF '}Continue with Apple</Text>
+          <Text className="text-canvas font-semibold text-16">{' \uF8FF '}Continue with Apple</Text>
         </Pressable>
 
         <Pressable
-          className="bg-[#f2f2f7] active:bg-[#e8e8e8] rounded-[14px] h-[54px] items-center justify-center"
-          style={{ borderCurve: 'continuous' }}
+          className="bg-muted rounded-radius-14 items-center justify-center"
+          style={{ borderCurve: 'continuous', height: 54 }}
           onPress={() => router.push('/(auth)/sms')}
         >
-          <Text className="text-black font-semibold text-16">Continue with SMS</Text>
+          <Text className="text-ink font-semibold text-16">Continue with SMS</Text>
         </Pressable>
 
         <Text className="text-center text-ink-ghost text-12 mt-1">

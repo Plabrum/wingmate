@@ -77,6 +77,8 @@
     --text-28--line-height: 36px;
     --text-30: 30px;
     --text-30--line-height: 38px;
+    --text-42: 42px;
+    --text-42--line-height: 50px;
 
     /* ── Border radii (prototype uses these specific values) ──── */
     --radius-4: 4px;

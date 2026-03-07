@@ -8,7 +8,7 @@ module.exports = {
     orientation: 'portrait',
     icon: './assets/images/icon.png',
     scheme: 'orbit',
-    userInterfaceStyle: 'automatic',
+    userInterfaceStyle: 'light',
     newArchEnabled: true,
     ios: {
       supportsTablet: true,
