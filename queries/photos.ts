@@ -1,32 +1,19 @@
-import * as FileSystem from 'expo-file-system';
-import { Platform } from 'react-native';
 import { supabase } from '@/lib/supabase';
 
 // ── Upload ────────────────────────────────────────────────────────────────────
 
 /**
  * Upload a local image URI to the profile-photos bucket.
- * On native: uses FileSystem + base64 → Uint8Array to avoid fetch().blob() corruption.
- * On web: fetches the blob URL directly via fetch() → arrayBuffer().
+ * Uses fetch() → blob() which works correctly on both native and web
+ * in React Native 0.76+ with new architecture.
  */
 export async function uploadPhoto(userId: string, uri: string, filename: string) {
   const path = `${userId}/${filename}`;
 
-  let bytes: Uint8Array;
-  if (Platform.OS === 'web') {
-    const response = await fetch(uri);
-    const buffer = await response.arrayBuffer();
-    bytes = new Uint8Array(buffer);
-  } else {
-    const base64 = await FileSystem.readAsStringAsync(uri, { encoding: 'base64' });
-    const binary = atob(base64);
-    bytes = new Uint8Array(binary.length);
-    for (let i = 0; i < binary.length; i++) {
-      bytes[i] = binary.charCodeAt(i);
-    }
-  }
+  const response = await fetch(uri);
+  const blob = await response.blob();
 
-  const { error } = await supabase.storage.from('profile-photos').upload(path, bytes, {
+  const { error } = await supabase.storage.from('profile-photos').upload(path, blob, {
     contentType: 'image/jpeg',
     upsert: false,
   });
