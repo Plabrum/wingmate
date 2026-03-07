@@ -1,0 +1,8 @@
+title: Wyng
+description: Legal documents for the Wyng dating app
+theme: minima
+baseurl: "/wingmate"
+url: "https://plabrum.github.io"
+
+minima:
+  skin: classic
