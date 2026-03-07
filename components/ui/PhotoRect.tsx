@@ -1,4 +1,4 @@
-import { View } from '@/lib/tw';
+import { View, StyleSheet } from 'react-native';
 import { Image } from 'expo-image';
 
 type Props = {
@@ -10,18 +10,29 @@ type Props = {
 
 export function PhotoRect({ uri, ratio = 4 / 5, blur = false, style }: Props) {
   return (
-    <View className="bg-surface overflow-hidden rounded-xl" style={[{ aspectRatio: ratio }, style]}>
+    <View style={[styles.container, { aspectRatio: ratio }, style]}>
       {uri ? (
         <Image
           source={{ uri }}
-          style={{ flex: 1, width: '100%' }}
+          style={StyleSheet.absoluteFillObject}
           contentFit="cover"
           blurRadius={blur ? 20 : 0}
           transition={200}
         />
       ) : (
-        <View className="flex-1 bg-separator" />
+        <View style={[StyleSheet.absoluteFillObject, styles.placeholder]} />
       )}
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    backgroundColor: '#f1f0ee',
+    overflow: 'hidden',
+    borderRadius: 12,
+  },
+  placeholder: {
+    backgroundColor: '#ebebf0',
+  },
+});

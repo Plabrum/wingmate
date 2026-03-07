@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { Platform } from 'react-native';
 import type { Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 
@@ -30,12 +29,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'INITIAL_SESSION' && __DEV__ && Platform.OS === 'web') return;
+      if (event === 'INITIAL_SESSION' && __DEV__) return;
       setSession(session);
       setLoading(false);
     });
 
-    if (__DEV__ && Platform.OS === 'web') {
+    if (__DEV__) {
       supabase.auth
         .signInWithPassword({ email: 'dev@local.test', password: 'devpassword' })
         .then(({ error }) => {

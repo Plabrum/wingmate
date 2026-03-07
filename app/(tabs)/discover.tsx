@@ -1,10 +1,10 @@
 import React, { Suspense, useCallback, useState } from 'react';
-import { ActivityIndicator, Modal } from 'react-native';
+import { ActivityIndicator } from 'react-native';
 import { useForm } from 'react-hook-form';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner-native';
 
-import { View, Text, ScrollView, SafeAreaView, Pressable } from '@/lib/tw';
+import { View, Text, ScrollView, SafeAreaView, Pressable, Modal, ModalView } from '@/lib/tw';
 import { useAuth } from '@/context/auth';
 import { useDiscover, type PoolFetcher, type LikeResult } from '@/hooks/use-discover';
 import type { Enums } from '@/types/database';
@@ -145,7 +145,7 @@ function CardView({ card }: { card: DiscoverCard }) {
 function MatchOverlay({ card, onDismiss }: { card: DiscoverCard; onDismiss: () => void }) {
   return (
     <Modal visible animationType="fade" transparent>
-      <View className="flex-1 justify-center items-center p-6 bg-black">
+      <ModalView backgroundColor="rgba(0,0,0,0.9)" className="justify-center items-center p-6">
         <View className="w-[80%] mb-8">
           <PhotoRect
             uri={card.first_photo}
@@ -161,7 +161,7 @@ function MatchOverlay({ card, onDismiss }: { card: DiscoverCard; onDismiss: () =
             <PurpleButton label="Keep Swiping" onPress={onDismiss} outline />
           </View>
         </View>
-      </View>
+      </ModalView>
     </Modal>
   );
 }

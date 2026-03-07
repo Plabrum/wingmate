@@ -41,6 +41,24 @@ if [ "$NEEDS_BUILD" = true ]; then
   bash scripts/install-dev-sim.sh
 fi
 
+# Ensure a simulator is booted before starting Metro
+BOOTED=$(xcrun simctl list devices booted | grep -c "(Booted)" 2>/dev/null || echo "0")
+if [ "$BOOTED" -eq 0 ]; then
+  UDID=$(xcrun simctl list devices available -j \
+    | node -e "let s=''; process.stdin.on('data',d=>s+=d); process.stdin.on('end',()=>{
+        const devs=JSON.parse(s).devices;
+        const iphone=Object.values(devs).flat().find(x=>x.name.includes('iPhone')&&x.isAvailable);
+        console.log(iphone?iphone.udid:'');
+      })")
+  if [ -z "$UDID" ]; then
+    echo "Error: no available iPhone simulator found."
+    exit 1
+  fi
+  echo "Booting simulator $UDID..."
+  xcrun simctl boot "$UDID"
+  open -a Simulator
+fi
+
 echo ""
 echo "Starting Metro bundler..."
 npx expo start --dev-client --ios

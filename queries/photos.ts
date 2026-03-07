@@ -4,16 +4,15 @@ import { supabase } from '@/lib/supabase';
 
 /**
  * Upload a local image URI to the profile-photos bucket.
- * Uses fetch() → blob() which works correctly on both native and web
- * in React Native 0.76+ with new architecture.
+ * Uses fetch() → arrayBuffer() per the official Supabase Expo docs.
+ * Note: fetch().blob() is broken on iOS new architecture; arrayBuffer() works.
  */
 export async function uploadPhoto(userId: string, uri: string, filename: string) {
   const path = `${userId}/${filename}`;
 
-  const response = await fetch(uri);
-  const blob = await response.blob();
+  const arrayBuffer = await fetch(uri).then((res) => res.arrayBuffer());
 
-  const { error } = await supabase.storage.from('profile-photos').upload(path, blob, {
+  const { error } = await supabase.storage.from('profile-photos').upload(path, arrayBuffer, {
     contentType: 'image/jpeg',
     upsert: false,
   });

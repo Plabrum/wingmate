@@ -9,10 +9,10 @@ import { Toaster } from 'sonner-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useEffect, useState } from 'react';
 
-import { QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider, useSuspenseQuery } from '@tanstack/react-query';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { AuthProvider, useSession } from '@/context/auth';
-import { useProfileData } from '@/queries/profiles';
+import { getProfileData } from '@/queries/profiles';
 import { queryClient } from '@/lib/queryClient';
 import { registerPushToken } from '@/lib/push';
 import ScreenSuspense from '@/components/ui/ScreenSuspense';
@@ -22,20 +22,21 @@ export const unstable_settings = {
 };
 
 function AuthenticatedNavigator({ userId }: { userId: string }) {
-  const {
-    data: { profile, datingProfile },
-  } = useProfileData(userId);
-
-  // Captured once at mount — Suspense ensures profile is ready before this renders
-  const [dest] = useState<string>(() =>
-    !profile?.chosen_name
-      ? '/(onboarding)'
-      : profile.role === 'winger'
-        ? '/(tabs)/profile'
-        : !datingProfile
-          ? '/(onboarding)'
-          : '/(tabs)/discover'
-  );
+  // select derives a stable string — this component only re-renders when dest
+  // actually changes (e.g. onboarding → discover), not on every profile refetch.
+  const { data: dest } = useSuspenseQuery({
+    queryKey: ['profile', userId],
+    queryFn: () => getProfileData(userId),
+    staleTime: 5 * 60_000,
+    select: ({ profile, datingProfile }) =>
+      !profile?.chosen_name
+        ? '/(onboarding)'
+        : profile.role === 'winger'
+          ? '/(tabs)/profile'
+          : !datingProfile
+            ? '/(onboarding)'
+            : '/(tabs)/discover',
+  });
 
   // Mount-only: check for a pending deep-link invite (external async state)
   useEffect(() => {

@@ -1,4 +1,4 @@
-import { ActivityIndicator, Dimensions } from 'react-native';
+import { ActionSheetIOS, Alert, ActivityIndicator, Dimensions } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import { useState } from 'react';
@@ -14,6 +14,7 @@ import {
   insertPhoto,
   getPhotoUrl,
   reorderPhotos,
+  deleteOwnPhoto,
 } from '@/queries/photos';
 
 import { ScrollView, Text, Pressable, View } from '@/lib/tw';
@@ -81,6 +82,68 @@ export function PhotosTab({ form, data, userId, onRefresh }: Props) {
       form.setValue('photos', prev);
       toast.error('Could not reorder photos.');
     }
+  };
+
+  const handleSetAsPrimary = async (idx: number) => {
+    if (idx === 0) return;
+    const updated = [...selfPhotos];
+    const [photo] = updated.splice(idx, 1);
+    updated.unshift(photo);
+    const payload = updated.map((p, i) => ({ id: p.id, display_order: i }));
+    const prev = photos;
+    form.setValue('photos', [...updated.map((p, i) => ({ ...p, display_order: i })), ...pending]);
+    try {
+      await reorderPhotos(payload);
+      onRefresh();
+    } catch {
+      form.setValue('photos', prev);
+      toast.error('Could not reorder photos.');
+    }
+  };
+
+  const handleDelete = (idx: number) => {
+    const photo = selfPhotos[idx];
+    Alert.alert('Delete Photo', "This can't be undone.", [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: async () => {
+          const prev = photos;
+          form.setValue(
+            'photos',
+            photos.filter((p) => p.id !== photo.id)
+          );
+          try {
+            await deleteOwnPhoto(photo.id, photo.storage_url);
+          } catch {
+            form.setValue('photos', prev);
+            toast.error('Could not delete photo.');
+          }
+        },
+      },
+    ]);
+  };
+
+  const handleLongPress = (idx: number) => {
+    const isPrimary = idx === 0;
+    const options = isPrimary
+      ? ['Delete Photo', 'Cancel']
+      : ['Set as Primary', 'Delete Photo', 'Cancel'];
+    const cancelButtonIndex = options.length - 1;
+    const destructiveButtonIndex = isPrimary ? 0 : 1;
+
+    ActionSheetIOS.showActionSheetWithOptions(
+      { options, cancelButtonIndex, destructiveButtonIndex },
+      (buttonIndex) => {
+        if (isPrimary) {
+          if (buttonIndex === 0) handleDelete(idx);
+        } else {
+          if (buttonIndex === 0) handleSetAsPrimary(idx);
+          if (buttonIndex === 1) handleDelete(idx);
+        }
+      }
+    );
   };
 
   const handleAddPhoto = async () => {
@@ -173,23 +236,30 @@ export function PhotosTab({ form, data, userId, onRefresh }: Props) {
       ) : (
         <View className="flex-row flex-wrap gap-2">
           {selfPhotos.map((photo, idx) => (
-            <View key={photo.id} style={{ width: PHOTO_COL, position: 'relative' }}>
-              <PhotoRect uri={getPhotoUrl(photo.storage_url)} ratio={4 / 5} />
-              {idx === 0 ? (
-                <View className="absolute top-2 left-2 bg-accent rounded-md px-[7px] py-[3px]">
-                  <Text className="text-white text-xs font-semibold">Primary</Text>
-                </View>
-              ) : (
-                <Pressable
-                  className="absolute top-2 left-2 rounded-lg p-[5px]"
-                  style={{ backgroundColor: 'rgba(0,0,0,0.45)' }}
-                  onPress={() => handleMoveUp(idx)}
-                  hitSlop={{ top: 4, bottom: 4, left: 4, right: 4 }}
-                >
-                  <IconSymbol name="arrow.up" size={13} color={colors.white} />
-                </Pressable>
-              )}
-            </View>
+            <Pressable
+              key={photo.id}
+              style={{ width: PHOTO_COL }}
+              onLongPress={() => handleLongPress(idx)}
+              delayLongPress={500}
+            >
+              <View style={{ position: 'relative' }}>
+                <PhotoRect uri={getPhotoUrl(photo.storage_url)} ratio={4 / 5} />
+                {idx === 0 ? (
+                  <View className="absolute top-2 left-2 bg-accent rounded-md px-[7px] py-[3px]">
+                    <Text className="text-white text-xs font-semibold">Primary</Text>
+                  </View>
+                ) : (
+                  <Pressable
+                    className="absolute top-2 left-2 rounded-lg p-[5px]"
+                    style={{ backgroundColor: 'rgba(0,0,0,0.45)' }}
+                    onPress={() => handleMoveUp(idx)}
+                    hitSlop={{ top: 4, bottom: 4, left: 4, right: 4 }}
+                  >
+                    <IconSymbol name="arrow.up" size={13} color={colors.white} />
+                  </Pressable>
+                )}
+              </View>
+            </Pressable>
           ))}
         </View>
       )}
