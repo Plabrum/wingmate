@@ -2,6 +2,7 @@ import * as AppleAuthentication from 'expo-apple-authentication';
 import { Platform } from 'react-native';
 import { ScrollView, Text, View } from '@/lib/tw';
 import { supabase } from '@/lib/supabase';
+import { toast } from 'sonner-native';
 
 export default function AppleModal() {
   const handleSignIn = async () => {
@@ -20,7 +21,12 @@ export default function AppleModal() {
         token: credential.identityToken,
       });
 
-      if (!error && credential.fullName) {
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
+
+      if (credential.fullName) {
         const parts = [
           credential.fullName.givenName,
           credential.fullName.middleName,
@@ -40,6 +46,7 @@ export default function AppleModal() {
     } catch (e: any) {
       if (e.code !== 'ERR_REQUEST_CANCELED') {
         console.error('Apple sign-in error:', e);
+        toast.error(e.message ?? 'Apple sign-in failed');
       }
     }
   };
