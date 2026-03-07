@@ -18,6 +18,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "format:functions": "deno fmt supabase/functions",
+    "db:local": "bash scripts/db-local.sh",
     "supabase:start": "supabase start",
     "supabase:stop": "supabase stop",
     "db:types": "supabase gen types typescript --local > types/database.ts",

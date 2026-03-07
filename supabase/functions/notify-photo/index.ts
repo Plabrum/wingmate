@@ -1,5 +1,13 @@
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 
+interface WebhookPayload {
+  type: 'INSERT' | 'UPDATE' | 'DELETE';
+  table: string;
+  schema: 'public';
+  record: Record<string, unknown>;
+  old_record: Record<string, unknown> | null;
+}
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -17,15 +25,19 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
   if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405);
 
-  let payload: { dating_profile_id?: unknown; suggester_id?: unknown };
+  let payload: WebhookPayload;
   try {
     payload = await req.json();
   } catch {
     return json({ error: 'Invalid JSON' }, 400);
   }
 
-  const { dating_profile_id, suggester_id } = payload;
-  if (typeof dating_profile_id !== 'string' || typeof suggester_id !== 'string') {
+  // WHEN clause on trigger guarantees suggester_id is non-null
+  const { record } = payload;
+  const dating_profile_id = record.dating_profile_id as string;
+  const suggester_id = record.suggester_id as string;
+
+  if (!dating_profile_id || !suggester_id) {
     return json({ error: 'dating_profile_id and suggester_id required' }, 400);
   }
 

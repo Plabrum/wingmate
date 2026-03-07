@@ -1,5 +1,13 @@
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 
+interface WebhookPayload {
+  type: 'INSERT' | 'UPDATE' | 'DELETE';
+  table: string;
+  schema: 'public';
+  record: Record<string, unknown>;
+  old_record: Record<string, unknown> | null;
+}
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -17,15 +25,18 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
   if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405);
 
-  let payload: { user_a_id?: unknown; user_b_id?: unknown };
+  let payload: WebhookPayload;
   try {
     payload = await req.json();
   } catch {
     return json({ error: 'Invalid JSON' }, 400);
   }
 
-  const { user_a_id, user_b_id } = payload;
-  if (typeof user_a_id !== 'string' || typeof user_b_id !== 'string') {
+  const { record } = payload;
+  const user_a_id = record.user_a_id as string;
+  const user_b_id = record.user_b_id as string;
+
+  if (!user_a_id || !user_b_id) {
     return json({ error: 'user_a_id and user_b_id required' }, 400);
   }
 
