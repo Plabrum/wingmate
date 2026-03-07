@@ -145,7 +145,7 @@ function CardView({ card }: { card: DiscoverCard }) {
 function MatchOverlay({ card, onDismiss }: { card: DiscoverCard; onDismiss: () => void }) {
   return (
     <Modal visible animationType="fade" transparent>
-      <View className="flex-1 bg-black/90 justify-center items-center p-6">
+      <View className="flex-1 justify-center items-center p-6 bg-black">
         <View className="w-[80%] mb-8">
           <PhotoRect
             uri={card.first_photo}

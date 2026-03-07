@@ -49,3 +49,4 @@ app-example
 # fingerprint cache (local build state)
 .build-fingerprint
 .dev-sim-fingerprint
+.env.production
