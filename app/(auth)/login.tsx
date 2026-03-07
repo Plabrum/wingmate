@@ -13,12 +13,12 @@ export default function LoginScreen() {
     >
       <View className="flex-1 justify-center items-center gap-3">
         <Text className="text-[42px] font-extrabold tracking-[-1px]">Orbit</Text>
-        <Text className="text-16 text-[#666] text-center">Your personal aviation companion</Text>
+        <Text className="text-16 text-ink-mid text-center">Your personal aviation companion</Text>
       </View>
 
       <View className="gap-3">
         <Pressable
-          className="bg-[#000] active:bg-[#1a1a1a] rounded-[14px] h-[54px] items-center justify-center"
+          className="bg-black active:bg-[#1a1a1a] rounded-[14px] h-[54px] items-center justify-center"
           style={{ borderCurve: 'continuous' }}
           onPress={() => router.push('/(auth)/apple')}
         >
@@ -30,10 +30,10 @@ export default function LoginScreen() {
           style={{ borderCurve: 'continuous' }}
           onPress={() => router.push('/(auth)/sms')}
         >
-          <Text className="text-[#000] font-semibold text-16">Continue with SMS</Text>
+          <Text className="text-black font-semibold text-16">Continue with SMS</Text>
         </Pressable>
 
-        <Text className="text-center text-[#aaa] text-12 mt-1">
+        <Text className="text-center text-ink-ghost text-12 mt-1">
           By continuing, you agree to our Terms of Service
         </Text>
       </View>

@@ -1,28 +1,31 @@
 import * as FileSystem from 'expo-file-system';
+import { Platform } from 'react-native';
 import { supabase } from '@/lib/supabase';
 
 // ── Upload ────────────────────────────────────────────────────────────────────
 
 /**
  * Upload a local image URI to the profile-photos bucket.
- * Uses FileSystem + base64 → Uint8Array to avoid the fetch().blob() serialization
- * issues that cause silent corrupt uploads in React Native.
- *
- * @param userId   The uploading user's ID (used for the folder prefix).
- * @param uri      Local file URI from expo-image-manipulator.
- * @param filename A unique filename, e.g. `${Date.now()}.jpg`.
- * @returns        The bucket-relative path to store in profile_photos.storage_url.
+ * On native: uses FileSystem + base64 → Uint8Array to avoid fetch().blob() corruption.
+ * On web: fetches the blob URL directly via fetch() → arrayBuffer().
  */
 export async function uploadPhoto(userId: string, uri: string, filename: string) {
   const path = `${userId}/${filename}`;
-  const base64 = await FileSystem.readAsStringAsync(uri, {
-    encoding: 'base64',
-  });
-  const binary = atob(base64);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) {
-    bytes[i] = binary.charCodeAt(i);
+
+  let bytes: Uint8Array;
+  if (Platform.OS === 'web') {
+    const response = await fetch(uri);
+    const buffer = await response.arrayBuffer();
+    bytes = new Uint8Array(buffer);
+  } else {
+    const base64 = await FileSystem.readAsStringAsync(uri, { encoding: 'base64' });
+    const binary = atob(base64);
+    bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+      bytes[i] = binary.charCodeAt(i);
+    }
   }
+
   const { error } = await supabase.storage.from('profile-photos').upload(path, bytes, {
     contentType: 'image/jpeg',
     upsert: false,

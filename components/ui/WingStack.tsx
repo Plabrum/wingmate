@@ -1,6 +1,7 @@
 import { View } from '@/lib/tw';
 import { FaceAvatar } from './FaceAvatar';
 
+// Matches --color-avatar-* tokens in global.css
 const BG_COLORS = ['#D9D4FF', '#C7F2E0', '#FEF3C7', '#FCE7F3', '#DBEAFE'];
 const OVERLAP = 10;
 

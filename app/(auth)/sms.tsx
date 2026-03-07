@@ -1,17 +1,10 @@
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import {
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
+import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { View, Text, TextInput, Pressable } from '@/lib/tw';
 import { sendOTP, verifyOTP } from '@/context/auth';
 import { formatPhoneInput, toE164 } from '@/lib/phoneUtils';
+import { cn } from '@/lib/cn';
 
 type PhoneFields = { phone: string };
 type OtpFields = { code: string };
@@ -60,15 +53,11 @@ export default function SmsModal() {
               name="phone"
               render={({ field: { onChange, value } }) => (
                 <TextInput
-                  style={{
-                    borderWidth: 1,
-                    borderColor: phoneForm.formState.errors.phone ? '#dc2626' : '#ddd',
-                    borderRadius: 10,
-                    borderCurve: 'continuous',
-                    padding: 14,
-                    fontSize: 17,
-                    marginTop: 8,
-                  }}
+                  className={cn(
+                    'border rounded-[10px] p-[14px] text-[17px] mt-2',
+                    phoneForm.formState.errors.phone ? 'border-error' : 'border-divider'
+                  )}
+                  style={{ borderCurve: 'continuous' }}
                   placeholder="(555) 000-0000"
                   keyboardType="phone-pad"
                   autoComplete="tel"
@@ -79,42 +68,31 @@ export default function SmsModal() {
               )}
             />
             {phoneForm.formState.errors.phone && (
-              <Text style={{ color: '#dc2626', fontSize: 13 }}>
-                {phoneForm.formState.errors.phone.message}
-              </Text>
+              <Text className="text-error text-13">{phoneForm.formState.errors.phone.message}</Text>
             )}
             {phoneForm.formState.errors.root && (
-              <Text style={{ color: '#dc2626', fontSize: 13 }}>
-                {phoneForm.formState.errors.root.message}
-              </Text>
+              <Text className="text-error text-13">{phoneForm.formState.errors.root.message}</Text>
             )}
-            <Text style={{ fontSize: 13, color: '#888', marginTop: 4 }}>
+            <Text className="text-13 text-ink-dim mt-1">
               US numbers are auto-detected. Include a country code for international numbers.
             </Text>
-            <View style={{ marginTop: 8 }}>
+            <View className="mt-2">
               {phoneForm.formState.isSubmitting ? (
                 <ActivityIndicator style={{ paddingVertical: 14 }} />
               ) : (
                 <Pressable
-                  style={({ pressed }) => ({
-                    backgroundColor: pressed ? '#1d4ed8' : '#2563eb',
-                    borderRadius: 12,
-                    borderCurve: 'continuous',
-                    padding: 14,
-                    alignItems: 'center',
-                  })}
+                  className="bg-purple active:bg-purple-dark rounded-xl p-[14px] items-center"
+                  style={{ borderCurve: 'continuous' }}
                   onPress={onSubmitPhone}
                 >
-                  <Text style={{ color: '#fff', fontWeight: '600', fontSize: 16 }}>Send Code</Text>
+                  <Text className="text-white font-semibold text-16">Send Code</Text>
                 </Pressable>
               )}
             </View>
           </>
         ) : (
           <>
-            <Text style={{ fontSize: 15, color: '#555', marginTop: 8 }}>
-              We sent a 6-digit code to {e164Phone}
-            </Text>
+            <Text className="text-15 text-ink-mid mt-2">We sent a 6-digit code to {e164Phone}</Text>
             <Controller
               control={otpForm.control}
               name="code"
@@ -124,17 +102,11 @@ export default function SmsModal() {
               }}
               render={({ field: { onChange, value } }) => (
                 <TextInput
-                  style={{
-                    borderWidth: 1,
-                    borderColor: otpForm.formState.errors.code ? '#dc2626' : '#ddd',
-                    borderRadius: 10,
-                    borderCurve: 'continuous',
-                    padding: 14,
-                    fontSize: 24,
-                    letterSpacing: 6,
-                    textAlign: 'center',
-                    marginTop: 8,
-                  }}
+                  className={cn(
+                    'border rounded-[10px] p-[14px] text-[24px] mt-2 text-center',
+                    otpForm.formState.errors.code ? 'border-error' : 'border-divider'
+                  )}
+                  style={{ borderCurve: 'continuous', letterSpacing: 6 }}
                   placeholder="000000"
                   keyboardType="number-pad"
                   maxLength={6}
@@ -145,37 +117,25 @@ export default function SmsModal() {
               )}
             />
             {otpForm.formState.errors.code && (
-              <Text style={{ color: '#dc2626', fontSize: 13 }}>
-                {otpForm.formState.errors.code.message}
-              </Text>
+              <Text className="text-error text-13">{otpForm.formState.errors.code.message}</Text>
             )}
             {otpForm.formState.errors.root && (
-              <Text style={{ color: '#dc2626', fontSize: 13 }}>
-                {otpForm.formState.errors.root.message}
-              </Text>
+              <Text className="text-error text-13">{otpForm.formState.errors.root.message}</Text>
             )}
-            <View style={{ marginTop: 8, gap: 8 }}>
+            <View className="mt-2 gap-2">
               {otpForm.formState.isSubmitting ? (
                 <ActivityIndicator style={{ paddingVertical: 14 }} />
               ) : (
                 <>
                   <Pressable
-                    style={({ pressed }) => ({
-                      backgroundColor: pressed ? '#1d4ed8' : '#2563eb',
-                      borderRadius: 12,
-                      borderCurve: 'continuous',
-                      padding: 14,
-                      alignItems: 'center',
-                    })}
+                    className="bg-purple active:bg-purple-dark rounded-xl p-[14px] items-center"
+                    style={{ borderCurve: 'continuous' }}
                     onPress={onSubmitOtp}
                   >
-                    <Text style={{ color: '#fff', fontWeight: '600', fontSize: 16 }}>Verify</Text>
+                    <Text className="text-white font-semibold text-16">Verify</Text>
                   </Pressable>
-                  <Pressable
-                    style={{ alignItems: 'center', padding: 10 }}
-                    onPress={() => setStep('phone')}
-                  >
-                    <Text style={{ color: '#2563eb', fontSize: 14 }}>Change number</Text>
+                  <Pressable className="items-center p-[10px]" onPress={() => setStep('phone')}>
+                    <Text className="text-purple text-14">Change number</Text>
                   </Pressable>
                 </>
               )}
