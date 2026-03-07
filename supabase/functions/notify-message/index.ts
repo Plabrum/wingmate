@@ -1,5 +1,13 @@
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 
+interface WebhookPayload {
+  type: 'INSERT' | 'UPDATE' | 'DELETE';
+  table: string;
+  schema: 'public';
+  record: Record<string, unknown>;
+  old_record: Record<string, unknown> | null;
+}
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -17,19 +25,19 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
   if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405);
 
-  let payload: { match_id?: unknown; sender_id?: unknown; body?: unknown };
+  let payload: WebhookPayload;
   try {
     payload = await req.json();
   } catch {
     return json({ error: 'Invalid JSON' }, 400);
   }
 
-  const { match_id, sender_id, body: msgBody } = payload;
-  if (
-    typeof match_id !== 'string' ||
-    typeof sender_id !== 'string' ||
-    typeof msgBody !== 'string'
-  ) {
+  const { record } = payload;
+  const match_id = record.match_id as string;
+  const sender_id = record.sender_id as string;
+  const msgBody = record.body as string;
+
+  if (!match_id || !sender_id || !msgBody) {
     return json({ error: 'match_id, sender_id, and body required' }, 400);
   }
 
@@ -47,8 +55,7 @@ Deno.serve(async (req) => {
 
   if (!match) return json({ ok: true }, 200);
 
-  const recipient_id =
-    match.user_a_id === sender_id ? match.user_b_id : match.user_a_id;
+  const recipient_id = match.user_a_id === sender_id ? match.user_b_id : match.user_a_id;
 
   // Guard: don't notify if sender == recipient (shouldn't happen, but be safe)
   if (recipient_id === sender_id) return json({ ok: true }, 200);

@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - 'supabase/migrations/**'
+      - 'supabase/functions/**'
 
 jobs:
   deploy:
@@ -27,3 +28,8 @@ jobs:
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+
+      - name: Deploy edge functions
+        run: supabase functions deploy notify-match notify-message notify-invite notify-suggestion notify-photo send-wing-invite
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}

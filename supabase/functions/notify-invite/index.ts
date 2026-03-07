@@ -1,5 +1,13 @@
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 
+interface WebhookPayload {
+  type: 'INSERT' | 'UPDATE' | 'DELETE';
+  table: string;
+  schema: 'public';
+  record: Record<string, unknown>;
+  old_record: Record<string, unknown> | null;
+}
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -17,14 +25,14 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
   if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405);
 
-  let payload: { winger_id?: unknown };
+  let payload: WebhookPayload;
   try {
     payload = await req.json();
   } catch {
     return json({ error: 'Invalid JSON' }, 400);
   }
 
-  const { winger_id } = payload;
+  const winger_id = payload.record.winger_id;
 
   // If winger_id is null the invitee hasn't signed up yet — SMS handled elsewhere
   if (!winger_id || typeof winger_id !== 'string') {
@@ -47,7 +55,7 @@ Deno.serve(async (req) => {
   await sendPush(
     profile.push_token,
     "You've been invited! 🤝",
-    "Someone wants you to be their wingperson on Orbit.",
+    'Someone wants you to be their wingperson on Orbit.',
   );
 
   return json({ ok: true }, 200);

@@ -48,10 +48,10 @@ export function useDiscover(
 
     let error: unknown;
     if (card.suggested_by) {
-      const result = await actOnSuggestionQuery(userId, card.profile_id, 'approved');
+      const result = await actOnSuggestionQuery(userId, card.user_id, 'approved');
       error = result.error;
     } else {
-      const result = await recordDecision(userId, card.profile_id, 'approved');
+      const result = await recordDecision(userId, card.user_id, 'approved');
       error = result.error;
     }
 
@@ -76,9 +76,9 @@ export function useDiscover(
     if (newIndex >= pool.length - 3) loadMore();
 
     if (card.suggested_by) {
-      await actOnSuggestionQuery(userId, card.profile_id, 'declined');
+      await actOnSuggestionQuery(userId, card.user_id, 'declined');
     } else {
-      await recordDecision(userId, card.profile_id, 'declined');
+      await recordDecision(userId, card.user_id, 'declined');
     }
   }
 
