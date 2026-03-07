@@ -110,47 +110,54 @@ export function AboutMeTab({ form, data, userId }: Props) {
         </View>
       )}
 
-      <Text className="text-12 font-bold text-ink-dim uppercase tracking-[0.6px] mt-5 mb-2">
-        Details
-      </Text>
-      <View className="bg-white rounded-14 overflow-hidden">
-        {detailRows.map((row, i) => (
-          <View
-            key={row.label}
-            className="flex-row items-center justify-between px-[14px] py-[13px]"
-            style={
-              i < detailRows.length - 1
-                ? { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.divider }
-                : undefined
-            }
-          >
-            <Text className="text-15 text-ink-mid">{row.label}</Text>
-            <Text className="text-15 font-medium text-ink">{row.value}</Text>
-          </View>
-        ))}
-      </View>
-
-      {data.bio ? (
+      {dating_status !== 'winging' && (
         <>
           <Text className="text-12 font-bold text-ink-dim uppercase tracking-[0.6px] mt-5 mb-2">
-            Bio
+            Details
           </Text>
-          <View className="bg-white rounded-14 overflow-hidden p-[14px]">
-            <Text className="text-15 text-ink leading-[22px]">{data.bio}</Text>
-          </View>
-        </>
-      ) : null}
-
-      {data.interests.length > 0 && (
-        <>
-          <Text className="text-12 font-bold text-ink-dim uppercase tracking-[0.6px] mt-5 mb-2">
-            Interests
-          </Text>
-          <View className="flex-row flex-wrap gap-2">
-            {data.interests.map((interest) => (
-              <Pill key={interest} label={interest} />
+          <View className="bg-white rounded-14 overflow-hidden">
+            {detailRows.map((row, i) => (
+              <View
+                key={row.label}
+                className="flex-row items-center justify-between px-[14px] py-[13px]"
+                style={
+                  i < detailRows.length - 1
+                    ? {
+                        borderBottomWidth: StyleSheet.hairlineWidth,
+                        borderBottomColor: colors.divider,
+                      }
+                    : undefined
+                }
+              >
+                <Text className="text-15 text-ink-mid">{row.label}</Text>
+                <Text className="text-15 font-medium text-ink">{row.value}</Text>
+              </View>
             ))}
           </View>
+
+          {data.bio ? (
+            <>
+              <Text className="text-12 font-bold text-ink-dim uppercase tracking-[0.6px] mt-5 mb-2">
+                Bio
+              </Text>
+              <View className="bg-white rounded-14 overflow-hidden p-[14px]">
+                <Text className="text-15 text-ink leading-[22px]">{data.bio}</Text>
+              </View>
+            </>
+          ) : null}
+
+          {data.interests.length > 0 && (
+            <>
+              <Text className="text-12 font-bold text-ink-dim uppercase tracking-[0.6px] mt-5 mb-2">
+                Interests
+              </Text>
+              <View className="flex-row flex-wrap gap-2">
+                {data.interests.map((interest) => (
+                  <Pill key={interest} label={interest} />
+                ))}
+              </View>
+            </>
+          )}
         </>
       )}
 

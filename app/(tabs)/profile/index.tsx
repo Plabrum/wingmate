@@ -78,6 +78,8 @@ function ProfileScreenInner() {
 
   const form = useForm<OwnDatingProfile>({ defaultValues: datingProfile ?? undefined });
 
+  const dating_status = form.watch('dating_status');
+
   const handleRefresh = useCallback(async () => {
     const result = await refetch();
     if (result.data?.datingProfile) form.reset(result.data.datingProfile);
@@ -119,17 +121,24 @@ function ProfileScreenInner() {
         <IconSymbol name="chevron.right" size={13} color={colors.inkGhost} />
       </Pressable>
 
-      <TextTabBar
-        tabs={['About Me', 'Photos', 'Prompts']}
-        active={activeTab}
-        setActive={setActiveTab}
-      />
-
-      {activeTab === 0 && <AboutMeTab form={form} data={datingProfile} userId={userId} />}
-      {activeTab === 1 && (
-        <PhotosTab form={form} data={datingProfile} userId={userId} onRefresh={handleRefresh} />
+      {dating_status === 'winging' ? (
+        <AboutMeTab form={form} data={datingProfile} userId={userId} />
+      ) : (
+        <>
+          <TextTabBar
+            tabs={['About Me', 'Photos', 'Prompts']}
+            active={activeTab}
+            setActive={setActiveTab}
+          />
+          {activeTab === 0 && <AboutMeTab form={form} data={datingProfile} userId={userId} />}
+          {activeTab === 1 && (
+            <PhotosTab form={form} data={datingProfile} userId={userId} onRefresh={handleRefresh} />
+          )}
+          {activeTab === 2 && (
+            <PromptsTab form={form} data={datingProfile} onRefresh={handleRefresh} />
+          )}
+        </>
       )}
-      {activeTab === 2 && <PromptsTab form={form} data={datingProfile} onRefresh={handleRefresh} />}
     </SafeAreaView>
   );
 }
