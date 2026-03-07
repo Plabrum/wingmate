@@ -71,7 +71,7 @@ export function AddPromptModal({
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={{ flex: 1 }}
       >
-        <View className="flex-1 bg-canvas">
+        <View className="flex-1 bg-page">
           <SafeAreaView className="flex-1" edges={['top', 'bottom']}>
             <View
               className="flex-row items-center justify-between px-5 py-[14px] bg-white"
@@ -81,9 +81,9 @@ export function AddPromptModal({
               }}
             >
               <Pressable onPress={onClose} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                <Text className="text-15 text-ink-mid">Cancel</Text>
+                <Text className="text-sm text-fg-muted">Cancel</Text>
               </Pressable>
-              <Text className="text-16 font-semibold text-ink">
+              <Text className="text-base font-semibold text-fg">
                 {selected ? 'Write Your Answer' : 'Pick a Prompt'}
               </Text>
               <Pressable
@@ -92,7 +92,7 @@ export function AddPromptModal({
                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               >
                 <Text
-                  className={cn('text-15 font-semibold text-purple', saveDisabled && 'opacity-40')}
+                  className={cn('text-sm font-semibold text-accent', saveDisabled && 'opacity-40')}
                 >
                   {isSubmitting ? 'Saving…' : 'Save'}
                 </Text>
@@ -108,7 +108,7 @@ export function AddPromptModal({
                     className="flex-row items-center bg-white px-5 py-4"
                     onPress={() => setSelected(item)}
                   >
-                    <Text className="flex-1 text-15 text-ink pr-3">{item.question}</Text>
+                    <Text className="flex-1 text-sm text-fg pr-3">{item.question}</Text>
                     <IconSymbol name="chevron.right" size={15} color={colors.inkGhost} />
                   </Pressable>
                 )}
@@ -122,7 +122,7 @@ export function AddPromptModal({
                   />
                 )}
                 ListEmptyComponent={
-                  <Text className="p-9 text-center text-ink-mid text-15">
+                  <Text className="p-9 text-center text-fg-muted text-sm">
                     You{"'"}ve answered all available prompts.
                   </Text>
                 }
@@ -135,9 +135,9 @@ export function AddPromptModal({
                   hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                 >
                   <IconSymbol name="chevron.left" size={13} color={colors.purple} />
-                  <Text className="text-14 text-purple">Back to prompts</Text>
+                  <Text className="text-sm text-accent">Back to prompts</Text>
                 </Pressable>
-                <Text className="text-[20px] font-bold text-ink font-serif mb-5 leading-7">
+                <Text className="text-xl font-bold text-fg font-serif mb-5 leading-7">
                   {selected.question}
                 </Text>
                 <Controller
@@ -146,7 +146,7 @@ export function AddPromptModal({
                   rules={{ required: true, validate: (v) => v.trim().length > 0 }}
                   render={({ field }) => (
                     <TextInput
-                      className="bg-white rounded-14 p-4 text-16 text-ink min-h-[130px] leading-6"
+                      className="bg-white rounded-xl p-4 text-base text-fg min-h-[130px] leading-6"
                       placeholder="Write your answer…"
                       placeholderTextColor={colors.inkGhost}
                       value={field.value}
@@ -158,7 +158,7 @@ export function AddPromptModal({
                     />
                   )}
                 />
-                <Text className="text-12 text-ink-ghost text-right mt-1.5">{answerLength}/300</Text>
+                <Text className="text-xs text-fg-ghost text-right mt-1.5">{answerLength}/300</Text>
               </ScrollView>
             )}
           </SafeAreaView>

@@ -130,7 +130,7 @@ export default function PhotosStep({ userId, dpId: initialDpId, onDpCreated, onN
 
   if (initializing) {
     return (
-      <SafeAreaView className="flex-1 bg-canvas justify-center items-center">
+      <SafeAreaView className="flex-1 bg-page justify-center items-center">
         <ActivityIndicator size="large" color={colors.purple} />
       </SafeAreaView>
     );
@@ -140,16 +140,16 @@ export default function PhotosStep({ userId, dpId: initialDpId, onDpCreated, onN
   const canAddMore = photos.length < MAX_PHOTOS && !uploading;
 
   return (
-    <SafeAreaView className="flex-1 bg-canvas">
+    <SafeAreaView className="flex-1 bg-page">
       <View className="flex-1 p-6">
-        <Text className="font-serif text-28 font-semibold text-ink mb-2">Add your photos</Text>
-        <Text className="text-15 text-ink-mid mb-7">Add at least one so people can see you.</Text>
+        <Text className="font-serif text-3xl font-semibold text-fg mb-2">Add your photos</Text>
+        <Text className="text-sm text-fg-muted mb-7">Add at least one so people can see you.</Text>
 
-        <View className="flex-row flex-wrap gap-[10px]">
+        <View className="flex-row flex-wrap gap-2.5">
           {photos.map((photo) => (
             <View
               key={photo.id}
-              className="rounded-[12px] overflow-hidden relative"
+              className="rounded-xl overflow-hidden relative"
               style={{ width: SLOT_SIZE, height: SLOT_SIZE }}
             >
               <Image
@@ -158,19 +158,19 @@ export default function PhotosStep({ userId, dpId: initialDpId, onDpCreated, onN
                 contentFit="cover"
               />
               <Pressable
-                className="absolute top-[6px] right-[6px] rounded-[12px] w-6 h-6 justify-center items-center"
+                className="absolute top-1.5 right-1.5 rounded-xl w-6 h-6 justify-center items-center"
                 style={{ backgroundColor: 'rgba(0,0,0,0.65)' }}
                 onPress={() => handleDeletePhoto(photo)}
                 hitSlop={{ top: 6, right: 6, bottom: 6, left: 6 }}
               >
-                <Text className="text-white text-11 font-bold">✕</Text>
+                <Text className="text-white text-xs font-bold">✕</Text>
               </Pressable>
             </View>
           ))}
 
           {uploading && (
             <View
-              className="rounded-[12px] overflow-hidden relative bg-muted justify-center items-center"
+              className="rounded-xl overflow-hidden relative bg-surface justify-center items-center"
               style={{ width: SLOT_SIZE, height: SLOT_SIZE }}
             >
               <ActivityIndicator color={colors.purple} />
@@ -179,36 +179,36 @@ export default function PhotosStep({ userId, dpId: initialDpId, onDpCreated, onN
 
           {canAddMore && (
             <Pressable
-              className="rounded-[12px] overflow-hidden relative bg-white border-[1.5px] border-divider border-dashed justify-center items-center active:opacity-70"
+              className="rounded-xl overflow-hidden relative bg-white border-[1.5px] border-separator border-dashed justify-center items-center"
               style={{ width: SLOT_SIZE, height: SLOT_SIZE }}
               onPress={handleAddPhoto}
             >
-              <Text className="text-[32px] text-ink-ghost leading-9">+</Text>
+              <Text className="text-4xl text-fg-ghost leading-9">+</Text>
             </Pressable>
           )}
         </View>
 
         {photos.length === 0 && !uploading && (
-          <Text className="text-14 text-ink-dim text-center mt-6 leading-5">
+          <Text className="text-sm text-fg-subtle text-center mt-6 leading-5">
             Add at least one photo so people can see you.
           </Text>
         )}
 
         <View className="flex-row items-center justify-between mt-auto pt-6">
           <Pressable className="py-[14px] pr-2" onPress={onNext} disabled={disabled}>
-            <Text className={cn('text-16 text-ink-mid font-medium', disabled && 'opacity-40')}>
+            <Text className={cn('text-base text-fg-muted font-medium', disabled && 'opacity-40')}>
               Skip
             </Text>
           </Pressable>
           <Pressable
             className={cn(
-              'bg-purple rounded-14 py-[14px] px-8 items-center',
+              'bg-accent rounded-xl py-[14px] px-8 items-center',
               disabled && 'opacity-40'
             )}
             onPress={onNext}
             disabled={disabled}
           >
-            <Text className="text-white text-17 font-semibold">Continue</Text>
+            <Text className="text-white text-base font-semibold">Continue</Text>
           </Pressable>
         </View>
       </View>

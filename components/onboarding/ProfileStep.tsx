@@ -68,7 +68,7 @@ export default function ProfileStep({ role, defaultPhoneNumber, onNext }: Props)
   });
 
   return (
-    <SafeAreaView className="flex-1 bg-canvas">
+    <SafeAreaView className="flex-1 bg-page">
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -78,11 +78,11 @@ export default function ProfileStep({ role, defaultPhoneNumber, onNext }: Props)
           contentContainerClassName="p-6 pb-12"
           keyboardShouldPersistTaps="handled"
         >
-          <Text className="font-serif text-28 font-semibold text-ink mb-7">
+          <Text className="font-serif text-3xl font-semibold text-fg mb-7">
             Tell us about yourself
           </Text>
 
-          <Text className="text-13 font-semibold text-ink-mid uppercase tracking-[0.5px] mb-2 mt-5">
+          <Text className="text-sm font-semibold text-fg-muted uppercase tracking-[0.5px] mb-2 mt-5">
             Your name
           </Text>
           <Controller
@@ -92,7 +92,7 @@ export default function ProfileStep({ role, defaultPhoneNumber, onNext }: Props)
             render={({ field: { onChange, value } }) => (
               <TextInput
                 className={cn(
-                  'bg-white rounded-[12px] border-[1.5px] border-divider px-4 py-[14px] text-16 text-ink',
+                  'bg-white rounded-xl border-[1.5px] border-separator px-4 py-[14px] text-base text-fg',
                   errors.chosenName && 'border-[#EF4444]'
                 )}
                 placeholder="First name or nickname"
@@ -105,7 +105,7 @@ export default function ProfileStep({ role, defaultPhoneNumber, onNext }: Props)
             )}
           />
 
-          <Text className="text-13 font-semibold text-ink-mid uppercase tracking-[0.5px] mb-2 mt-5">
+          <Text className="text-sm font-semibold text-fg-muted uppercase tracking-[0.5px] mb-2 mt-5">
             Date of birth
           </Text>
           <Controller
@@ -117,7 +117,7 @@ export default function ProfileStep({ role, defaultPhoneNumber, onNext }: Props)
             )}
           />
 
-          <Text className="text-13 font-semibold text-ink-mid uppercase tracking-[0.5px] mb-2 mt-5">
+          <Text className="text-sm font-semibold text-fg-muted uppercase tracking-[0.5px] mb-2 mt-5">
             Gender
           </Text>
           <Controller
@@ -130,15 +130,15 @@ export default function ProfileStep({ role, defaultPhoneNumber, onNext }: Props)
                   <Pressable
                     key={g}
                     className={cn(
-                      'px-4 py-[10px] rounded-[24px] border-[1.5px] border-divider bg-white',
-                      value === g && 'border-purple bg-purple-pale'
+                      'px-4 py-[10px] rounded-[24px] border-[1.5px] border-separator bg-white',
+                      value === g && 'border-accent bg-accent-muted'
                     )}
                     onPress={() => onChange(g)}
                   >
                     <Text
                       className={cn(
-                        'text-15 text-ink-mid font-medium',
-                        value === g && 'text-purple'
+                        'text-sm text-fg-muted font-medium',
+                        value === g && 'text-accent'
                       )}
                     >
                       {g}
@@ -149,7 +149,7 @@ export default function ProfileStep({ role, defaultPhoneNumber, onNext }: Props)
             )}
           />
 
-          <Text className="text-13 font-semibold text-ink-mid uppercase tracking-[0.5px] mb-2 mt-5">
+          <Text className="text-sm font-semibold text-fg-muted uppercase tracking-[0.5px] mb-2 mt-5">
             Phone number
           </Text>
           <Controller
@@ -157,7 +157,7 @@ export default function ProfileStep({ role, defaultPhoneNumber, onNext }: Props)
             name="phoneNumber"
             render={({ field: { onChange, value } }) => (
               <TextInput
-                className="bg-white rounded-[12px] border-[1.5px] border-divider px-4 py-[14px] text-16 text-ink"
+                className="bg-white rounded-xl border-[1.5px] border-separator px-4 py-[14px] text-base text-fg"
                 placeholder="+1 555 000 0000"
                 placeholderTextColor={colors.inkGhost}
                 value={value}
@@ -169,7 +169,7 @@ export default function ProfileStep({ role, defaultPhoneNumber, onNext }: Props)
 
           {isDater && (
             <>
-              <Text className="text-13 font-semibold text-ink-mid uppercase tracking-[0.5px] mb-2 mt-5">
+              <Text className="text-sm font-semibold text-fg-muted uppercase tracking-[0.5px] mb-2 mt-5">
                 City
               </Text>
               <Controller
@@ -182,15 +182,15 @@ export default function ProfileStep({ role, defaultPhoneNumber, onNext }: Props)
                       <Pressable
                         key={c}
                         className={cn(
-                          'px-4 py-[10px] rounded-[24px] border-[1.5px] border-divider bg-white',
-                          value === c && 'border-purple bg-purple-pale'
+                          'px-4 py-[10px] rounded-[24px] border-[1.5px] border-separator bg-white',
+                          value === c && 'border-accent bg-accent-muted'
                         )}
                         onPress={() => onChange(c)}
                       >
                         <Text
                           className={cn(
-                            'text-15 text-ink-mid font-medium',
-                            value === c && 'text-purple'
+                            'text-sm text-fg-muted font-medium',
+                            value === c && 'text-accent'
                           )}
                         >
                           {c}
@@ -201,7 +201,7 @@ export default function ProfileStep({ role, defaultPhoneNumber, onNext }: Props)
                 )}
               />
 
-              <Text className="text-13 font-semibold text-ink-mid uppercase tracking-[0.5px] mb-2 mt-5">
+              <Text className="text-sm font-semibold text-fg-muted uppercase tracking-[0.5px] mb-2 mt-5">
                 Bio (optional)
               </Text>
               <Controller
@@ -209,7 +209,7 @@ export default function ProfileStep({ role, defaultPhoneNumber, onNext }: Props)
                 name="bio"
                 render={({ field: { onChange, value } }) => (
                   <TextInput
-                    className="bg-white rounded-[12px] border-[1.5px] border-divider px-4 pt-[14px] text-16 text-ink h-[100px]"
+                    className="bg-white rounded-xl border-[1.5px] border-separator px-4 pt-[14px] text-base text-fg h-[100px]"
                     placeholder="A little about you (optional)"
                     placeholderTextColor={colors.inkGhost}
                     value={value}
@@ -225,7 +225,7 @@ export default function ProfileStep({ role, defaultPhoneNumber, onNext }: Props)
 
           <Pressable
             className={cn(
-              'bg-purple rounded-14 py-4 items-center mt-8',
+              'bg-accent rounded-xl py-4 items-center mt-8',
               (!isValid || isSubmitting) && 'opacity-40'
             )}
             onPress={onSubmit}
@@ -234,7 +234,7 @@ export default function ProfileStep({ role, defaultPhoneNumber, onNext }: Props)
             {isSubmitting ? (
               <ActivityIndicator color={colors.white} />
             ) : (
-              <Text className="text-white text-17 font-semibold">Continue</Text>
+              <Text className="text-white text-base font-semibold">Continue</Text>
             )}
           </Pressable>
         </ScrollView>

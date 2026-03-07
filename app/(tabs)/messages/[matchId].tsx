@@ -46,18 +46,15 @@ function MessageBubble({ body, isMine, createdAt, isOptimistic }: MessageBubbleP
         onPress={() => setShowTime((v) => !v)}
         className={cn(
           'rounded-[18px] py-[9px] px-3.5',
-          isMine ? 'bg-lavender rounded-br-[4px]' : 'bg-white rounded-bl-[4px]',
+          isMine ? 'bg-accent-muted rounded-br-[4px]' : 'bg-white rounded-bl-[4px]',
           isOptimistic && 'opacity-65'
         )}
       >
-        <Text className="text-15 leading-[21px] text-ink">{body}</Text>
+        <Text className="text-sm leading-[21px] text-fg">{body}</Text>
       </Pressable>
       {showTime && (
         <Text
-          className={cn(
-            'text-11 text-ink-ghost mt-[3px] mx-1',
-            isMine ? 'text-right' : 'text-left'
-          )}
+          className={cn('text-xs text-fg-ghost mt-[3px] mx-1', isMine ? 'text-right' : 'text-left')}
         >
           {formatTimestamp(createdAt)}
         </Text>
@@ -106,16 +103,16 @@ export default function ChatScreen() {
   const initials = getInitials(otherName ?? null);
 
   return (
-    <SafeAreaView className="flex-1 bg-canvas" edges={['top']}>
+    <SafeAreaView className="flex-1 bg-page" edges={['top']}>
       <NavHeader
         back
         onBack={() => router.back()}
         title={headerTitle}
         right={
-          <View className="w-8 h-8 rounded-2xl bg-purple-soft items-center justify-center">
-            <Text className="text-12 font-bold text-purple">{initials}</Text>
+          <View className="w-8 h-8 rounded-2xl bg-accent-soft items-center justify-center">
+            <Text className="text-xs font-bold text-accent">{initials}</Text>
             {isOnline && (
-              <View className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-[5px] bg-green border-2 border-canvas" />
+              <View className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-[5px] bg-green-500 border-2 border-page" />
             )}
           </View>
         }
@@ -133,9 +130,9 @@ export default function ChatScreen() {
           </View>
         ) : error != null ? (
           <View className="flex-1 items-center justify-center p-8 gap-3">
-            <Text className="text-15 text-ink-mid text-center">{error}</Text>
+            <Text className="text-sm text-fg-muted text-center">{error}</Text>
             <Pressable className="py-2 px-4" onPress={reload}>
-              <Text className="text-14 font-semibold text-purple">Try again</Text>
+              <Text className="text-sm font-semibold text-accent">Try again</Text>
             </Pressable>
           </View>
         ) : (
@@ -152,7 +149,7 @@ export default function ChatScreen() {
             onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: false })}
             ListEmptyComponent={
               <View className="flex-1 items-center justify-center p-10">
-                <Text className="text-15 text-ink-mid text-center">
+                <Text className="text-sm text-fg-muted text-center">
                   Say hello to {otherName ?? 'your match'}!
                 </Text>
               </View>
@@ -178,7 +175,7 @@ export default function ChatScreen() {
             name="message"
             render={({ field: { value, onChange } }) => (
               <TextInput
-                className="flex-1 bg-muted rounded-[20px] px-4 py-[9px] text-15 text-ink"
+                className="flex-1 bg-surface rounded-2xl px-4 py-[9px] text-sm text-fg"
                 style={{ maxHeight: 120, lineHeight: 20 }}
                 value={value}
                 onChangeText={onChange}
@@ -194,7 +191,7 @@ export default function ChatScreen() {
           />
           <Pressable
             className={cn(
-              'w-9 h-9 rounded-[18px] bg-purple items-center justify-center',
+              'w-9 h-9 rounded-[18px] bg-accent items-center justify-center',
               (!messageValue.trim() || isSubmitting) && 'opacity-40'
             )}
             onPress={onSubmit}

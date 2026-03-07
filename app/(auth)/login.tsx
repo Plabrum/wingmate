@@ -8,31 +8,31 @@ export default function LoginScreen() {
 
   return (
     <View
-      className="flex-1 bg-canvas px-6"
+      className="flex-1 bg-page px-6"
       style={{ paddingTop: insets.top, paddingBottom: insets.bottom + 24 }}
     >
       <View className="flex-1 justify-center items-center gap-3">
-        <Text className="text-42 font-extrabold tracking-[-1px] text-ink">Wyng</Text>
+        <Text className="text-4xl font-extrabold tracking-[-1px] text-fg">Wyng</Text>
       </View>
 
       <View className="gap-3">
         <Pressable
-          className="bg-ink rounded-radius-14 items-center justify-center"
+          className="bg-fg rounded-xl items-center justify-center"
           style={{ borderCurve: 'continuous', height: 54 }}
           onPress={() => router.push('/(auth)/apple')}
         >
-          <Text className="text-canvas font-semibold text-16">{' \uF8FF '}Continue with Apple</Text>
+          <Text className="text-page font-semibold text-base">{' \uF8FF '}Continue with Apple</Text>
         </Pressable>
 
         <Pressable
-          className="bg-muted rounded-radius-14 items-center justify-center"
+          className="bg-surface rounded-xl items-center justify-center"
           style={{ borderCurve: 'continuous', height: 54 }}
           onPress={() => router.push('/(auth)/sms')}
         >
-          <Text className="text-ink font-semibold text-16">Continue with SMS</Text>
+          <Text className="text-fg font-semibold text-base">Continue with SMS</Text>
         </Pressable>
 
-        <Text className="text-center text-ink-ghost text-12 mt-1">
+        <Text className="text-center text-fg-ghost text-xs mt-1">
           By continuing, you agree to our Terms of Service
         </Text>
       </View>

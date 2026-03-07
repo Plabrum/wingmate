@@ -27,22 +27,22 @@ export function TextTabBar({ tabs, active, setActive, badges }: Props) {
               <View className="flex-row items-center gap-1.5">
                 <Text
                   className={cn(
-                    'text-15 font-medium text-ink-mid',
-                    i === active && 'text-ink font-semibold'
+                    'text-sm font-medium text-fg-muted',
+                    i === active && 'text-fg font-semibold'
                   )}
                 >
                   {tab}
                 </Text>
                 {badgeCount > 0 && (
-                  <View className="bg-purple rounded-9 min-w-[18px] h-[18px] justify-center items-center px-1">
-                    <Text className="text-white text-11 font-bold leading-[13px]">
+                  <View className="bg-accent rounded-lg min-w-[18px] h-[18px] justify-center items-center px-1">
+                    <Text className="text-white text-xs font-bold leading-[13px]">
                       {badgeCount}
                     </Text>
                   </View>
                 )}
               </View>
               {i === active && (
-                <View className="h-0.5 bg-purple rounded-[1px] absolute bottom-0 left-0 right-0" />
+                <View className="h-0.5 bg-accent rounded-[1px] absolute bottom-0 left-0 right-0" />
               )}
             </Pressable>
           );

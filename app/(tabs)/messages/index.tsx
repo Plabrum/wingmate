@@ -62,34 +62,34 @@ function ConvoRow({ convo, userId, onlineIds, onPress }: ConvoRowProps) {
       <View className="relative mr-3">
         <FaceAvatar initials={initials} size={48} />
         {isUnread && (
-          <View className="absolute bottom-0 right-0 w-3 h-3 rounded-[6px] bg-purple border-2 border-white" />
+          <View className="absolute bottom-0 right-0 w-3 h-3 rounded-[6px] bg-accent border-2 border-white" />
         )}
         {isOnline && (
-          <View className="absolute top-0 right-0 w-3 h-3 rounded-[6px] bg-green border-2 border-white" />
+          <View className="absolute top-0 right-0 w-3 h-3 rounded-[6px] bg-green-500 border-2 border-white" />
         )}
       </View>
       <View className="flex-1">
         <View className="flex-row justify-between items-center mb-0.5">
           <Text
-            className={`flex-1 text-15 text-ink mr-2 ${isUnread ? 'font-bold' : 'font-medium'}`}
+            className={`flex-1 text-sm text-fg mr-2 ${isUnread ? 'font-bold' : 'font-medium'}`}
             numberOfLines={1}
           >
             {other?.chosen_name ?? 'Someone'}
           </Text>
           {lastMsg != null && (
-            <Text className="text-12 text-ink-ghost">{relativeTime(lastMsg.created_at)}</Text>
+            <Text className="text-xs text-fg-ghost">{relativeTime(lastMsg.created_at)}</Text>
           )}
         </View>
         {lastMsg != null ? (
           <Text
-            className={`text-14 ${isUnread ? 'text-ink font-medium' : 'text-ink-mid'}`}
+            className={`text-sm ${isUnread ? 'text-fg font-medium' : 'text-fg-muted'}`}
             numberOfLines={1}
           >
             {lastMsg.sender_id === userId ? 'You: ' : ''}
             {lastMsg.body}
           </Text>
         ) : (
-          <Text className="text-14 text-ink-ghost italic">New match — say hello!</Text>
+          <Text className="text-sm text-fg-ghost italic">New match — say hello!</Text>
         )}
       </View>
     </Pressable>
@@ -101,10 +101,10 @@ function ConvoRow({ convo, userId, onlineIds, onPress }: ConvoRowProps) {
 function SkeletonRow() {
   return (
     <View className="flex-row items-center px-4 py-3 bg-white gap-3">
-      <View className="w-12 h-12 rounded-3xl bg-divider" />
+      <View className="w-12 h-12 rounded-3xl bg-separator" />
       <View className="flex-1 gap-2">
-        <View className="h-3.5 rounded-[7px] bg-divider w-[70%]" />
-        <View className="h-3.5 rounded-[7px] bg-divider w-[45%]" />
+        <View className="h-3.5 rounded-[7px] bg-separator w-[70%]" />
+        <View className="h-3.5 rounded-[7px] bg-separator w-[45%]" />
       </View>
     </View>
   );
@@ -143,14 +143,14 @@ function MessagesContent({ userId, onlineIds }: ContentProps) {
       ListHeaderComponent={<LargeHeader title="Messages" />}
       ListEmptyComponent={
         <View className="flex-1 items-center justify-center p-10 pt-20">
-          <Text className="text-15 text-ink-mid text-center leading-[22px]">
+          <Text className="text-sm text-fg-muted text-center leading-[22px]">
             No conversations yet. Start one from your Matches.
           </Text>
         </View>
       }
       renderSectionHeader={({ section }) => (
-        <View className="px-4 pt-5 pb-1.5 bg-canvas">
-          <Text className="text-11 font-bold tracking-[0.8px] text-ink-dim uppercase">
+        <View className="px-4 pt-5 pb-1.5 bg-page">
+          <Text className="text-xs font-bold tracking-[0.8px] text-fg-subtle uppercase">
             {section.title}
           </Text>
         </View>
@@ -194,7 +194,7 @@ export default function MessagesScreen() {
   const onlineIds = useMessagesListPresence(userId);
 
   return (
-    <SafeAreaView className="flex-1 bg-canvas" edges={['top']}>
+    <SafeAreaView className="flex-1 bg-page" edges={['top']}>
       <ScreenSuspense
         fallback={
           <>

@@ -10,7 +10,7 @@ type Props = {
 
 export function PhotoRect({ uri, ratio = 4 / 5, blur = false, style }: Props) {
   return (
-    <View className="bg-muted overflow-hidden rounded-xl" style={[{ aspectRatio: ratio }, style]}>
+    <View className="bg-surface overflow-hidden rounded-xl" style={[{ aspectRatio: ratio }, style]}>
       {uri ? (
         <Image
           source={{ uri }}
@@ -20,7 +20,7 @@ export function PhotoRect({ uri, ratio = 4 / 5, blur = false, style }: Props) {
           transition={200}
         />
       ) : (
-        <View className="absolute inset-0 bg-divider" />
+        <View className="absolute inset-0 bg-separator" />
       )}
     </View>
   );

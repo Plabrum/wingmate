@@ -36,7 +36,9 @@ import { formatPhoneInput, toE164 } from '@/lib/phoneUtils';
 function SectionHeader({ title, right }: { title: string; right?: React.ReactNode }) {
   return (
     <View className="flex-row items-center justify-between px-5 pt-6 pb-2">
-      <Text className="text-12 font-semibold text-ink-mid uppercase tracking-[0.6px]">{title}</Text>
+      <Text className="text-xs font-semibold text-fg-muted uppercase tracking-[0.6px]">
+        {title}
+      </Text>
       {right}
     </View>
   );
@@ -105,17 +107,17 @@ function WingpeopleContent({ userId, onOpenInvite }: ContentProps) {
           wingpeople.length < 5 ? (
             <Pressable
               onPress={onOpenInvite}
-              className="px-3 py-[5px] rounded-full bg-purple-pale"
+              className="px-3 py-[5px] rounded-full bg-accent-muted"
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             >
-              <Text className="text-13 font-semibold text-purple">+ Invite</Text>
+              <Text className="text-sm font-semibold text-accent">+ Invite</Text>
             </Pressable>
           ) : null
         }
       />
 
       {wingpeople.length === 0 ? (
-        <Text className="text-14 text-ink-mid px-5 py-[14px] leading-5">
+        <Text className="text-sm text-fg-muted px-5 py-[14px] leading-5">
           No wingpeople yet. Invite a trusted friend to swipe for you.
         </Text>
       ) : (
@@ -136,8 +138,8 @@ function WingpeopleContent({ userId, onOpenInvite }: ContentProps) {
             >
               <FaceAvatar initials={getInitials(name)} size={40} />
               <View className="flex-1">
-                <Text className="text-15 font-semibold text-ink">{name}</Text>
-                <Text className="text-12 text-ink-mid mt-0.5">
+                <Text className="text-sm font-semibold text-fg">{name}</Text>
+                <Text className="text-xs text-fg-muted mt-0.5">
                   {count} pick{count !== 1 ? 's' : ''} this week
                 </Text>
               </View>
@@ -150,7 +152,7 @@ function WingpeopleContent({ userId, onOpenInvite }: ContentProps) {
       <SectionHeader title="Invitations" />
 
       {invitations.length === 0 ? (
-        <Text className="text-14 text-ink-mid px-5 py-[14px] leading-5">
+        <Text className="text-sm text-fg-muted px-5 py-[14px] leading-5">
           No invitations right now.
         </Text>
       ) : (
@@ -167,18 +169,18 @@ function WingpeopleContent({ userId, onOpenInvite }: ContentProps) {
               }}
             >
               <FaceAvatar initials={getInitials(name)} size={40} />
-              <Text className="flex-1 text-15 font-semibold text-ink">{name}</Text>
+              <Text className="flex-1 text-sm font-semibold text-fg">{name}</Text>
               <Pressable
-                className="px-[14px] py-2 rounded-full bg-muted"
+                className="px-[14px] py-2 rounded-full bg-surface"
                 onPress={() => handleDecline(inv.id)}
               >
-                <Text className="text-13 font-semibold text-ink-mid">Decline</Text>
+                <Text className="text-sm font-semibold text-fg-muted">Decline</Text>
               </Pressable>
               <Pressable
-                className="px-[14px] py-2 rounded-full bg-purple"
+                className="px-[14px] py-2 rounded-full bg-accent"
                 onPress={() => handleAccept(inv.id)}
               >
-                <Text className="text-13 font-semibold text-white">Accept</Text>
+                <Text className="text-sm font-semibold text-white">Accept</Text>
               </Pressable>
             </View>
           );
@@ -189,7 +191,7 @@ function WingpeopleContent({ userId, onOpenInvite }: ContentProps) {
       <SectionHeader title="You're Winging For" />
 
       {wingingFor.length === 0 ? (
-        <Text className="text-14 text-ink-mid px-5 py-[14px] leading-5">
+        <Text className="text-sm text-fg-muted px-5 py-[14px] leading-5">
           No one has invited you to wing for them yet.
         </Text>
       ) : (
@@ -207,14 +209,14 @@ function WingpeopleContent({ userId, onOpenInvite }: ContentProps) {
               }}
             >
               <FaceAvatar initials={getInitials(name)} size={40} />
-              <Text className="flex-1 text-15 font-semibold text-ink">{name}</Text>
+              <Text className="flex-1 text-sm font-semibold text-fg">{name}</Text>
               <Pressable
-                className="px-[14px] py-2 rounded-full bg-purple-pale"
+                className="px-[14px] py-2 rounded-full bg-accent-muted"
                 onPress={() =>
                   router.push(`/(tabs)/profile/wingpeople/wingswipe?daterId=${dater?.id}` as any)
                 }
               >
-                <Text className="text-13 font-semibold text-purple">Swipe for {firstName}</Text>
+                <Text className="text-sm font-semibold text-accent">Swipe for {firstName}</Text>
               </Pressable>
             </View>
           );
@@ -287,7 +289,7 @@ export default function WingpeopleScreen() {
   });
 
   return (
-    <SafeAreaView className="flex-1 bg-canvas" edges={['top']}>
+    <SafeAreaView className="flex-1 bg-page" edges={['top']}>
       <NavHeader back title="Wingpeople" onBack={() => router.back()} />
 
       <Suspense
@@ -317,9 +319,9 @@ export default function WingpeopleScreen() {
               className="bg-white rounded-t-[20px] px-6 pt-3"
               style={{ paddingBottom: insets.bottom + 20 }}
             >
-              <View className="self-center w-9 h-1 rounded-full bg-ink-ghost mb-5" />
-              <Text className="text-18 font-bold text-ink mb-1.5">Invite a Wingperson</Text>
-              <Text className="text-14 text-ink-mid leading-5 mb-5">
+              <View className="self-center w-9 h-1 rounded-full bg-fg-ghost mb-5" />
+              <Text className="text-lg font-bold text-fg mb-1.5">Invite a Wingperson</Text>
+              <Text className="text-sm text-fg-muted leading-5 mb-5">
                 Enter their phone number and we{"'"}ll send them an invite to Orbit.
               </Text>
 
@@ -333,7 +335,7 @@ export default function WingpeopleScreen() {
                 render={({ field: { value, onChange }, fieldState: { error } }) => (
                   <>
                     <TextInput
-                      className="border-[1.5px] border-divider rounded-[12px] px-4 py-[14px] text-16 text-ink bg-white"
+                      className="border-[1.5px] border-separator rounded-xl px-4 py-[14px] text-base text-fg bg-white"
                       placeholder="(555) 000-0000"
                       placeholderTextColor={colors.inkGhost}
                       keyboardType="phone-pad"
@@ -342,7 +344,7 @@ export default function WingpeopleScreen() {
                       autoFocus
                     />
                     {error && (
-                      <Text className="text-[#B91C1C] text-13 mt-1.5">{error.message}</Text>
+                      <Text className="text-[#B91C1C] text-sm mt-1.5">{error.message}</Text>
                     )}
                   </>
                 )}

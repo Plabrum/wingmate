@@ -23,9 +23,9 @@ export default function RoleStep({ onNext }: Props) {
   const [selected, setSelected] = useState<Role | null>(null);
 
   return (
-    <SafeAreaView className="flex-1 bg-canvas">
+    <SafeAreaView className="flex-1 bg-page">
       <View className="flex-1 px-6 pt-12 pb-10">
-        <Text className="font-serif text-[28px] font-semibold text-ink leading-9 mb-10">
+        <Text className="font-serif text-3xl font-semibold text-fg leading-9 mb-10">
           How do you want to use Orbit?
         </Text>
 
@@ -35,25 +35,25 @@ export default function RoleStep({ onNext }: Props) {
               key={role}
               className={[
                 'bg-white rounded-2xl border-2 p-5',
-                selected === role ? 'border-purple bg-purple-pale' : 'border-divider',
+                selected === role ? 'border-accent bg-accent-muted' : 'border-separator',
               ].join(' ')}
               onPress={() => setSelected(role)}
             >
-              <Text className="text-[17px] font-semibold text-ink mb-1.5">{title}</Text>
-              <Text className="text-sm text-ink-mid leading-5">{subtitle}</Text>
+              <Text className="text-base font-semibold text-fg mb-1.5">{title}</Text>
+              <Text className="text-sm text-fg-muted leading-5">{subtitle}</Text>
             </Pressable>
           ))}
         </View>
 
         <Pressable
           className={[
-            'mt-6 bg-purple rounded-[14px] py-4 items-center',
+            'mt-6 bg-accent rounded-[14px] py-4 items-center',
             !selected ? 'opacity-40' : '',
           ].join(' ')}
           onPress={() => selected && onNext(selected)}
           disabled={!selected}
         >
-          <Text className="text-white text-[17px] font-semibold">Continue</Text>
+          <Text className="text-white text-base font-semibold">Continue</Text>
         </Pressable>
       </View>
     </SafeAreaView>

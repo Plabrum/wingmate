@@ -20,7 +20,7 @@ fi
 
 NEEDS_BUILD=false
 
-if [ ! -d "$SIM_BUILD" ]; then
+if [ ! -e "$SIM_BUILD" ]; then
   echo "No dev client build found."
   NEEDS_BUILD=true
 elif [ ! -f "$FP_FILE" ] || [ "$(cat "$FP_FILE")" != "$CURRENT" ]; then
@@ -38,18 +38,9 @@ if [ "$NEEDS_BUILD" = true ]; then
     --local \
     --output "$SIM_BUILD"
 
-  echo "Installing on booted simulator..."
-  # EAS outputs a compressed archive — extract it first
-  EXTRACT_DIR="builds/dev-sim-extracted"
-  rm -rf "$EXTRACT_DIR"
-  mkdir -p "$EXTRACT_DIR"
-  tar -xzf "$SIM_BUILD" -C "$EXTRACT_DIR"
-  APP_PATH=$(find "$EXTRACT_DIR" -name "*.app" -maxdepth 1 | head -1)
-  xcrun simctl install booted "$APP_PATH"
-  echo "$CURRENT" > "$FP_FILE"
-  echo "Dev client installed."
+  bash scripts/install-dev-sim.sh
 fi
 
 echo ""
 echo "Starting Metro bundler..."
-npx expo start --dev-client
+npx expo start --dev-client --ios

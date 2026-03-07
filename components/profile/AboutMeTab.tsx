@@ -61,10 +61,10 @@ export function AboutMeTab({ form, data, userId }: Props) {
       showsVerticalScrollIndicator={false}
       keyboardShouldPersistTaps="handled"
     >
-      <Text className="text-12 font-bold text-ink-dim uppercase tracking-[0.6px] mt-5 mb-2">
+      <Text className="text-xs font-bold text-fg-subtle uppercase tracking-[0.6px] mt-5 mb-2">
         Dating Status
       </Text>
-      <View className="bg-white rounded-14 overflow-hidden">
+      <View className="bg-white rounded-xl overflow-hidden">
         {STATUS_OPTIONS.map((opt, i) => {
           const active = dating_status === opt.key;
           return (
@@ -82,18 +82,18 @@ export function AboutMeTab({ form, data, userId }: Props) {
               }
             >
               <View className="flex-1">
-                <Text className={'text-15 font-medium ' + (active ? 'text-purple' : 'text-ink')}>
+                <Text className={'text-sm font-medium ' + (active ? 'text-accent' : 'text-fg')}>
                   {opt.label}
                 </Text>
-                <Text className="text-12 text-ink-dim mt-px">{opt.sub}</Text>
+                <Text className="text-xs text-fg-subtle mt-px">{opt.sub}</Text>
               </View>
               <View
                 className={
-                  'w-5 h-5 rounded-[10px] border-2 items-center justify-center ' +
-                  (active ? 'border-purple' : 'border-ink-ghost')
+                  'w-5 h-5 rounded-lg border-2 items-center justify-center ' +
+                  (active ? 'border-accent' : 'border-fg-ghost')
                 }
               >
-                {active && <View className="w-[10px] h-[10px] rounded-[5px] bg-purple" />}
+                {active && <View className="w-[10px] h-[10px] rounded-[5px] bg-accent" />}
               </View>
             </Pressable>
           );
@@ -101,9 +101,9 @@ export function AboutMeTab({ form, data, userId }: Props) {
       </View>
 
       {dating_status !== 'open' && (
-        <View className="flex-row items-start gap-2 bg-purple-pale rounded-[10px] p-3 mt-[10px]">
+        <View className="flex-row items-start gap-2 bg-accent-muted rounded-lg p-3 mt-[10px]">
           <IconSymbol name="eye.slash" size={15} color={colors.purple} />
-          <Text className="flex-1 text-13 text-purple leading-[18px]">
+          <Text className="flex-1 text-sm text-accent leading-[18px]">
             Your profile is hidden from Discover while you{"'"}re{' '}
             {dating_status === 'break' ? 'on a break' : 'just winging'}.
           </Text>
@@ -112,10 +112,10 @@ export function AboutMeTab({ form, data, userId }: Props) {
 
       {dating_status !== 'winging' && (
         <>
-          <Text className="text-12 font-bold text-ink-dim uppercase tracking-[0.6px] mt-5 mb-2">
+          <Text className="text-xs font-bold text-fg-subtle uppercase tracking-[0.6px] mt-5 mb-2">
             Details
           </Text>
-          <View className="bg-white rounded-14 overflow-hidden">
+          <View className="bg-white rounded-xl overflow-hidden">
             {detailRows.map((row, i) => (
               <View
                 key={row.label}
@@ -129,26 +129,26 @@ export function AboutMeTab({ form, data, userId }: Props) {
                     : undefined
                 }
               >
-                <Text className="text-15 text-ink-mid">{row.label}</Text>
-                <Text className="text-15 font-medium text-ink">{row.value}</Text>
+                <Text className="text-sm text-fg-muted">{row.label}</Text>
+                <Text className="text-sm font-medium text-fg">{row.value}</Text>
               </View>
             ))}
           </View>
 
           {data.bio ? (
             <>
-              <Text className="text-12 font-bold text-ink-dim uppercase tracking-[0.6px] mt-5 mb-2">
+              <Text className="text-xs font-bold text-fg-subtle uppercase tracking-[0.6px] mt-5 mb-2">
                 Bio
               </Text>
-              <View className="bg-white rounded-14 overflow-hidden p-[14px]">
-                <Text className="text-15 text-ink leading-[22px]">{data.bio}</Text>
+              <View className="bg-white rounded-xl overflow-hidden p-[14px]">
+                <Text className="text-sm text-fg leading-[22px]">{data.bio}</Text>
               </View>
             </>
           ) : null}
 
           {data.interests.length > 0 && (
             <>
-              <Text className="text-12 font-bold text-ink-dim uppercase tracking-[0.6px] mt-5 mb-2">
+              <Text className="text-xs font-bold text-fg-subtle uppercase tracking-[0.6px] mt-5 mb-2">
                 Interests
               </Text>
               <View className="flex-row flex-wrap gap-2">

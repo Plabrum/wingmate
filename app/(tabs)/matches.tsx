@@ -60,21 +60,21 @@ function MatchCard({ match, currentUserId, onPress }: MatchCardProps) {
   const age = dob ? computeAge(dob) : null;
 
   return (
-    <Pressable className="rounded-[12px] overflow-hidden bg-muted" onPress={onPress}>
+    <Pressable className="rounded-xl overflow-hidden bg-surface" onPress={onPress}>
       <PhotoRect uri={photoUrl} ratio={4 / 3} style={{ width: '100%' }} />
       {/* Name + age overlay */}
       <View
         className="absolute bottom-0 left-0 right-0 px-2 py-[6px]"
         style={{ backgroundColor: 'rgba(0,0,0,0.35)' }}
       >
-        <Text className="text-white text-[13px] font-semibold" numberOfLines={1}>
+        <Text className="text-white text-sm font-semibold" numberOfLines={1}>
           {other.chosen_name ?? 'Someone'}
           {age != null ? `, ${age}` : ''}
         </Text>
       </View>
       {/* New match indicator */}
       {isNew && (
-        <View className="absolute top-2 right-2 w-[10px] h-[10px] rounded-full bg-purple border-[1.5px] border-white" />
+        <View className="absolute top-2 right-2 w-[10px] h-[10px] rounded-full bg-accent border-[1.5px] border-white" />
       )}
     </Pressable>
   );
@@ -117,21 +117,21 @@ function SheetBody({ match, currentUserId }: { match: MatchRow; currentUserId: s
     <>
       {/* Wing note */}
       {wingNote?.note != null && (
-        <View className="mx-5 mt-4 bg-purple-pale rounded-[12px] p-[14px]">
+        <View className="mx-5 mt-4 bg-accent-muted rounded-xl p-[14px]">
           <View className="flex-row items-center gap-2 mb-[6px]">
             <WingStack initials={[getInitials(wingNote.winger?.chosen_name)]} />
-            <Text className="text-13 font-semibold text-purple">
+            <Text className="text-sm font-semibold text-accent">
               {wingNote.winger?.chosen_name ?? 'Your wing'} introduced you
             </Text>
           </View>
-          <Text className="text-[14px] leading-[20px] text-ink">{wingNote.note}</Text>
+          <Text className="text-sm leading-[20px] text-fg">{wingNote.note}</Text>
         </View>
       )}
 
       {/* Prompts */}
       {prompts.length > 0 && (
         <View className="px-5 pt-4">
-          <Text className="text-11 font-bold tracking-[0.8px] text-ink-dim uppercase mb-2">
+          <Text className="text-xs font-bold tracking-[0.8px] text-fg-subtle uppercase mb-2">
             Prompts
           </Text>
           {prompts.map((prompt) => {
@@ -143,22 +143,22 @@ function SheetBody({ match, currentUserId }: { match: MatchRow; currentUserId: s
               error: null,
             };
             return (
-              <View key={prompt.id} className="bg-white rounded-[12px] p-[14px] mb-[10px]">
+              <View key={prompt.id} className="bg-white rounded-xl p-[14px] mb-[10px]">
                 {prompt.template?.question != null && (
-                  <Text className="text-12 font-semibold text-ink-dim tracking-[0.5px] mb-1">
+                  <Text className="text-xs font-semibold text-fg-subtle tracking-[0.5px] mb-1">
                     {prompt.template.question}
                   </Text>
                 )}
-                <Text className="text-[15px] leading-[21px] text-ink">{prompt.answer}</Text>
+                <Text className="text-sm leading-[21px] text-fg">{prompt.answer}</Text>
 
                 {ps.sent ? (
-                  <Text className="mt-[10px] text-13 text-green font-medium">
+                  <Text className="mt-[10px] text-sm text-green-500 font-medium">
                     Comment sent — {other.chosen_name ?? 'They'} will see it.
                   </Text>
                 ) : ps.open ? (
                   <View className="mt-[10px] gap-2">
                     <TextInput
-                      className="bg-muted rounded-[10px] p-3 text-14 text-ink min-h-[72px]"
+                      className="bg-surface rounded-lg p-3 text-sm text-fg min-h-[72px]"
                       style={{ textAlignVertical: 'top' }}
                       value={ps.text}
                       onChangeText={(t) => setPromptField(prompt.id, { text: t })}
@@ -168,10 +168,10 @@ function SheetBody({ match, currentUserId }: { match: MatchRow; currentUserId: s
                       maxLength={300}
                       editable={!ps.sending}
                     />
-                    {ps.error != null && <Text className="text-12 text-[#B91C1C]">{ps.error}</Text>}
+                    {ps.error != null && <Text className="text-xs text-[#B91C1C]">{ps.error}</Text>}
                     <Pressable
                       className={cn(
-                        'bg-purple rounded-[10px] py-[10px] items-center justify-center',
+                        'bg-accent rounded-lg py-[10px] items-center justify-center',
                         (!ps.text.trim() || ps.sending) && 'opacity-50'
                       )}
                       onPress={() => sendReply(prompt.id)}
@@ -180,7 +180,7 @@ function SheetBody({ match, currentUserId }: { match: MatchRow; currentUserId: s
                       {ps.sending ? (
                         <ActivityIndicator color={colors.white} size="small" />
                       ) : (
-                        <Text className="text-white font-semibold text-14">Send</Text>
+                        <Text className="text-white font-semibold text-sm">Send</Text>
                       )}
                     </Pressable>
                   </View>
@@ -189,7 +189,7 @@ function SheetBody({ match, currentUserId }: { match: MatchRow; currentUserId: s
                     className="mt-[10px]"
                     onPress={() => setPromptField(prompt.id, { open: true })}
                   >
-                    <Text className="text-13 font-semibold text-purple">Reply to this prompt</Text>
+                    <Text className="text-sm font-semibold text-accent">Reply to this prompt</Text>
                   </Pressable>
                 )}
               </View>
@@ -243,7 +243,7 @@ function MatchSheet({ match, currentUserId, visible, onClose }: MatchSheetProps)
           onPress={onClose}
           hitSlop={12}
         >
-          <Text className="text-white text-14 font-bold">✕</Text>
+          <Text className="text-white text-sm font-bold">✕</Text>
         </Pressable>
 
         <ScrollView
@@ -252,34 +252,34 @@ function MatchSheet({ match, currentUserId, visible, onClose }: MatchSheetProps)
           keyboardShouldPersistTaps="handled"
         >
           {/* Handle bar */}
-          <View className="self-center w-9 h-1 rounded-[2px] bg-divider mt-3 mb-2" />
+          <View className="self-center w-9 h-1 rounded-[2px] bg-separator mt-3 mb-2" />
 
           {/* Photo */}
           <PhotoRect uri={photoUrl} ratio={4 / 3} style={{ width: '100%', borderRadius: 0 }} />
 
           {/* Name + Age + City */}
           <View className="px-5 pt-4 pb-2">
-            <Text className="text-[26px] font-bold text-ink font-serif">
+            <Text className="text-2xl font-bold text-fg font-serif">
               {other.chosen_name ?? 'Someone'}
               {age != null ? `, ${age}` : ''}
             </Text>
-            {city != null && <Text className="text-14 text-ink-mid mt-0.5">{city}</Text>}
+            {city != null && <Text className="text-sm text-fg-muted mt-0.5">{city}</Text>}
           </View>
 
           {/* Bio */}
           {bio != null && bio.length > 0 && (
             <View className="px-5 pt-4">
-              <Text className="text-11 font-bold tracking-[0.8px] text-ink-dim uppercase mb-2">
+              <Text className="text-xs font-bold tracking-[0.8px] text-fg-subtle uppercase mb-2">
                 About
               </Text>
-              <Text className="text-[15px] leading-[22px] text-ink">{bio}</Text>
+              <Text className="text-sm leading-[22px] text-fg">{bio}</Text>
             </View>
           )}
 
           {/* Interests */}
           {interests.length > 0 && (
             <View className="px-5 pt-4">
-              <Text className="text-11 font-bold tracking-[0.8px] text-ink-dim uppercase mb-2">
+              <Text className="text-xs font-bold tracking-[0.8px] text-fg-subtle uppercase mb-2">
                 Interests
               </Text>
               <View className="flex-row flex-wrap gap-2">
@@ -322,7 +322,7 @@ function MatchesList({ userId }: { userId: string }) {
   const [selectedMatch, setSelectedMatch] = useState<MatchRow | null>(null);
 
   return (
-    <SafeAreaView className="flex-1 bg-canvas">
+    <SafeAreaView className="flex-1 bg-page">
       <FlatList
         data={matches}
         keyExtractor={(item) => item.id}
@@ -334,7 +334,7 @@ function MatchesList({ userId }: { userId: string }) {
         ListHeaderComponent={<LargeHeader title="Matches" />}
         ListEmptyComponent={
           <View className="flex-1 items-center justify-center p-8">
-            <Text className="text-[15px] leading-[22px] text-ink-mid text-center">
+            <Text className="text-sm leading-[22px] text-fg-muted text-center">
               No matches yet. Keep swiping in Discover.
             </Text>
           </View>

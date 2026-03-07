@@ -49,7 +49,7 @@ export default function PromptsStep({ dpId, onFinish }: Props) {
   const visibleTemplates = templates.filter((t) => !addedIds.has(t.id));
 
   return (
-    <SafeAreaView className="flex-1 bg-canvas">
+    <SafeAreaView className="flex-1 bg-page">
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -59,21 +59,21 @@ export default function PromptsStep({ dpId, onFinish }: Props) {
           contentContainerClassName="p-6 pb-12"
           keyboardShouldPersistTaps="handled"
         >
-          <Text className="font-serif text-28 font-semibold text-ink mb-6">
+          <Text className="font-serif text-3xl font-semibold text-fg mb-6">
             Tell people something about you.
           </Text>
 
           {visibleTemplates.map((template) => (
             <View
               key={template.id}
-              className="bg-white rounded-16 border-[1.5px] border-divider mb-3 overflow-hidden"
+              className="bg-white rounded-2xl border-[1.5px] border-separator mb-3 overflow-hidden"
             >
               <Pressable
                 className="flex-row items-center justify-between p-4"
                 onPress={() => toggleExpand(template.id)}
               >
-                <Text className="flex-1 text-15 text-ink font-medium">{template.question}</Text>
-                <Text className="text-11 text-ink-dim ml-2">
+                <Text className="flex-1 text-sm text-fg font-medium">{template.question}</Text>
+                <Text className="text-xs text-fg-subtle ml-2">
                   {expandedId === template.id ? '▲' : '▼'}
                 </Text>
               </Pressable>
@@ -86,7 +86,7 @@ export default function PromptsStep({ dpId, onFinish }: Props) {
                     rules={{ required: true }}
                     render={({ field: { onChange, value } }) => (
                       <TextInput
-                        className="bg-canvas rounded-[10px] border border-divider p-3 text-15 text-ink min-h-20 mb-3"
+                        className="bg-page rounded-lg border border-separator p-3 text-sm text-fg min-h-20 mb-3"
                         placeholder="Your answer..."
                         placeholderTextColor={colors.inkGhost}
                         value={value}
@@ -99,14 +99,14 @@ export default function PromptsStep({ dpId, onFinish }: Props) {
                     )}
                   />
                   <Pressable
-                    className={`bg-purple rounded-[10px] py-2.5 items-center${!isValid || isSubmitting ? ' opacity-40' : ''}`}
+                    className={`bg-accent rounded-lg py-2.5 items-center${!isValid || isSubmitting ? ' opacity-40' : ''}`}
                     onPress={onAdd}
                     disabled={!isValid || isSubmitting}
                   >
                     {isSubmitting ? (
                       <ActivityIndicator color={colors.white} size="small" />
                     ) : (
-                      <Text className="text-white font-semibold text-15">Add</Text>
+                      <Text className="text-white font-semibold text-sm">Add</Text>
                     )}
                   </Pressable>
                 </View>
@@ -116,13 +116,13 @@ export default function PromptsStep({ dpId, onFinish }: Props) {
 
           {addedPrompts.length > 0 && (
             <View className="mt-6 mb-2">
-              <Text className="text-13 font-semibold text-ink-mid uppercase tracking-[0.5px] mb-3">
+              <Text className="text-sm font-semibold text-fg-muted uppercase tracking-[0.5px] mb-3">
                 Your prompts
               </Text>
               {addedPrompts.map((p, i) => (
-                <View key={i} className="bg-white rounded-16 p-4 mb-2.5 border border-divider">
-                  <Text className="text-13 text-ink-mid mb-1">{p.question}</Text>
-                  <Text className="text-15 text-ink font-medium">{p.answer}</Text>
+                <View key={i} className="bg-white rounded-2xl p-4 mb-2.5 border border-separator">
+                  <Text className="text-sm text-fg-muted mb-1">{p.question}</Text>
+                  <Text className="text-sm text-fg font-medium">{p.answer}</Text>
                 </View>
               ))}
             </View>
@@ -134,14 +134,14 @@ export default function PromptsStep({ dpId, onFinish }: Props) {
               onPress={onFinish}
               disabled={isSubmitting}
             >
-              <Text className="text-16 text-ink-mid font-medium">Skip</Text>
+              <Text className="text-base text-fg-muted font-medium">Skip</Text>
             </Pressable>
             <Pressable
-              className={`bg-purple rounded-14 py-3.5 px-8 items-center${isSubmitting ? ' opacity-40' : ''}`}
+              className={`bg-accent rounded-xl py-3.5 px-8 items-center${isSubmitting ? ' opacity-40' : ''}`}
               onPress={onFinish}
               disabled={isSubmitting}
             >
-              <Text className="text-white text-17 font-semibold">Finish</Text>
+              <Text className="text-white text-base font-semibold">Finish</Text>
             </Pressable>
           </View>
         </ScrollView>

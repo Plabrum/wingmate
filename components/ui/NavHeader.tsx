@@ -29,8 +29,8 @@ export function NavHeader({ back, onBack, title, sub, right }: Props) {
         <View className="w-10" />
       )}
       <View className="flex-1 items-center">
-        <Text className="text-17 font-semibold text-ink">{title}</Text>
-        {sub != null && <Text className="text-12 text-ink-mid mt-px">{sub}</Text>}
+        <Text className="text-base font-semibold text-fg">{title}</Text>
+        {sub != null && <Text className="text-xs text-fg-muted mt-px">{sub}</Text>}
       </View>
       <View className="w-10 items-end">{right ?? null}</View>
     </View>

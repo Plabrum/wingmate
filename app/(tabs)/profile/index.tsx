@@ -36,7 +36,7 @@ function LogOutButton() {
 
   return (
     <Pressable onPress={handleLogOut} hitSlop={12}>
-      <Text className="text-15 text-ink-mid">Log out</Text>
+      <Text className="text-sm text-fg-muted">Log out</Text>
     </Pressable>
   );
 }
@@ -48,8 +48,8 @@ function WingerView({ name }: { name: string | null }) {
   return (
     <View className="flex-1 items-center justify-center p-10">
       <FaceAvatar initials={getInitials(name)} size={72} />
-      <Text className="text-[24px] font-bold text-ink mt-4 font-serif">{name ?? 'Winger'}</Text>
-      <Text className="text-14 text-ink-mid mt-1">Winger</Text>
+      <Text className="text-2xl font-bold text-fg mt-4 font-serif">{name ?? 'Winger'}</Text>
+      <Text className="text-sm text-fg-muted mt-1">Winger</Text>
       <View className="mt-8 w-full">
         <PurpleButton
           label="Wingpeople & Invitations"
@@ -87,7 +87,7 @@ function ProfileScreenInner() {
 
   if (profile?.role === 'winger') {
     return (
-      <SafeAreaView className="flex-1 bg-canvas" edges={['top']}>
+      <SafeAreaView className="flex-1 bg-page" edges={['top']}>
         <LargeHeader title="My Profile" right={<LogOutButton />} />
         <WingerView name={profile.chosen_name} />
       </SafeAreaView>
@@ -99,7 +99,7 @@ function ProfileScreenInner() {
   const wingInitials = wingpeople.map((w) => getInitials((w as any).winger?.chosen_name));
 
   return (
-    <SafeAreaView className="flex-1 bg-canvas" edges={['top']}>
+    <SafeAreaView className="flex-1 bg-page" edges={['top']}>
       <LargeHeader title="My Profile" right={<LogOutButton />} />
 
       {/* Wingpeople row */}
@@ -111,12 +111,14 @@ function ProfileScreenInner() {
         {wingInitials.length > 0 ? (
           <>
             <WingStack initials={wingInitials} size={30} />
-            <Text className="flex-1 text-14 font-semibold text-ink">
+            <Text className="flex-1 text-sm font-semibold text-fg">
               {wingpeople.length} wingperson{wingpeople.length !== 1 ? 'e' : ''}
             </Text>
           </>
         ) : (
-          <Text className="flex-1 text-14 text-ink-mid">No wingpeople yet — tap to invite one</Text>
+          <Text className="flex-1 text-sm text-fg-muted">
+            No wingpeople yet — tap to invite one
+          </Text>
         )}
         <IconSymbol name="chevron.right" size={13} color={colors.inkGhost} />
       </Pressable>

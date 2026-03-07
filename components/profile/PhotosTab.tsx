@@ -120,13 +120,13 @@ export function PhotosTab({ form, data, userId, onRefresh }: Props) {
     <ScrollView contentContainerClassName="p-5 pb-12" showsVerticalScrollIndicator={false}>
       {pending.length > 0 && (
         <>
-          <Text className="text-12 font-bold text-ink-dim uppercase tracking-[0.6px] mb-[10px] mt-1">
+          <Text className="text-xs font-bold text-fg-subtle uppercase tracking-[0.6px] mb-[10px] mt-1">
             Suggested by Wingpeople
           </Text>
           {pending.map((photo) => {
             const suggesterName = (photo as any).suggester?.chosen_name ?? 'your wingperson';
             return (
-              <View key={photo.id} className="bg-white rounded-14 overflow-hidden mb-3">
+              <View key={photo.id} className="bg-white rounded-xl overflow-hidden mb-3">
                 <PhotoRect
                   uri={getPhotoUrl(photo.storage_url)}
                   ratio={4 / 3}
@@ -134,23 +134,23 @@ export function PhotosTab({ form, data, userId, onRefresh }: Props) {
                   style={{ borderRadius: 0 }}
                 />
                 <View className="p-3">
-                  <Text className="text-15 font-semibold text-ink">From {suggesterName}</Text>
-                  <Text className="text-13 text-ink-mid mt-0.5">
+                  <Text className="text-sm font-semibold text-fg">From {suggesterName}</Text>
+                  <Text className="text-sm text-fg-muted mt-0.5">
                     Approve to add this to your profile.
                   </Text>
                 </View>
                 <View className="flex-row gap-2 px-3 pb-3">
                   <Pressable
-                    className="flex-1 py-[10px] rounded-[10px] items-center bg-purple"
+                    className="flex-1 py-[10px] rounded-lg items-center bg-accent"
                     onPress={() => handleApprove(photo.id)}
                   >
-                    <Text className="text-white font-semibold text-14">Approve</Text>
+                    <Text className="text-white font-semibold text-sm">Approve</Text>
                   </Pressable>
                   <Pressable
-                    className="flex-1 py-[10px] rounded-[10px] items-center bg-muted"
+                    className="flex-1 py-[10px] rounded-lg items-center bg-surface"
                     onPress={() => handleReject(photo.id, photo.storage_url)}
                   >
-                    <Text className="text-ink font-semibold text-14">Reject</Text>
+                    <Text className="text-fg font-semibold text-sm">Reject</Text>
                   </Pressable>
                 </View>
               </View>
@@ -159,14 +159,14 @@ export function PhotosTab({ form, data, userId, onRefresh }: Props) {
         </>
       )}
 
-      <Text className="text-12 font-bold text-ink-dim uppercase tracking-[0.6px] mb-[10px] mt-1">
+      <Text className="text-xs font-bold text-fg-subtle uppercase tracking-[0.6px] mb-[10px] mt-1">
         My Photos{selfPhotos.length > 0 ? ` (${selfPhotos.length})` : ''}
       </Text>
 
       {selfPhotos.length === 0 ? (
-        <View className="bg-white rounded-14 p-7 items-center mb-4">
-          <Text className="text-15 font-semibold text-ink">No photos yet.</Text>
-          <Text className="text-13 text-ink-mid mt-1.5 text-center">
+        <View className="bg-white rounded-xl p-7 items-center mb-4">
+          <Text className="text-sm font-semibold text-fg">No photos yet.</Text>
+          <Text className="text-sm text-fg-muted mt-1.5 text-center">
             Add at least one so people can see you.
           </Text>
         </View>
@@ -176,8 +176,8 @@ export function PhotosTab({ form, data, userId, onRefresh }: Props) {
             <View key={photo.id} style={{ width: PHOTO_COL, position: 'relative' }}>
               <PhotoRect uri={getPhotoUrl(photo.storage_url)} ratio={4 / 5} />
               {idx === 0 ? (
-                <View className="absolute top-2 left-2 bg-purple rounded-md px-[7px] py-[3px]">
-                  <Text className="text-white text-11 font-semibold">Primary</Text>
+                <View className="absolute top-2 left-2 bg-accent rounded-md px-[7px] py-[3px]">
+                  <Text className="text-white text-xs font-semibold">Primary</Text>
                 </View>
               ) : (
                 <Pressable
@@ -195,7 +195,7 @@ export function PhotosTab({ form, data, userId, onRefresh }: Props) {
       )}
 
       <Pressable
-        className="flex-row items-center justify-center gap-2 border-[1.5px] border-purple border-dashed rounded-14 py-[14px] mt-4 min-h-[52px]"
+        className="flex-row items-center justify-center gap-2 border-[1.5px] border-accent border-dashed rounded-xl py-[14px] mt-4 min-h-[52px]"
         onPress={handleAddPhoto}
         disabled={uploading}
       >
@@ -204,7 +204,7 @@ export function PhotosTab({ form, data, userId, onRefresh }: Props) {
         ) : (
           <>
             <IconSymbol name="plus" size={18} color={colors.purple} />
-            <Text className="text-15 font-semibold text-purple">Add Photo</Text>
+            <Text className="text-sm font-semibold text-accent">Add Photo</Text>
           </>
         )}
       </Pressable>

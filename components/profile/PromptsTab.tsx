@@ -97,9 +97,9 @@ export function PromptsTab({ form, data, onRefresh }: Props) {
   return (
     <ScrollView contentContainerClassName="p-5 pb-12" showsVerticalScrollIndicator={false}>
       {prompts.length === 0 && (
-        <View className="bg-white rounded-14 p-7 items-center mb-[14px]">
-          <Text className="text-15 font-semibold text-ink">No prompts yet.</Text>
-          <Text className="text-13 text-ink-mid mt-1.5 text-center">
+        <View className="bg-white rounded-xl p-7 items-center mb-[14px]">
+          <Text className="text-sm font-semibold text-fg">No prompts yet.</Text>
+          <Text className="text-sm text-fg-muted mt-1.5 text-center">
             Add one to give people something to connect with.
           </Text>
         </View>
@@ -111,11 +111,11 @@ export function PromptsTab({ form, data, onRefresh }: Props) {
         const isExpanded = expanded.has(prompt.id);
 
         return (
-          <View key={prompt.id} className="bg-white rounded-14 p-4 mb-[14px]">
-            <Text className="text-13 font-semibold text-purple mb-1.5">
+          <View key={prompt.id} className="bg-white rounded-xl p-4 mb-[14px]">
+            <Text className="text-sm font-semibold text-accent mb-1.5">
               {prompt.template.question}
             </Text>
-            <Text className="text-16 text-ink leading-[22px] font-serif">{prompt.answer}</Text>
+            <Text className="text-base text-fg leading-[22px] font-serif">{prompt.answer}</Text>
 
             {/* Approved wing comments */}
             {approvedR.map((r) => (
@@ -126,10 +126,10 @@ export function PromptsTab({ form, data, onRefresh }: Props) {
               >
                 <FaceAvatar initials={getInitials((r as any).author?.chosen_name)} size={28} />
                 <View className="flex-1">
-                  <Text className="text-12 font-semibold text-ink-mid mb-[3px]">
+                  <Text className="text-xs font-semibold text-fg-muted mb-[3px]">
                     {(r as any).author?.chosen_name ?? 'Wingperson'}
                   </Text>
-                  <Text className="text-14 text-ink leading-5">{r.message}</Text>
+                  <Text className="text-sm text-fg leading-5">{r.message}</Text>
                 </View>
               </View>
             ))}
@@ -145,7 +145,7 @@ export function PromptsTab({ form, data, onRefresh }: Props) {
                   }}
                   onPress={() => toggle(prompt.id)}
                 >
-                  <Text className="flex-1 text-13 font-semibold text-purple">
+                  <Text className="flex-1 text-sm font-semibold text-accent">
                     {pendingR.length} wingperson comment{pendingR.length > 1 ? 's' : ''} waiting
                   </Text>
                   <IconSymbol
@@ -162,19 +162,19 @@ export function PromptsTab({ form, data, onRefresh }: Props) {
                         size={28}
                       />
                       <View className="flex-1">
-                        <Text className="text-14 text-ink leading-5">{r.message}</Text>
+                        <Text className="text-sm text-fg leading-5">{r.message}</Text>
                         <View className="flex-row gap-2 mt-2">
                           <Pressable
-                            className="px-3 py-1.5 rounded-lg bg-purple"
+                            className="px-3 py-1.5 rounded-lg bg-accent"
                             onPress={() => handleApproveResponse(prompt.id, r.id)}
                           >
-                            <Text className="text-white text-13 font-semibold">Approve</Text>
+                            <Text className="text-white text-sm font-semibold">Approve</Text>
                           </Pressable>
                           <Pressable
-                            className="px-3 py-1.5 rounded-lg bg-muted"
+                            className="px-3 py-1.5 rounded-lg bg-surface"
                             onPress={() => handleRejectResponse(prompt.id, r.id)}
                           >
-                            <Text className="text-ink text-13 font-semibold">Reject</Text>
+                            <Text className="text-fg text-sm font-semibold">Reject</Text>
                           </Pressable>
                         </View>
                       </View>
@@ -198,19 +198,19 @@ export function PromptsTab({ form, data, onRefresh }: Props) {
                 ])
               }
             >
-              <Text className="text-13 text-[#EF4444] font-medium">Remove prompt</Text>
+              <Text className="text-sm text-[#EF4444] font-medium">Remove prompt</Text>
             </Pressable>
           </View>
         );
       })}
 
       <Pressable
-        className="flex-row items-center justify-center gap-2 rounded-14 py-[14px] min-h-[52px]"
+        className="flex-row items-center justify-center gap-2 rounded-xl py-[14px] min-h-[52px]"
         style={{ borderWidth: 1.5, borderColor: colors.purple, borderStyle: 'dashed' }}
         onPress={() => setModalVisible(true)}
       >
         <IconSymbol name="plus" size={18} color={colors.purple} />
-        <Text className="text-15 font-semibold text-purple">Add Prompt</Text>
+        <Text className="text-sm font-semibold text-accent">Add Prompt</Text>
       </Pressable>
 
       <AddPromptModal

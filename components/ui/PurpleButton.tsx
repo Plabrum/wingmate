@@ -23,15 +23,15 @@ export function PurpleButton({
       onPress={onPress}
       disabled={disabled || loading}
       className={cn(
-        'rounded-14 py-[15px] px-6 items-center justify-center',
-        outline ? 'bg-transparent border-[1.5px] border-purple' : 'bg-purple',
+        'rounded-xl py-[15px] px-6 items-center justify-center',
+        outline ? 'bg-transparent border-[1.5px] border-accent' : 'bg-accent',
         (disabled || loading) && 'opacity-50'
       )}
     >
       {loading ? (
         <ActivityIndicator color={outline ? colors.purple : 'white'} size="small" />
       ) : (
-        <Text className={cn('text-16 font-semibold', outline ? 'text-purple' : 'text-white')}>
+        <Text className={cn('text-base font-semibold', outline ? 'text-accent' : 'text-white')}>
           {label}
         </Text>
       )}

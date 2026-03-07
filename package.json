@@ -25,7 +25,6 @@
     "db:types": "supabase gen types typescript --local > types/database.ts",
     "prebuild:local": "bash scripts/check-local-build-deps.sh",
     "build:local": "EAS_BUILD_NO_EXPO_GO_WARNING=true eas build --platform ios --profile production --local --output builds/app.ipa",
-    "build:dev-sim": "EAS_BUILD_NO_EXPO_GO_WARNING=true eas build --platform ios --profile development-simulator --local --output builds/dev-sim.app",
     "build:device": "expo run:ios --device",
     "submit:local": "eas submit --platform ios --profile production --path builds/app.ipa",
     "seed:prod": "npx tsx --env-file .env.local scripts/seed-prod.ts",

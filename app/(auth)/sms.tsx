@@ -54,8 +54,8 @@ export default function SmsModal() {
               render={({ field: { onChange, value } }) => (
                 <TextInput
                   className={cn(
-                    'border rounded-[10px] p-[14px] text-[17px] mt-2',
-                    phoneForm.formState.errors.phone ? 'border-error' : 'border-divider'
+                    'border rounded-xl p-3.5 text-base mt-2',
+                    phoneForm.formState.errors.phone ? 'border-red-600' : 'border-separator'
                   )}
                   style={{ borderCurve: 'continuous' }}
                   placeholder="(555) 000-0000"
@@ -68,12 +68,16 @@ export default function SmsModal() {
               )}
             />
             {phoneForm.formState.errors.phone && (
-              <Text className="text-error text-13">{phoneForm.formState.errors.phone.message}</Text>
+              <Text className="text-red-600 text-sm">
+                {phoneForm.formState.errors.phone.message}
+              </Text>
             )}
             {phoneForm.formState.errors.root && (
-              <Text className="text-error text-13">{phoneForm.formState.errors.root.message}</Text>
+              <Text className="text-red-600 text-sm">
+                {phoneForm.formState.errors.root.message}
+              </Text>
             )}
-            <Text className="text-13 text-ink-dim mt-1">
+            <Text className="text-sm text-fg-subtle mt-1">
               US numbers are auto-detected. Include a country code for international numbers.
             </Text>
             <View className="mt-2">
@@ -81,18 +85,20 @@ export default function SmsModal() {
                 <ActivityIndicator style={{ paddingVertical: 14 }} />
               ) : (
                 <Pressable
-                  className="bg-purple active:bg-purple-dark rounded-xl p-[14px] items-center"
+                  className="bg-accent rounded-xl p-[14px] items-center"
                   style={{ borderCurve: 'continuous' }}
                   onPress={onSubmitPhone}
                 >
-                  <Text className="text-white font-semibold text-16">Send Code</Text>
+                  <Text className="text-white font-semibold text-base">Send Code</Text>
                 </Pressable>
               )}
             </View>
           </>
         ) : (
           <>
-            <Text className="text-15 text-ink-mid mt-2">We sent a 6-digit code to {e164Phone}</Text>
+            <Text className="text-sm text-fg-muted mt-2">
+              We sent a 6-digit code to {e164Phone}
+            </Text>
             <Controller
               control={otpForm.control}
               name="code"
@@ -103,8 +109,8 @@ export default function SmsModal() {
               render={({ field: { onChange, value } }) => (
                 <TextInput
                   className={cn(
-                    'border rounded-[10px] p-[14px] text-[24px] mt-2 text-center',
-                    otpForm.formState.errors.code ? 'border-error' : 'border-divider'
+                    'border rounded-xl p-3.5 text-2xl mt-2 text-center',
+                    otpForm.formState.errors.code ? 'border-red-600' : 'border-separator'
                   )}
                   style={{ borderCurve: 'continuous', letterSpacing: 6 }}
                   placeholder="000000"
@@ -117,10 +123,10 @@ export default function SmsModal() {
               )}
             />
             {otpForm.formState.errors.code && (
-              <Text className="text-error text-13">{otpForm.formState.errors.code.message}</Text>
+              <Text className="text-red-600 text-sm">{otpForm.formState.errors.code.message}</Text>
             )}
             {otpForm.formState.errors.root && (
-              <Text className="text-error text-13">{otpForm.formState.errors.root.message}</Text>
+              <Text className="text-red-600 text-sm">{otpForm.formState.errors.root.message}</Text>
             )}
             <View className="mt-2 gap-2">
               {otpForm.formState.isSubmitting ? (
@@ -128,14 +134,14 @@ export default function SmsModal() {
               ) : (
                 <>
                   <Pressable
-                    className="bg-purple active:bg-purple-dark rounded-xl p-[14px] items-center"
+                    className="bg-accent rounded-xl p-[14px] items-center"
                     style={{ borderCurve: 'continuous' }}
                     onPress={onSubmitOtp}
                   >
-                    <Text className="text-white font-semibold text-16">Verify</Text>
+                    <Text className="text-white font-semibold text-base">Verify</Text>
                   </Pressable>
                   <Pressable className="items-center p-[10px]" onPress={() => setStep('phone')}>
-                    <Text className="text-purple text-14">Change number</Text>
+                    <Text className="text-accent text-sm">Change number</Text>
                   </Pressable>
                 </>
               )}

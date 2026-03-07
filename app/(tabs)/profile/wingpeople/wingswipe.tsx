@@ -22,8 +22,8 @@ const PAGE_SIZE = 20;
 
 function DaterCallout({ name, interests }: { name: string; interests: string[] }) {
   return (
-    <View className="bg-purple-pale rounded-xl p-[14px] mb-4 gap-[10px]">
-      <Text className="text-14 font-semibold text-purple">You think {name} would like this?</Text>
+    <View className="bg-accent-muted rounded-xl p-[14px] mb-4 gap-[10px]">
+      <Text className="text-sm font-semibold text-accent">You think {name} would like this?</Text>
       {interests.length > 0 && (
         <View className="flex-row flex-wrap gap-2">
           {interests.map((interest) => (
@@ -54,10 +54,10 @@ function WingCardView({ card, callout }: WingCardViewProps) {
     <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
       <PhotoRect uri={card.first_photo} ratio={4 / 5} />
       <View className="p-4">
-        <Text className="text-[28px] font-serif text-ink font-bold">
+        <Text className="text-3xl font-serif text-fg font-bold">
           {card.chosen_name}, {card.age}
         </Text>
-        <Text className="text-15 text-ink-mid mt-1 mb-3">{card.city}</Text>
+        <Text className="text-sm text-fg-muted mt-1 mb-3">{card.city}</Text>
         {callout}
         {card.interests.length > 0 && (
           <View className="flex-row flex-wrap gap-2 mb-4">
@@ -67,7 +67,7 @@ function WingCardView({ card, callout }: WingCardViewProps) {
           </View>
         )}
         {card.bio != null && (
-          <Text className="text-15 text-ink-mid leading-[22px]">{card.bio}</Text>
+          <Text className="text-sm text-fg-muted leading-[22px]">{card.bio}</Text>
         )}
       </View>
     </ScrollView>
@@ -105,13 +105,13 @@ function NoteModal({
             className="bg-white rounded-tl-[20px] rounded-tr-[20px] px-6 pt-3"
             style={{ paddingBottom: insets.bottom + 20 }}
           >
-            <View className="self-center w-9 h-1 rounded-[2px] bg-ink-ghost mb-5" />
-            <Text className="text-18 font-bold text-ink mb-1.5">Add a note?</Text>
-            <Text className="text-14 text-ink-mid leading-5 mb-4">
+            <View className="self-center w-9 h-1 rounded-[2px] bg-fg-ghost mb-5" />
+            <Text className="text-lg font-bold text-fg mb-1.5">Add a note?</Text>
+            <Text className="text-sm text-fg-muted leading-5 mb-4">
               Let them know why you think they{"'"}d get along. (Optional)
             </Text>
             <TextInput
-              className="border-[1.5px] border-divider rounded-xl px-4 py-[14px] text-15 text-ink bg-white min-h-[100px]"
+              className="border-[1.5px] border-separator rounded-xl px-4 py-[14px] text-sm text-fg bg-white min-h-[100px]"
               placeholder="She loves hiking and has a great laugh..."
               placeholderTextColor={colors.inkGhost}
               multiline
@@ -136,7 +136,7 @@ function NoteModal({
 function EmptyState({ daterName }: { daterName: string }) {
   return (
     <View className="flex-1 justify-center items-center p-6">
-      <Text className="text-16 text-ink-mid text-center leading-6">
+      <Text className="text-base text-fg-muted text-center leading-6">
         You{"'"}ve gone through everyone in {daterName}
         {"'"}s area. Check back soon.
       </Text>
@@ -195,14 +195,14 @@ function WingSwipeContent() {
             style={cardButtonShadow}
             onPress={decline}
           >
-            <Text className="text-[24px] text-ink-mid">✕</Text>
+            <Text className="text-2xl text-fg-muted">✕</Text>
           </Pressable>
           <Pressable
-            className="w-16 h-16 rounded-[32px] justify-center items-center bg-purple"
+            className="w-16 h-16 rounded-[32px] justify-center items-center bg-accent"
             style={cardButtonShadow}
             onPress={() => setNoteVisible(true)}
           >
-            <Text className="text-[24px] text-white">♥</Text>
+            <Text className="text-2xl text-white">♥</Text>
           </Pressable>
         </View>
       )}
@@ -220,7 +220,7 @@ function WingSwipeContent() {
 
 export default function WingSwipeScreen() {
   return (
-    <SafeAreaView className="flex-1 bg-canvas" edges={['top']}>
+    <SafeAreaView className="flex-1 bg-page" edges={['top']}>
       <ScreenSuspense>
         <WingSwipeContent />
       </ScreenSuspense>

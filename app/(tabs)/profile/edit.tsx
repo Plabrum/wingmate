@@ -46,7 +46,7 @@ const RELIGIOUS_PREFS: { value: Religion | null; label: string }[] = [
 
 function SectionLabel({ label }: { label: string }) {
   return (
-    <Text className="text-[12px] font-bold text-ink-dim uppercase tracking-[0.6px] mt-5 mb-2.5">
+    <Text className="text-xs font-bold text-fg-subtle uppercase tracking-[0.6px] mt-5 mb-2.5">
       {label}
     </Text>
   );
@@ -72,11 +72,11 @@ function PickerRow<T extends string>({
             key={opt}
             onPress={() => onChange(opt)}
             className={cn(
-              'rounded-[20px] px-3.5 py-2 bg-white border-[1.5px] border-divider',
-              active && 'bg-purple-pale border-purple'
+              'rounded-2xl px-3.5 py-2 bg-white border-[1.5px] border-separator',
+              active && 'bg-accent-muted border-accent'
             )}
           >
-            <Text className={cn('text-[14px] text-ink-mid font-medium', active && 'text-purple')}>
+            <Text className={cn('text-sm text-fg-muted font-medium', active && 'text-accent')}>
               {getLabel ? getLabel(opt) : opt}
             </Text>
           </Pressable>
@@ -107,11 +107,11 @@ function MultiPickerRow<T extends string>({
             key={opt}
             onPress={() => toggle(opt)}
             className={cn(
-              'rounded-[20px] px-3.5 py-2 bg-white border-[1.5px] border-divider',
-              active && 'bg-purple-pale border-purple'
+              'rounded-2xl px-3.5 py-2 bg-white border-[1.5px] border-separator',
+              active && 'bg-accent-muted border-accent'
             )}
           >
-            <Text className={cn('text-[14px] text-ink-mid font-medium', active && 'text-purple')}>
+            <Text className={cn('text-sm text-fg-muted font-medium', active && 'text-accent')}>
               {opt}
             </Text>
           </Pressable>
@@ -196,14 +196,14 @@ function EditProfileForm({
       disabled={isSubmitting}
       hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
     >
-      <Text className={cn('text-[15px] font-semibold text-purple', isSubmitting && 'opacity-40')}>
+      <Text className={cn('text-sm font-semibold text-accent', isSubmitting && 'opacity-40')}>
         {isSubmitting ? 'Saving…' : 'Save'}
       </Text>
     </Pressable>
   );
 
   return (
-    <SafeAreaView className="flex-1 bg-canvas" edges={['top', 'bottom']}>
+    <SafeAreaView className="flex-1 bg-page" edges={['top', 'bottom']}>
       <NavHeader back title="Edit Profile" onBack={() => router.back()} right={saveButton} />
 
       <KeyboardAvoidingView
@@ -222,7 +222,7 @@ function EditProfileForm({
             name="bio"
             render={({ field }) => (
               <TextInput
-                className="bg-white rounded-[12px] px-3.5 py-3 text-[15px] text-ink min-h-[100px]"
+                className="bg-white rounded-xl px-3.5 py-3 text-sm text-fg min-h-[100px]"
                 style={{ textAlignVertical: 'top', lineHeight: 22 }}
                 placeholder="Tell people a bit about yourself…"
                 placeholderTextColor={colors.inkGhost}
@@ -233,7 +233,7 @@ function EditProfileForm({
               />
             )}
           />
-          <Text className="text-[12px] text-ink-ghost text-right mt-1">{bioValue.length}/500</Text>
+          <Text className="text-xs text-fg-ghost text-right mt-1">{bioValue.length}/500</Text>
 
           {/* City */}
           <SectionLabel label="City" />
@@ -249,13 +249,13 @@ function EditProfileForm({
           <SectionLabel label="Age Range" />
           <View className="flex-row items-center gap-3">
             <View className="flex-1">
-              <Text className="text-[12px] text-ink-mid mb-1.5">From</Text>
+              <Text className="text-xs text-fg-muted mb-1.5">From</Text>
               <Controller
                 control={control}
                 name="ageFrom"
                 render={({ field }) => (
                   <TextInput
-                    className="bg-white rounded-[12px] px-3.5 py-3 text-[16px] text-ink text-center"
+                    className="bg-white rounded-xl px-3.5 py-3 text-base text-fg text-center"
                     value={field.value}
                     onChangeText={field.onChange}
                     keyboardType="number-pad"
@@ -265,15 +265,15 @@ function EditProfileForm({
                 )}
               />
             </View>
-            <Text className="text-[20px] text-ink-ghost mt-5">–</Text>
+            <Text className="text-xl text-fg-ghost mt-5">–</Text>
             <View className="flex-1">
-              <Text className="text-[12px] text-ink-mid mb-1.5">To (optional)</Text>
+              <Text className="text-xs text-fg-muted mb-1.5">To (optional)</Text>
               <Controller
                 control={control}
                 name="ageTo"
                 render={({ field }) => (
                   <TextInput
-                    className="bg-white rounded-[12px] px-3.5 py-3 text-[16px] text-ink text-center"
+                    className="bg-white rounded-xl px-3.5 py-3 text-base text-fg text-center"
                     value={field.value}
                     onChangeText={field.onChange}
                     keyboardType="number-pad"
@@ -328,15 +328,12 @@ function EditProfileForm({
                       key={String(opt.value)}
                       onPress={() => field.onChange(opt.value)}
                       className={cn(
-                        'rounded-[20px] px-3.5 py-2 bg-white border-[1.5px] border-divider',
-                        active && 'bg-purple-pale border-purple'
+                        'rounded-2xl px-3.5 py-2 bg-white border-[1.5px] border-separator',
+                        active && 'bg-accent-muted border-accent'
                       )}
                     >
                       <Text
-                        className={cn(
-                          'text-[14px] text-ink-mid font-medium',
-                          active && 'text-purple'
-                        )}
+                        className={cn('text-sm text-fg-muted font-medium', active && 'text-accent')}
                       >
                         {opt.label}
                       </Text>
@@ -382,7 +379,7 @@ function EditProfileScreenInner() {
 
   if (!datingProfile) {
     return (
-      <SafeAreaView className="flex-1 bg-canvas" edges={['top', 'bottom']}>
+      <SafeAreaView className="flex-1 bg-page" edges={['top', 'bottom']}>
         <NavHeader back title="Edit Profile" onBack={() => router.back()} />
       </SafeAreaView>
     );

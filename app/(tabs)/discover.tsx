@@ -58,13 +58,13 @@ function DiscoverPausedScreen({
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-canvas">
+    <SafeAreaView className="flex-1 bg-page">
       <LargeHeader title="Discover" />
       <View className="flex-1 justify-center items-center p-6 gap-4">
-        <Text className="text-[24px] font-bold font-serif text-ink text-center">
+        <Text className="text-2xl font-bold font-serif text-fg text-center">
           {status === 'break' ? "You're on a break" : "You're winging"}
         </Text>
-        <Text className="text-15 text-ink-mid text-center" style={{ lineHeight: 22 }}>
+        <Text className="text-sm text-fg-muted text-center" style={{ lineHeight: 22 }}>
           {copy}
         </Text>
         <PurpleButton
@@ -84,15 +84,15 @@ function WingNoteSection({ card }: { card: DiscoverCard }) {
   const initial = card.suggester_name ? card.suggester_name[0].toUpperCase() : '?';
 
   return (
-    <View className="bg-lavender rounded-[12px] p-3 mb-4 gap-[6px]">
+    <View className="bg-accent-muted rounded-xl p-3 mb-4 gap-[6px]">
       <View className="flex-row items-center gap-2">
         <WingStack initials={[initial]} />
-        <Text className="text-14 font-semibold text-ink flex-1">
+        <Text className="text-sm font-semibold text-fg flex-1">
           {card.suggester_name} thinks you{"'"}d get along
         </Text>
       </View>
       <Text
-        className="text-14 text-ink-mid"
+        className="text-sm text-fg-muted"
         style={{ lineHeight: 20 }}
         numberOfLines={expanded ? undefined : 2}
       >
@@ -100,7 +100,7 @@ function WingNoteSection({ card }: { card: DiscoverCard }) {
       </Text>
       {!expanded && (
         <Pressable onPress={() => setExpanded(true)}>
-          <Text className="text-13 text-purple font-medium mt-[2px]">Read more</Text>
+          <Text className="text-sm text-accent font-medium mt-[2px]">Read more</Text>
         </Pressable>
       )}
     </View>
@@ -116,10 +116,10 @@ function CardView({ card }: { card: DiscoverCard }) {
         <PhotoRect uri={card.first_photo} ratio={1} />
       </View>
       <View className="p-4">
-        <Text className="text-[28px] font-serif font-bold text-ink">
+        <Text className="text-3xl font-serif font-bold text-fg">
           {card.chosen_name}, {card.age}
         </Text>
-        <Text className="text-15 text-ink-mid mt-1 mb-3">{card.city}</Text>
+        <Text className="text-sm text-fg-muted mt-1 mb-3">{card.city}</Text>
         {card.wing_note != null && <WingNoteSection card={card} />}
         {card.interests.length > 0 && (
           <View className="flex-row flex-wrap gap-2 mb-4">
@@ -129,7 +129,7 @@ function CardView({ card }: { card: DiscoverCard }) {
           </View>
         )}
         {card.bio != null && (
-          <Text className="text-15 text-ink-mid" style={{ lineHeight: 22 }}>
+          <Text className="text-sm text-fg-muted" style={{ lineHeight: 22 }}>
             {card.bio}
           </Text>
         )}
@@ -163,8 +163,8 @@ function MatchOverlay({
           />
         </View>
         <View className="items-center gap-3 w-full">
-          <Text className="text-[32px] font-serif font-bold text-white">It{"'"}s a Match!</Text>
-          <Text className="text-[20px] text-white/85 mb-2">{card.chosen_name}</Text>
+          <Text className="text-4xl font-serif font-bold text-white">It{"'"}s a Match!</Text>
+          <Text className="text-xl text-white/85 mb-2">{card.chosen_name}</Text>
           <View className="w-full gap-3">
             <PurpleButton label="Send a Message" onPress={onDismiss} />
             <PurpleButton label="Keep Swiping" onPress={onDismiss} outline />
@@ -181,7 +181,7 @@ function EmptyState({ tabIndex, wingerName }: { tabIndex: number; wingerName?: s
   if (tabIndex === 0) {
     return (
       <View className="flex-1 justify-center items-center p-6 gap-4">
-        <Text className="text-16 text-ink-mid text-center" style={{ lineHeight: 24 }}>
+        <Text className="text-base text-fg-muted text-center" style={{ lineHeight: 24 }}>
           No one has liked you yet — check back soon.
         </Text>
       </View>
@@ -194,7 +194,7 @@ function EmptyState({ tabIndex, wingerName }: { tabIndex: number; wingerName?: s
 
   return (
     <View className="flex-1 justify-center items-center p-6 gap-4">
-      <Text className="text-16 text-ink-mid text-center" style={{ lineHeight: 24 }}>
+      <Text className="text-base text-fg-muted text-center" style={{ lineHeight: 24 }}>
         {copy}
       </Text>
     </View>
@@ -271,14 +271,14 @@ function DiscoverPool({
             style={cardButtonShadow}
             onPress={handlePass}
           >
-            <Text className="text-[24px] text-ink-mid">✕</Text>
+            <Text className="text-2xl text-fg-muted">✕</Text>
           </Pressable>
           <Pressable
-            className="w-16 h-16 rounded-full justify-center items-center bg-purple"
+            className="w-16 h-16 rounded-full justify-center items-center bg-accent"
             style={cardButtonShadow}
             onPress={handleLike}
           >
-            <Text className="text-[24px] text-white">♥</Text>
+            <Text className="text-2xl text-white">♥</Text>
           </Pressable>
         </View>
       )}
@@ -310,7 +310,7 @@ function DiscoverContent({ userId }: { userId: string }) {
   }, [userId]);
 
   return (
-    <SafeAreaView className="flex-1 bg-canvas">
+    <SafeAreaView className="flex-1 bg-page">
       <LargeHeader title="Discover" />
       <TextTabBar
         tabs={tabs}

@@ -21,11 +21,11 @@ export default function DateInput({ value, onChange, style }: Props) {
   return (
     <>
       <Pressable
-        className="bg-white rounded-xl border-[1.5px] border-divider px-4 py-[14px] justify-center"
+        className="bg-white rounded-xl border-[1.5px] border-separator px-4 py-[14px] justify-center"
         style={style}
         onPress={() => setShow(true)}
       >
-        <Text className={value ? 'text-16 text-ink' : 'text-16 text-ink-ghost'}>
+        <Text className={value ? 'text-base text-fg' : 'text-base text-fg-ghost'}>
           {value ? formatDate(value) : 'Date of birth'}
         </Text>
       </Pressable>
@@ -55,7 +55,7 @@ export default function DateInput({ value, onChange, style }: Props) {
                 }}
               >
                 <Pressable onPress={() => setShow(false)}>
-                  <Text className="text-purple text-17 font-semibold">Done</Text>
+                  <Text className="text-accent text-base font-semibold">Done</Text>
                 </Pressable>
               </View>
               <DateTimePicker
