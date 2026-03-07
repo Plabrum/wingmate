@@ -158,7 +158,7 @@ export default function ProfileStep({ role, defaultPhoneNumber, onNext }: Props)
             render={({ field: { onChange, value } }) => (
               <TextInput
                 className="bg-white rounded-[12px] border-[1.5px] border-divider px-4 py-[14px] text-16 text-ink"
-                placeholder="+44 7700 000000"
+                placeholder="+1 555 000 0000"
                 placeholderTextColor={colors.inkGhost}
                 value={value}
                 onChangeText={onChange}
