@@ -2,6 +2,8 @@ import { ActivityIndicator, Dimensions } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import { useState } from 'react';
+import { toast } from 'sonner-native';
+import type { UseFormReturn } from 'react-hook-form';
 
 import { colors } from '@/constants/theme';
 import type { OwnDatingProfile } from '@/queries/profiles';
@@ -17,46 +19,51 @@ import {
 import { ScrollView, Text, Pressable, View } from '@/lib/tw';
 import { PhotoRect } from '@/components/ui/PhotoRect';
 import { IconSymbol } from '@/components/ui/icon-symbol';
-import type { OptimisticHandlers } from './profile-helpers';
 
 const PHOTO_COL = (Dimensions.get('window').width - 20 * 2 - 8) / 2;
 
-interface Props extends OptimisticHandlers {
+interface Props {
+  form: UseFormReturn<OwnDatingProfile>;
   data: OwnDatingProfile;
   userId: string;
-  onRefresh: () => Promise<unknown>;
+  onRefresh: () => Promise<void>;
 }
 
-export function PhotosTab({ data, userId, onOptimistic, onRollback, onError, onRefresh }: Props) {
+export function PhotosTab({ form, data, userId, onRefresh }: Props) {
   const [uploading, setUploading] = useState(false);
 
-  const selfPhotos = data.photos.filter((p) => p.suggester_id === null && p.approved_at !== null);
-  const pending = data.photos.filter((p) => p.suggester_id !== null && p.approved_at === null);
+  const photos = form.watch('photos');
+  const selfPhotos = photos.filter((p) => p.suggester_id === null && p.approved_at !== null);
+  const pending = photos.filter((p) => p.suggester_id !== null && p.approved_at === null);
 
   const handleApprove = async (photoId: string) => {
-    const prev = data.photos;
+    const prev = photos;
     const now = new Date().toISOString();
-    onOptimistic({
-      photos: data.photos.map((p) => (p.id === photoId ? { ...p, approved_at: now } : p)),
-    });
+    form.setValue(
+      'photos',
+      photos.map((p) => (p.id === photoId ? { ...p, approved_at: now } : p))
+    );
     try {
       const { error } = await approvePhoto(photoId);
       if (error) throw error;
     } catch {
-      onRollback({ photos: prev });
-      onError('Could not approve photo.');
+      form.setValue('photos', prev);
+      toast.error('Could not approve photo.');
     }
   };
 
   const handleReject = async (photoId: string, storagePath: string) => {
-    const prev = data.photos;
-    onOptimistic({ photos: data.photos.filter((p) => p.id !== photoId) });
+    const prev = photos;
+    form.setValue(
+      'photos',
+      photos.filter((p) => p.id !== photoId)
+    );
     try {
       const { dbResult } = await rejectPhoto(photoId, storagePath);
       if (dbResult.error) throw dbResult.error;
     } catch {
-      onRollback({ photos: prev });
-      onError('Could not reject photo.');
+      form.setValue('photos', prev);
+      toast.error('Could not reject photo.');
     }
   };
 
@@ -65,21 +72,21 @@ export function PhotosTab({ data, userId, onOptimistic, onRollback, onError, onR
     const updated = [...selfPhotos];
     [updated[idx - 1], updated[idx]] = [updated[idx], updated[idx - 1]];
     const payload = updated.map((p, i) => ({ id: p.id, display_order: i }));
-    const prev = data.photos;
-    onOptimistic({ photos: [...updated.map((p, i) => ({ ...p, display_order: i })), ...pending] });
+    const prev = photos;
+    form.setValue('photos', [...updated.map((p, i) => ({ ...p, display_order: i })), ...pending]);
     try {
       await reorderPhotos(payload);
       onRefresh();
     } catch {
-      onRollback({ photos: prev });
-      onError('Could not reorder photos.');
+      form.setValue('photos', prev);
+      toast.error('Could not reorder photos.');
     }
   };
 
   const handleAddPhoto = async () => {
     const { granted } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!granted) {
-      onError('Allow photo access in Settings to add photos.');
+      toast.error('Allow photo access in Settings to add photos.');
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -103,7 +110,7 @@ export function PhotosTab({ data, userId, onOptimistic, onRollback, onError, onR
       if (insErr) throw insErr;
       await onRefresh();
     } catch {
-      onError('Failed to upload photo. Please try again.');
+      toast.error('Failed to upload photo. Please try again.');
     } finally {
       setUploading(false);
     }

@@ -18,28 +18,16 @@ export default function LoginScreen() {
 
       <View className="gap-3">
         <Pressable
-          style={({ pressed }) => ({
-            backgroundColor: pressed ? '#1a1a1a' : '#000',
-            borderRadius: 14,
-            borderCurve: 'continuous',
-            height: 54,
-            alignItems: 'center',
-            justifyContent: 'center',
-          })}
+          className="bg-[#000] active:bg-[#1a1a1a] rounded-[14px] h-[54px] items-center justify-center"
+          style={{ borderCurve: 'continuous' }}
           onPress={() => router.push('/(auth)/apple')}
         >
           <Text className="text-white font-semibold text-16">{' \uF8FF '}Continue with Apple</Text>
         </Pressable>
 
         <Pressable
-          style={({ pressed }) => ({
-            backgroundColor: pressed ? '#e8e8e8' : '#f2f2f7',
-            borderRadius: 14,
-            borderCurve: 'continuous',
-            height: 54,
-            alignItems: 'center',
-            justifyContent: 'center',
-          })}
+          className="bg-[#f2f2f7] active:bg-[#e8e8e8] rounded-[14px] h-[54px] items-center justify-center"
+          style={{ borderCurve: 'continuous' }}
           onPress={() => router.push('/(auth)/sms')}
         >
           <Text className="text-[#000] font-semibold text-16">Continue with SMS</Text>

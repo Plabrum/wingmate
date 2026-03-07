@@ -1,13 +1,14 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { toast } from 'sonner-native';
+import { useForm } from 'react-hook-form';
 
 import { colors } from '@/constants/theme';
 import { useAuth } from '@/context/auth';
 import { useProfileData } from '@/queries/profiles';
 import type { OwnDatingProfile } from '@/queries/profiles';
-import { getMyWingpeople, type Wingperson } from '@/queries/contacts';
+import { useMyWingpeople } from '@/queries/contacts';
 
 import { View, Text, Pressable, SafeAreaView } from '@/lib/tw';
 import { LargeHeader } from '@/components/ui/LargeHeader';
@@ -21,7 +22,7 @@ import ScreenSuspense from '@/components/ui/ScreenSuspense';
 import { AboutMeTab } from '@/components/profile/AboutMeTab';
 import { PhotosTab } from '@/components/profile/PhotosTab';
 import { PromptsTab } from '@/components/profile/PromptsTab';
-import { ErrorBanner, getInitials } from '@/components/profile/profile-helpers';
+import { getInitials } from '@/components/profile/profile-helpers';
 
 // ── Log out button ────────────────────────────────────────────────────────────
 
@@ -71,26 +72,16 @@ function ProfileScreenInner() {
     refetch,
   } = useProfileData(userId);
 
+  const { data: wingpeople } = useMyWingpeople(userId);
+
   const [activeTab, setActiveTab] = useState(0);
-  const [localData, setLocalData] = useState<OwnDatingProfile | null>(() => datingProfile);
-  const [error, setError] = useState<string | null>(null);
-  const [wingpeople, setWingpeople] = useState<Wingperson[]>([]);
 
-  useEffect(() => {
-    getMyWingpeople(userId).then(({ data }) => setWingpeople(data ?? []));
-  }, [userId]);
+  const form = useForm<OwnDatingProfile>({ defaultValues: datingProfile ?? undefined });
 
-  const showError = useCallback((msg: string) => {
-    setError(msg);
-    setTimeout(() => setError(null), 3500);
-  }, []);
-
-  const handleOptimistic = useCallback((patch: Partial<OwnDatingProfile>) => {
-    setLocalData((d) => (d ? { ...d, ...patch } : d));
-  }, []);
-
-  // Roll back is the same operation — overwrite with the previous snapshot
-  const handleRollback = handleOptimistic;
+  const handleRefresh = useCallback(async () => {
+    const result = await refetch();
+    if (result.data?.datingProfile) form.reset(result.data.datingProfile);
+  }, [refetch, form]);
 
   if (profile?.role === 'winger') {
     return (
@@ -101,18 +92,7 @@ function ProfileScreenInner() {
     );
   }
 
-  if (!localData) {
-    return (
-      <SafeAreaView className="flex-1 bg-canvas" edges={['top']}>
-        <LargeHeader title="My Profile" right={<LogOutButton />} />
-        <View className="flex-1 items-center justify-center p-10">
-          <Text className="text-16 text-ink-mid text-center">
-            Complete your profile setup to see your profile here.
-          </Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
+  if (!datingProfile) return null; // routing should prevent this
 
   const wingInitials = wingpeople.map((w) => getInitials((w as any).winger?.chosen_name));
 
@@ -145,36 +125,11 @@ function ProfileScreenInner() {
         setActive={setActiveTab}
       />
 
-      {error && <ErrorBanner message={error} />}
-
-      {activeTab === 0 && (
-        <AboutMeTab
-          data={localData}
-          userId={userId}
-          onOptimistic={handleOptimistic}
-          onRollback={handleRollback}
-          onError={showError}
-        />
-      )}
+      {activeTab === 0 && <AboutMeTab form={form} data={datingProfile} userId={userId} />}
       {activeTab === 1 && (
-        <PhotosTab
-          data={localData}
-          userId={userId}
-          onOptimistic={handleOptimistic}
-          onRollback={handleRollback}
-          onError={showError}
-          onRefresh={refetch}
-        />
+        <PhotosTab form={form} data={datingProfile} userId={userId} onRefresh={handleRefresh} />
       )}
-      {activeTab === 2 && (
-        <PromptsTab
-          data={localData}
-          onOptimistic={handleOptimistic}
-          onRollback={handleRollback}
-          onError={showError}
-          onRefresh={refetch}
-        />
-      )}
+      {activeTab === 2 && <PromptsTab form={form} data={datingProfile} onRefresh={handleRefresh} />}
     </SafeAreaView>
   );
 }

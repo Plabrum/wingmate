@@ -22,7 +22,7 @@ export const unstable_settings = {
 
 function AuthenticatedNavigator({ userId }: { userId: string }) {
   const {
-    data: { profile },
+    data: { profile, datingProfile },
   } = useProfileData(userId);
 
   // Captured once at mount — Suspense ensures profile is ready before this renders
@@ -31,7 +31,9 @@ function AuthenticatedNavigator({ userId }: { userId: string }) {
       ? '/(onboarding)'
       : profile.role === 'winger'
         ? '/(tabs)/profile'
-        : '/(tabs)/discover'
+        : !datingProfile
+          ? '/(onboarding)'
+          : '/(tabs)/discover'
   );
 
   // Mount-only: check for a pending deep-link invite (external async state)

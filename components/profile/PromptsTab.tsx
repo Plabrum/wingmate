@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { Alert, StyleSheet } from 'react-native';
+import { toast } from 'sonner-native';
+import type { UseFormReturn } from 'react-hook-form';
 
 import { colors } from '@/constants/theme';
 import type { OwnDatingProfile } from '@/queries/profiles';
@@ -13,18 +15,20 @@ import { FaceAvatar } from '@/components/ui/FaceAvatar';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { ScrollView, Text, View, Pressable } from '@/lib/tw';
 import { AddPromptModal } from './AddPromptModal';
-import { getInitials, type OptimisticHandlers } from './profile-helpers';
+import { getInitials } from './profile-helpers';
 
-interface Props extends OptimisticHandlers {
+interface Props {
+  form: UseFormReturn<OwnDatingProfile>;
   data: OwnDatingProfile;
   onRefresh: () => void;
 }
 
-export function PromptsTab({ data, onOptimistic, onRollback, onError, onRefresh }: Props) {
+export function PromptsTab({ form, data, onRefresh }: Props) {
   const [modalVisible, setModalVisible] = useState(false);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
-  const usedTemplateIds = new Set(data.prompts.map((p) => p.template.id));
+  const prompts = form.watch('prompts');
+  const usedTemplateIds = new Set(prompts.map((p) => p.template.id));
 
   const toggle = (id: string) =>
     setExpanded((prev) => {
@@ -35,9 +39,10 @@ export function PromptsTab({ data, onOptimistic, onRollback, onError, onRefresh 
     });
 
   const handleApproveResponse = async (promptId: string, responseId: string) => {
-    const prev = data.prompts;
-    onOptimistic({
-      prompts: data.prompts.map((p) =>
+    const prev = prompts;
+    form.setValue(
+      'prompts',
+      prompts.map((p) =>
         p.id === promptId
           ? {
               ...p,
@@ -46,48 +51,52 @@ export function PromptsTab({ data, onOptimistic, onRollback, onError, onRefresh 
               ),
             }
           : p
-      ),
-    });
+      )
+    );
     try {
       const { error } = await approvePromptResponse(responseId);
       if (error) throw error;
     } catch {
-      onRollback({ prompts: prev });
-      onError('Could not approve comment.');
+      form.setValue('prompts', prev);
+      toast.error('Could not approve comment.');
     }
   };
 
   const handleRejectResponse = async (promptId: string, responseId: string) => {
-    const prev = data.prompts;
-    onOptimistic({
-      prompts: data.prompts.map((p) =>
+    const prev = prompts;
+    form.setValue(
+      'prompts',
+      prompts.map((p) =>
         p.id === promptId ? { ...p, responses: p.responses.filter((r) => r.id !== responseId) } : p
-      ),
-    });
+      )
+    );
     try {
       const { error } = await rejectPromptResponse(responseId);
       if (error) throw error;
     } catch {
-      onRollback({ prompts: prev });
-      onError('Could not reject comment.');
+      form.setValue('prompts', prev);
+      toast.error('Could not reject comment.');
     }
   };
 
   const handleDeletePrompt = async (promptId: string) => {
-    const prev = data.prompts;
-    onOptimistic({ prompts: data.prompts.filter((p) => p.id !== promptId) });
+    const prev = prompts;
+    form.setValue(
+      'prompts',
+      prompts.filter((p) => p.id !== promptId)
+    );
     try {
       const { error } = await deleteProfilePrompt(promptId);
       if (error) throw error;
     } catch {
-      onRollback({ prompts: prev });
-      onError('Could not remove prompt.');
+      form.setValue('prompts', prev);
+      toast.error('Could not remove prompt.');
     }
   };
 
   return (
     <ScrollView contentContainerClassName="p-5 pb-12" showsVerticalScrollIndicator={false}>
-      {data.prompts.length === 0 && (
+      {prompts.length === 0 && (
         <View className="bg-white rounded-14 p-7 items-center mb-[14px]">
           <Text className="text-15 font-semibold text-ink">No prompts yet.</Text>
           <Text className="text-13 text-ink-mid mt-1.5 text-center">
@@ -96,7 +105,7 @@ export function PromptsTab({ data, onOptimistic, onRollback, onError, onRefresh 
         </View>
       )}
 
-      {data.prompts.map((prompt) => {
+      {prompts.map((prompt) => {
         const pendingR = prompt.responses.filter((r) => !r.is_approved);
         const approvedR = prompt.responses.filter((r) => r.is_approved);
         const isExpanded = expanded.has(prompt.id);

@@ -137,6 +137,18 @@ export async function getWingpeopleWithCounts(daterId: string) {
   return { wingpeople, invitations, wingingFor, weeklyCounts };
 }
 
+export function useMyWingpeople(daterId: string) {
+  return useSuspenseQuery({
+    queryKey: [getMyWingpeople, daterId],
+    queryFn: async () => {
+      const { data, error } = await getMyWingpeople(daterId);
+      if (error) throw new Error(error.message);
+      return data ?? [];
+    },
+    staleTime: 2 * 60_000,
+  });
+}
+
 export function useWingpeopleData(userId: string) {
   return useSuspenseQuery({
     queryKey: ['wingpeople', userId],

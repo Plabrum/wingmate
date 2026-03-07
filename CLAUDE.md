@@ -34,6 +34,7 @@ Use react-hook-form for everything: `Controller`, `handleSubmit`, `isSubmitting`
 - Always use `import { View, Text, ... } from '@/lib/tw'` for className-based styling
 - Never use `StyleSheet.create` for new code — use `className` props instead
 - Use `style` prop only for things className can't handle: `borderCurve`, dynamic/animated values, SVG props
+- Never use function-style `style` props on `Pressable` — known NativeWind bug (issue #1105) causes children not to render. Use `active:` pseudo-class for pressed state instead: `className="bg-black active:bg-[#1a1a1a]"`
 - Use `lib/cn.ts` (`clsx` + `twMerge`) for conditional class composition
 - Design tokens live in `global.css` under `@theme` — do not add new colours to `constants/theme.ts`
 - `constants/theme.ts` is legacy — only touch it when modifying existing StyleSheet-based components

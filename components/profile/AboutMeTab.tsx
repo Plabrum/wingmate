@@ -1,6 +1,8 @@
 import { StyleSheet } from 'react-native';
 import { ScrollView, Text, Pressable, View } from '@/lib/tw';
 import { useRouter } from 'expo-router';
+import { toast } from 'sonner-native';
+import type { UseFormReturn } from 'react-hook-form';
 
 import { colors } from '@/constants/theme';
 import type { OwnDatingProfile } from '@/queries/profiles';
@@ -9,7 +11,6 @@ import { updateDatingProfile } from '@/queries/profiles';
 import { Pill } from '@/components/ui/Pill';
 import { PurpleButton } from '@/components/ui/PurpleButton';
 import { IconSymbol } from '@/components/ui/icon-symbol';
-import type { OptimisticHandlers } from './profile-helpers';
 
 type DatingStatus = 'open' | 'break' | 'winging';
 
@@ -19,23 +20,25 @@ const STATUS_OPTIONS: { key: DatingStatus; label: string; sub: string }[] = [
   { key: 'winging', label: 'Just Winging', sub: 'Hidden from Discover' },
 ];
 
-interface Props extends OptimisticHandlers {
+interface Props {
+  form: UseFormReturn<OwnDatingProfile>;
   data: OwnDatingProfile;
   userId: string;
 }
 
-export function AboutMeTab({ data, userId, onOptimistic, onRollback, onError }: Props) {
+export function AboutMeTab({ form, data, userId }: Props) {
   const router = useRouter();
+  const dating_status = form.watch('dating_status');
 
   const handleStatus = async (status: DatingStatus) => {
-    const prev = data.dating_status;
-    onOptimistic({ dating_status: status });
+    const prev = form.getValues('dating_status');
+    form.setValue('dating_status', status);
     try {
       const { error } = await updateDatingProfile(userId, { dating_status: status });
       if (error) throw error;
     } catch {
-      onRollback({ dating_status: prev });
-      onError('Could not update status. Please try again.');
+      form.setValue('dating_status', prev);
+      toast.error('Could not update status. Please try again.');
     }
   };
 
@@ -63,7 +66,7 @@ export function AboutMeTab({ data, userId, onOptimistic, onRollback, onError }: 
       </Text>
       <View className="bg-white rounded-14 overflow-hidden">
         {STATUS_OPTIONS.map((opt, i) => {
-          const active = data.dating_status === opt.key;
+          const active = dating_status === opt.key;
           return (
             <Pressable
               key={opt.key}
@@ -97,12 +100,12 @@ export function AboutMeTab({ data, userId, onOptimistic, onRollback, onError }: 
         })}
       </View>
 
-      {data.dating_status !== 'open' && (
+      {dating_status !== 'open' && (
         <View className="flex-row items-start gap-2 bg-purple-pale rounded-[10px] p-3 mt-[10px]">
           <IconSymbol name="eye.slash" size={15} color={colors.purple} />
           <Text className="flex-1 text-13 text-purple leading-[18px]">
             Your profile is hidden from Discover while you{"'"}re{' '}
-            {data.dating_status === 'break' ? 'on a break' : 'just winging'}.
+            {dating_status === 'break' ? 'on a break' : 'just winging'}.
           </Text>
         </View>
       )}
