@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import type { Enums } from '@/types/database';
 
 // ── Direct swipes ─────────────────────────────────────────────────────────────
 
@@ -10,11 +11,14 @@ import { supabase } from '@/lib/supabase';
 export function recordDecision(
   actorId: string,
   recipientId: string,
-  decision: 'approved' | 'declined'
+  decision: Enums<'decision_type'>
 ) {
   return supabase
     .from('decisions')
-    .insert({ actor_id: actorId, recipient_id: recipientId, decision });
+    .upsert(
+      { actor_id: actorId, recipient_id: recipientId, decision },
+      { onConflict: 'actor_id,recipient_id' }
+    );
 }
 
 // ── Acting on a wingperson suggestion ─────────────────────────────────────────
@@ -27,7 +31,7 @@ export function recordDecision(
 export function actOnSuggestion(
   actorId: string,
   recipientId: string,
-  decision: 'approved' | 'declined'
+  decision: Enums<'decision_type'>
 ) {
   return supabase
     .from('decisions')
@@ -81,12 +85,7 @@ export function wingSuggestApprove(
 export function checkMutualMatch(userA: string, userB: string) {
   const a = userA < userB ? userA : userB;
   const b = userA < userB ? userB : userA;
-  return supabase
-    .from('matches')
-    .select('id')
-    .eq('user_a_id', a)
-    .eq('user_b_id', b)
-    .maybeSingle();
+  return supabase.from('matches').select('id').eq('user_a_id', a).eq('user_b_id', b).maybeSingle();
 }
 
 /**

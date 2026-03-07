@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { type DiscoverCard } from '@/queries/discover';
+import type { Enums } from '@/types/database';
 import {
   recordDecision,
   actOnSuggestion as actOnSuggestionQuery,
@@ -7,6 +8,8 @@ import {
 } from '@/queries/decisions';
 
 const PAGE_SIZE = 20;
+
+export type LikeResult = 'match' | 'liked' | 'error';
 
 export type PoolFetcher = (
   userId: string,
@@ -24,6 +27,7 @@ export function useDiscover(
 
   const offsetRef = useRef(initialPool.length);
   const loadingMoreRef = useRef(false);
+  const swipingRef = useRef(false);
 
   async function loadMore() {
     if (!userId || loadingMoreRef.current) return;
@@ -36,10 +40,11 @@ export function useDiscover(
     loadingMoreRef.current = false;
   }
 
-  async function like(): Promise<'match' | 'liked' | 'error'> {
-    if (!userId) return 'error';
+  async function like(): Promise<LikeResult> {
+    if (!userId || swipingRef.current) return 'error';
     const card = pool[index];
     if (!card) return 'error';
+    swipingRef.current = true;
 
     // Optimistic advance; trigger prefetch when nearing the end
     const newIndex = index + 1;
@@ -58,17 +63,20 @@ export function useDiscover(
     if (error) {
       // Roll back on failure
       setIndex((prev) => prev - 1);
+      swipingRef.current = false;
       return 'error';
     }
 
     const { data: matchData } = await checkMutualMatch(userId, card.user_id);
+    swipingRef.current = false;
     return matchData ? 'match' : 'liked';
   }
 
   async function pass(): Promise<void> {
-    if (!userId) return;
+    if (!userId || swipingRef.current) return;
     const card = pool[index];
     if (!card) return;
+    swipingRef.current = true;
 
     // Optimistic advance; trigger prefetch when nearing the end
     const newIndex = index + 1;
@@ -80,9 +88,10 @@ export function useDiscover(
     } else {
       await recordDecision(userId, card.user_id, 'declined');
     }
+    swipingRef.current = false;
   }
 
-  async function actOnSuggestion(decision: 'approved' | 'declined') {
+  async function actOnSuggestion(decision: Enums<'decision_type'>) {
     if (decision === 'approved') return like();
     return pass();
   }

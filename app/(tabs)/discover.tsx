@@ -1,15 +1,17 @@
-import React, { Suspense, useCallback, useEffect, useState } from 'react';
+import React, { Suspense, useCallback, useState } from 'react';
 import { ActivityIndicator, Modal } from 'react-native';
 import { useForm } from 'react-hook-form';
+import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner-native';
 
 import { View, Text, ScrollView, SafeAreaView, Pressable } from '@/lib/tw';
 import { useAuth } from '@/context/auth';
-import { useDiscover, type PoolFetcher } from '@/hooks/use-discover';
+import { useDiscover, type PoolFetcher, type LikeResult } from '@/hooks/use-discover';
+import type { Enums } from '@/types/database';
 import {
   getDiscoverPool,
   getLikesYouPool,
-  getLikesYouCount,
+  useLikesYouCount,
   useWingerTabs,
   useInitialPool,
   type DiscoverCard,
@@ -34,7 +36,7 @@ function DiscoverPausedScreen({
   status,
   onResume,
 }: {
-  status: 'break' | 'winging';
+  status: Exclude<Enums<'dating_status'>, 'open'>;
   onResume: () => void;
 }) {
   const { userId } = useAuth();
@@ -140,25 +142,14 @@ function CardView({ card }: { card: DiscoverCard }) {
 
 // ── MatchOverlay ──────────────────────────────────────────────────────────────
 
-function MatchOverlay({
-  card,
-  visible,
-  onDismiss,
-}: {
-  card: DiscoverCard | null;
-  visible: boolean;
-  onDismiss: () => void;
-}) {
-  if (card == null) return null;
-
+function MatchOverlay({ card, onDismiss }: { card: DiscoverCard; onDismiss: () => void }) {
   return (
-    <Modal visible={visible} animationType="fade" transparent>
-      <View className="flex-1 bg-black/88 justify-center items-center p-6">
+    <Modal visible animationType="fade" transparent>
+      <View className="flex-1 bg-black/90 justify-center items-center p-6">
         <View className="w-[80%] mb-8">
           <PhotoRect
             uri={card.first_photo}
             ratio={4 / 5}
-            blur
             style={{ borderRadius: 16, overflow: 'hidden' }}
           />
         </View>
@@ -219,33 +210,34 @@ function DiscoverPool({
   tabs,
   onDecrement,
 }: DiscoverPoolProps) {
-  const fetchPool = useCallback<PoolFetcher>(
-    (uid, pageSize, offset) => {
-      if (activeTabIndex === 0) return getLikesYouPool(uid, pageSize, offset);
-      const isAll = activeTabIndex === tabs.length - 1;
-      const wingerId =
-        !isAll && activeTabIndex >= 2 ? (wingerTabs[activeTabIndex - 2]?.id ?? null) : null;
-      return getDiscoverPool(uid, wingerId, pageSize, offset);
-    },
-    [activeTabIndex, wingerTabs, tabs.length]
-  );
-
-  const mode = activeTabIndex === 0 ? 'likesYou' : 'discover';
   const isAll = activeTabIndex === tabs.length - 1;
   const wingerId =
     !isAll && activeTabIndex >= 2 ? (wingerTabs[activeTabIndex - 2]?.id ?? null) : null;
+
+  const fetchPool = useCallback<PoolFetcher>(
+    (uid, pageSize, offset) => {
+      if (activeTabIndex === 0) return getLikesYouPool(uid, pageSize, offset);
+      return getDiscoverPool(uid, wingerId, pageSize, offset);
+    },
+    [activeTabIndex, wingerId]
+  );
+
+  const mode = activeTabIndex === 0 ? 'likesYou' : 'discover';
   const { data: initialPool } = useInitialPool(userId, mode, wingerId, PAGE_SIZE);
 
+  const queryClient = useQueryClient();
   const { pool, index, like, pass } = useDiscover(fetchPool, userId, initialPool);
   const [matchCard, setMatchCard] = useState<DiscoverCard | null>(null);
   const card = pool[index] ?? null;
 
   async function handleLike() {
-    const likedCard = pool[index];
+    if (!card) return;
     onDecrement?.();
-    const result = await like();
+    const result: LikeResult = await like();
     if (result === 'match') {
-      setMatchCard(likedCard);
+      setMatchCard(card);
+      queryClient.invalidateQueries({ queryKey: ['matches', userId] });
+      queryClient.invalidateQueries({ queryKey: ['conversations', userId] });
     }
   }
 
@@ -283,11 +275,7 @@ function DiscoverPool({
         </View>
       )}
 
-      <MatchOverlay
-        card={matchCard}
-        visible={matchCard != null}
-        onDismiss={() => setMatchCard(null)}
-      />
+      {matchCard && <MatchOverlay card={matchCard} onDismiss={() => setMatchCard(null)} />}
     </>
   );
 }
@@ -296,18 +284,13 @@ function DiscoverPool({
 
 function DiscoverContent({ userId }: { userId: string }) {
   const { data: wingerTabs } = useWingerTabs(userId);
+  const { data: initialLikesYouCount } = useLikesYouCount(userId);
   const [activeTabIndex, setActiveTabIndex] = useState(0);
-  const [likesYouCount, setLikesYouCount] = useState(0);
+  const [likesYouDecrements, setLikesYouDecrements] = useState(0);
 
+  const likesYouCount = Math.max(0, initialLikesYouCount - likesYouDecrements);
   // tabs: [Likes You, For You, ...wingers, All]
   const tabs = ['Likes You', 'For You', ...wingerTabs.map((w: WingerTab) => w.name), 'All'];
-
-  // Load initial likes-you count on mount
-  useEffect(() => {
-    getLikesYouCount(userId).then(({ data }) => {
-      if (data != null) setLikesYouCount(data);
-    });
-  }, [userId]);
 
   return (
     <SafeAreaView className="flex-1 bg-page">
@@ -333,9 +316,7 @@ function DiscoverContent({ userId }: { userId: string }) {
           activeTabIndex={activeTabIndex}
           wingerTabs={wingerTabs}
           tabs={tabs}
-          onDecrement={
-            activeTabIndex === 0 ? () => setLikesYouCount((c) => Math.max(0, c - 1)) : null
-          }
+          onDecrement={activeTabIndex === 0 ? () => setLikesYouDecrements((d) => d + 1) : null}
         />
       </Suspense>
     </SafeAreaView>
@@ -352,7 +333,8 @@ export default function DiscoverScreen() {
   } = useProfileData(userId);
 
   if (datingProfile?.dating_status !== 'open') {
-    const status = (datingProfile?.dating_status as 'break' | 'winging') ?? 'break';
+    const status =
+      (datingProfile?.dating_status as Exclude<Enums<'dating_status'>, 'open'>) ?? 'break';
     return <DiscoverPausedScreen status={status} onResume={refreshProfile} />;
   }
 

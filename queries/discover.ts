@@ -1,5 +1,6 @@
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
+import type { Enums } from '@/types/database';
 
 // Shape returned by the get_discover_pool and get_wing_pool RPCs.
 // Keep in sync with the function return types in the migration.
@@ -7,11 +8,11 @@ export type DiscoverCard = {
   profile_id: string;
   user_id: string;
   chosen_name: string;
-  gender: 'Male' | 'Female' | 'Non-Binary' | null;
+  gender: Enums<'gender'> | null;
   age: number;
   city: string;
   bio: string | null;
-  dating_status: 'open' | 'break' | 'winging';
+  dating_status: Enums<'dating_status'>;
   interests: string[];
   first_photo: string | null;
   // Present when the card comes from a wingperson suggestion:
@@ -143,6 +144,18 @@ export async function getWingerTabs(daterId: string): Promise<WingerTab[]> {
     }
   }
   return distinct;
+}
+
+export function useLikesYouCount(userId: string) {
+  return useSuspenseQuery({
+    queryKey: ['likes-you-count', userId],
+    queryFn: async () => {
+      const { data, error } = await getLikesYouCount(userId);
+      if (error) throw error;
+      return data ?? 0;
+    },
+    staleTime: 60_000,
+  });
 }
 
 export function useWingerTabs(userId: string) {
