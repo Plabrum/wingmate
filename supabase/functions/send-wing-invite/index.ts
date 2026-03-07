@@ -60,7 +60,7 @@ Deno.serve(async (req) => {
   }
 
   const message =
-    `${daterName} invited you to be their wingperson on Orbit. Download: ${appUrl}`;
+    `${daterName} invited you to be their wingperson on Wyng. Download: ${appUrl}`;
 
   const twilioBody = new URLSearchParams({
     To: phone,

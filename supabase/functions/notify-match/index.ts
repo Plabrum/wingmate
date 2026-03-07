@@ -14,11 +14,14 @@ const corsHeaders = {
 };
 
 async function sendPush(token: string, title: string, body: string) {
-  await fetch('https://exp.host/--/api/v2/push/send', {
+  const res = await fetch('https://exp.host/--/api/v2/push/send', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ to: token, title, body }),
   });
+  if (!res.ok) {
+    console.error('Expo push failed:', await res.text());
+  }
 }
 
 Deno.serve(async (req) => {

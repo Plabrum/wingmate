@@ -14,11 +14,14 @@ const corsHeaders = {
 };
 
 async function sendPush(token: string, title: string, body: string) {
-  await fetch('https://exp.host/--/api/v2/push/send', {
+  const res = await fetch('https://exp.host/--/api/v2/push/send', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ to: token, title, body }),
   });
+  if (!res.ok) {
+    console.error('Expo push failed:', await res.text());
+  }
 }
 
 Deno.serve(async (req) => {
@@ -46,25 +49,18 @@ Deno.serve(async (req) => {
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
   );
 
-  // Resolve dating_profile → user_id
+  // Resolve dating_profile → push_token in one join
   const { data: datingProfile } = await admin
     .from('dating_profiles')
-    .select('user_id')
+    .select('profiles!inner(push_token)')
     .eq('id', dating_profile_id)
     .single();
 
-  if (!datingProfile?.user_id) return json({ ok: true }, 200);
-
-  const { data: profile } = await admin
-    .from('profiles')
-    .select('push_token')
-    .eq('id', datingProfile.user_id)
-    .single();
-
-  if (!profile?.push_token) return json({ ok: true }, 200);
+  const push_token = (datingProfile?.profiles as { push_token: string | null } | null)?.push_token;
+  if (!push_token) return json({ ok: true }, 200);
 
   await sendPush(
-    profile.push_token,
+    push_token,
     'New photo suggestion 📸',
     'Your wingperson suggested a photo for your profile.',
   );
