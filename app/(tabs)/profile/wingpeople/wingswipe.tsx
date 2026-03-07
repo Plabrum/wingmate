@@ -14,6 +14,7 @@ import { PurpleButton } from '@/components/ui/PurpleButton';
 import { useDaterContext } from '@/queries/profiles';
 import { useWingPool } from '@/queries/discover';
 import ScreenSuspense from '@/components/ui/ScreenSuspense';
+import { cardButtonShadow } from '@/lib/styles';
 
 const PAGE_SIZE = 20;
 
@@ -94,7 +95,7 @@ function NoteModal({
 
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onDismiss}>
-      <View className="flex-1 bg-[rgba(0,0,0,0.45)]">
+      <View className="flex-1 bg-black/45">
         <Pressable className="flex-1" onPress={onDismiss} />
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -191,26 +192,14 @@ function WingSwipeContent() {
         <View className="flex-row justify-center items-center gap-[40px] py-5 pb-7">
           <Pressable
             className="w-16 h-16 rounded-[32px] justify-center items-center bg-white"
-            style={{
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.12,
-              shadowRadius: 6,
-              elevation: 4,
-            }}
+            style={cardButtonShadow}
             onPress={decline}
           >
             <Text className="text-[24px] text-ink-mid">✕</Text>
           </Pressable>
           <Pressable
             className="w-16 h-16 rounded-[32px] justify-center items-center bg-purple"
-            style={{
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.12,
-              shadowRadius: 6,
-              elevation: 4,
-            }}
+            style={cardButtonShadow}
             onPress={() => setNoteVisible(true)}
           >
             <Text className="text-[24px] text-white">♥</Text>

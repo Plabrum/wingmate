@@ -24,6 +24,7 @@ import { PurpleButton } from '@/components/ui/PurpleButton';
 import { WingStack } from '@/components/ui/WingStack';
 import { colors } from '@/constants/theme';
 import ScreenSuspense from '@/components/ui/ScreenSuspense';
+import { cardButtonShadow } from '@/lib/styles';
 
 const PAGE_SIZE = 20;
 
@@ -111,7 +112,9 @@ function WingNoteSection({ card }: { card: DiscoverCard }) {
 function CardView({ card }: { card: DiscoverCard }) {
   return (
     <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-      <PhotoRect uri={card.first_photo} ratio={4 / 5} />
+      <View className="px-4">
+        <PhotoRect uri={card.first_photo} ratio={1} />
+      </View>
       <View className="p-4">
         <Text className="text-[28px] font-serif font-bold text-ink">
           {card.chosen_name}, {card.age}
@@ -265,26 +268,14 @@ function DiscoverPool({
         <View className="flex-row justify-center items-center gap-[40px] py-5 pb-7">
           <Pressable
             className="w-16 h-16 rounded-full justify-center items-center bg-white"
-            style={{
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.12,
-              shadowRadius: 6,
-              elevation: 4,
-            }}
+            style={cardButtonShadow}
             onPress={handlePass}
           >
             <Text className="text-[24px] text-ink-mid">✕</Text>
           </Pressable>
           <Pressable
             className="w-16 h-16 rounded-full justify-center items-center bg-purple"
-            style={{
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.12,
-              shadowRadius: 6,
-              elevation: 4,
-            }}
+            style={cardButtonShadow}
             onPress={handleLike}
           >
             <Text className="text-[24px] text-white">♥</Text>
