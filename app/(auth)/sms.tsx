@@ -89,7 +89,7 @@ export default function SmsModal() {
               </Text>
             )}
             <Text style={{ fontSize: 13, color: '#888', marginTop: 4 }}>
-              US numbers are auto-detected. Include a country code (e.g. +44) for international.
+              US numbers are auto-detected. Include a country code for international numbers.
             </Text>
             <View style={{ marginTop: 8 }}>
               {phoneForm.formState.isSubmitting ? (

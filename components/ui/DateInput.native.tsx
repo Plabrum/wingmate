@@ -11,7 +11,7 @@ type Props = {
 };
 
 function formatDate(date: Date) {
-  return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+  return date.toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' });
 }
 
 export default function DateInput({ value, onChange, style }: Props) {
