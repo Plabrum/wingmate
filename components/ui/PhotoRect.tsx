@@ -14,13 +14,13 @@ export function PhotoRect({ uri, ratio = 4 / 5, blur = false, style }: Props) {
       {uri ? (
         <Image
           source={{ uri }}
-          style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0 }}
+          style={{ flex: 1, width: '100%' }}
           contentFit="cover"
           blurRadius={blur ? 20 : 0}
           transition={200}
         />
       ) : (
-        <View className="absolute inset-0 bg-separator" />
+        <View className="flex-1 bg-separator" />
       )}
     </View>
   );
