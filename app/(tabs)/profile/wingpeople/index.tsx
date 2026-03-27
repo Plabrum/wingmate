@@ -11,6 +11,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Controller, useForm } from 'react-hook-form';
 import { toast } from 'sonner-native';
+import * as SMS from 'expo-sms';
 
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
@@ -279,9 +280,17 @@ export default function WingpeopleScreen() {
         .eq('user_id', userId)
         .eq('phone_number', e164);
     } else {
-      await supabase.functions.invoke('send-wing-invite', {
-        body: { phone: e164, daterName: profile?.chosen_name ?? 'Someone' },
-      });
+      const isAvailable = await SMS.isAvailableAsync();
+      if (isAvailable) {
+        const daterName = profile?.chosen_name ?? 'Someone';
+        const appUrl = 'https://apps.apple.com/app/wyng/id6744145981';
+        await SMS.sendSMSAsync(
+          [e164],
+          `${daterName} invited you to be their wingperson on Wyng! Download the app: ${appUrl}`
+        );
+      } else {
+        toast.error('SMS is not available on this device.');
+      }
     }
 
     queryClient.invalidateQueries({ queryKey: ['wingpeople', userId] });
@@ -322,7 +331,7 @@ export default function WingpeopleScreen() {
               <View className="self-center w-9 h-1 rounded-full bg-fg-ghost mb-5" />
               <Text className="text-lg font-bold text-fg mb-1.5">Invite a Wingperson</Text>
               <Text className="text-sm text-fg-muted leading-5 mb-5">
-                Enter their phone number and we{"'"}ll send them an invite to Orbit.
+                Enter their phone number and we{"'"}ll open a text for you to send.
               </Text>
 
               <Controller
