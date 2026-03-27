@@ -154,7 +154,6 @@ export function useLikesYouCount(userId: string) {
       if (error) throw error;
       return data ?? 0;
     },
-    staleTime: 0,
   });
 }
 
