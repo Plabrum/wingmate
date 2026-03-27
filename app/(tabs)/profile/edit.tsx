@@ -1,6 +1,7 @@
 import { Controller, useForm } from 'react-hook-form';
 import { KeyboardAvoidingView, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner-native';
 
 import { colors } from '@/constants/theme';
@@ -134,6 +135,7 @@ function EditProfileForm({
   userId: string;
   router: ReturnType<typeof useRouter>;
 }) {
+  const queryClient = useQueryClient();
   const {
     control,
     handleSubmit,
@@ -184,6 +186,8 @@ function EditProfileForm({
       toast.error('Could not save changes. Please try again.');
       return;
     }
+    queryClient.invalidateQueries({ queryKey: ['pool'] });
+    queryClient.invalidateQueries({ queryKey: ['likes-you-count'] });
     refresh();
     router.back();
   });

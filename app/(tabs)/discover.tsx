@@ -338,9 +338,16 @@ export default function DiscoverScreen() {
     return <DiscoverPausedScreen status={status} onResume={refreshProfile} />;
   }
 
+  const prefKey = [
+    datingProfile?.age_from,
+    datingProfile?.age_to,
+    datingProfile?.interested_gender?.join(','),
+    datingProfile?.religious_preference ?? '',
+  ].join('|');
+
   return (
     <ScreenSuspense>
-      <DiscoverContent userId={userId} />
+      <DiscoverContent key={prefKey} userId={userId} />
     </ScreenSuspense>
   );
 }
