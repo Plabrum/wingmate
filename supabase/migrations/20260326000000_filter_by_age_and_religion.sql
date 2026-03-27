@@ -2,6 +2,11 @@
 -- Both functions now respect:
 --   age_from / age_to      — candidate must fall within viewer/dater's desired age window
 --   religious_preference   — when set, candidate must share that religion (null = no preference)
+--
+-- Also excludes from the discover pool any candidate who has already liked (approved)
+-- the viewer. Those profiles appear in the "Likes You" tab instead.
+-- Matched profiles are unaffected: a match requires the viewer to have also
+-- approved, so they are already excluded by the existing "acted on" filter.
 
 create or replace function public.get_discover_pool(
   viewer_id        uuid,
@@ -86,6 +91,16 @@ language sql security definer stable as $$
       where  ex.actor_id     = viewer_id
         and  ex.recipient_id = dp.user_id
         and  ex.decision     is not null
+    )
+    -- exclude profiles that have already liked the viewer
+    -- (they appear in the Likes You tab; matched profiles are already
+    --  excluded above since a match requires the viewer to have approved)
+    and not exists (
+      select 1
+      from   public.decisions ex
+      where  ex.actor_id     = dp.user_id
+        and  ex.recipient_id = viewer_id
+        and  ex.decision     = 'approved'
     )
     -- winger tab: only show profiles that winger has suggested
     and (

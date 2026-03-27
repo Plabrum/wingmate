@@ -1,5 +1,5 @@
--- Apply the viewer's age range and religious preference filters to the
--- Likes You pool and count, matching the behaviour of get_discover_pool.
+-- Apply the viewer's age range, religious preference, city, and interested_gender
+-- filters to the Likes You pool and count, matching the behaviour of get_discover_pool.
 
 create or replace function public.get_likes_you_pool(
   viewer_id   uuid,
@@ -23,7 +23,7 @@ returns table (
 )
 language sql security definer stable as $$
   select
-    dp.user_id                                                    as profile_id,
+    dp.id                                                         as profile_id,
     dp.user_id,
     p.chosen_name,
     p.gender,
@@ -61,6 +61,14 @@ language sql security definer stable as $$
     -- liker must still be available
     and dp.is_active     = true
     and dp.dating_status = 'open'
+    -- liker must be in viewer's city
+    and dp.city          = vdp.city
+    -- liker's gender must be one the viewer is interested in
+    -- (empty array = open to all)
+    and (
+      vdp.interested_gender = '{}'::public.gender[]
+      or p.gender = any(vdp.interested_gender)
+    )
     -- liker's age must fall within viewer's desired range
     and extract(year from age(p.date_of_birth))::int >= vdp.age_from
     and (
@@ -73,19 +81,13 @@ language sql security definer stable as $$
       or dp.religion = vdp.religious_preference
     )
     -- viewer hasn't decided on this person yet
+    -- (this also covers matched profiles: a match requires decision = 'approved')
     and not exists (
       select 1
       from   public.decisions ex
       where  ex.actor_id     = viewer_id
         and  ex.recipient_id = lk.actor_id
         and  ex.decision     is not null
-    )
-    -- no match already exists between them
-    and not exists (
-      select 1
-      from   public.matches m
-      where  (m.user_a_id = viewer_id and m.user_b_id = lk.actor_id)
-          or (m.user_a_id = lk.actor_id and m.user_b_id = viewer_id)
     )
   order by lk.created_at desc
   limit  page_size
@@ -108,6 +110,11 @@ language sql security definer stable as $$
     and lk.decision      = 'approved'
     and dp.is_active     = true
     and dp.dating_status = 'open'
+    and dp.city          = vdp.city
+    and (
+      vdp.interested_gender = '{}'::public.gender[]
+      or p.gender = any(vdp.interested_gender)
+    )
     and extract(year from age(p.date_of_birth))::int >= vdp.age_from
     and (
       vdp.age_to is null
@@ -117,17 +124,13 @@ language sql security definer stable as $$
       vdp.religious_preference is null
       or dp.religion = vdp.religious_preference
     )
+    -- viewer hasn't decided on this person yet
+    -- (this also covers matched profiles: a match requires decision = 'approved')
     and not exists (
       select 1
       from   public.decisions ex
       where  ex.actor_id     = viewer_id
         and  ex.recipient_id = lk.actor_id
         and  ex.decision     is not null
-    )
-    and not exists (
-      select 1
-      from   public.matches m
-      where  (m.user_a_id = viewer_id and m.user_b_id = lk.actor_id)
-          or (m.user_a_id = lk.actor_id and m.user_b_id = viewer_id)
     )
 $$;
