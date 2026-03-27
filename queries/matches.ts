@@ -1,5 +1,6 @@
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
+import { getPhotoUrl } from '@/queries/photos';
 
 // ── Match list ────────────────────────────────────────────────────────────────
 
@@ -56,7 +57,7 @@ export function getFirstPhoto(profile: MatchRow['user_a'] | MatchRow['user_b']):
   const approved = photos
     .filter((p) => p.approved_at !== null)
     .sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0));
-  return approved[0]?.storage_url ?? null;
+  return getPhotoUrl(approved[0]?.storage_url ?? null);
 }
 
 /**
