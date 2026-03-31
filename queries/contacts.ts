@@ -47,6 +47,28 @@ export type IncomingInvitation = NonNullable<
 >[number];
 
 /**
+ * "Sent invitations" — contacts the current dater invited that haven't accepted yet.
+ * Includes the winger profile if they already have an account.
+ */
+export function getOutgoingPendingInvitations(daterId: string) {
+  return supabase
+    .from('contacts')
+    .select(
+      `
+      id, created_at, phone_number,
+      winger:profiles!contacts_winger_id_fkey (id, chosen_name)
+    `
+    )
+    .eq('user_id', daterId)
+    .eq('wingperson_status', 'invited')
+    .order('created_at', { ascending: false });
+}
+
+export type OutgoingInvitation = NonNullable<
+  Awaited<ReturnType<typeof getOutgoingPendingInvitations>>['data']
+>[number];
+
+/**
  * "You're winging for" — daters the current user is actively supporting.
  * Includes the dater's interests so WingSwipe can show the callout box.
  */
@@ -93,18 +115,21 @@ export async function getWingerWeeklyCount(wingerId: string, daterId: string) {
  * Throws on any Supabase error so useSuspenseQuery propagates to an error boundary.
  */
 export async function getWingpeopleWithCounts(daterId: string) {
-  const [wpResult, invResult, wfResult] = await Promise.all([
+  const [wpResult, invResult, wfResult, outResult] = await Promise.all([
     getMyWingpeople(daterId),
     getIncomingInvitations(daterId),
     getWingingFor(daterId),
+    getOutgoingPendingInvitations(daterId),
   ]);
   if (wpResult.error) throw new Error(wpResult.error.message);
   if (invResult.error) throw new Error(invResult.error.message);
   if (wfResult.error) throw new Error(wfResult.error.message);
+  if (outResult.error) throw new Error(outResult.error.message);
 
   const wingpeople = wpResult.data ?? [];
   const invitations = invResult.data ?? [];
   const wingingFor = wfResult.data ?? [];
+  const sentInvitations = outResult.data ?? [];
 
   // Build winger-profile-id → contact-row-id map for the batch count lookup.
   const wingerIds: string[] = [];
@@ -134,7 +159,7 @@ export async function getWingpeopleWithCounts(daterId: string) {
     }
   }
 
-  return { wingpeople, invitations, wingingFor, weeklyCounts };
+  return { wingpeople, invitations, wingingFor, sentInvitations, weeklyCounts };
 }
 
 export function useMyWingpeople(daterId: string) {

@@ -55,7 +55,7 @@ interface ContentProps {
 function WingpeopleContent({ userId, onOpenInvite }: ContentProps) {
   const router = useRouter();
   const {
-    data: { wingpeople, invitations, wingingFor, weeklyCounts },
+    data: { wingpeople, invitations, wingingFor, sentInvitations, weeklyCounts },
     refetch,
   } = useWingpeopleData(userId);
 
@@ -77,6 +77,24 @@ function WingpeopleContent({ userId, onOpenInvite }: ContentProps) {
     } else {
       refetch();
     }
+  };
+
+  const handleCancelInvite = (contactId: string) => {
+    Alert.alert('Cancel invite?', 'This will withdraw the invitation.', [
+      { text: 'Keep', style: 'cancel' },
+      {
+        text: 'Cancel Invite',
+        style: 'destructive',
+        onPress: async () => {
+          const { error } = await removeWingperson(contactId, userId);
+          if (error) {
+            toast.error("Couldn't cancel invite. Try again.");
+          } else {
+            refetch();
+          }
+        },
+      },
+    ]);
   };
 
   const handleRemove = (contactId: string) => {
@@ -149,7 +167,40 @@ function WingpeopleContent({ userId, onOpenInvite }: ContentProps) {
         })
       )}
 
-      {/* ── Section 2: Invitations ──────────────────────────────────────── */}
+      {/* ── Section 2: Sent Invites ────────────────────────────────────── */}
+      {sentInvitations.length > 0 && (
+        <>
+          <SectionHeader title="Sent Invites" />
+          {sentInvitations.map((inv) => {
+            const winger = (inv as any).winger as { id: string; chosen_name: string | null } | null;
+            const displayName = winger?.chosen_name ?? inv.phone_number ?? 'Unknown';
+            return (
+              <View
+                key={inv.id}
+                className="flex-row items-center px-5 py-3 gap-3 bg-white"
+                style={{
+                  borderBottomWidth: StyleSheet.hairlineWidth,
+                  borderBottomColor: colors.divider,
+                }}
+              >
+                <FaceAvatar initials={getInitials(displayName)} size={40} />
+                <View className="flex-1">
+                  <Text className="text-sm font-semibold text-fg">{displayName}</Text>
+                  <Text className="text-xs text-fg-muted mt-0.5">Invite pending</Text>
+                </View>
+                <Pressable
+                  className="px-[14px] py-2 rounded-full bg-surface"
+                  onPress={() => handleCancelInvite(inv.id)}
+                >
+                  <Text className="text-sm font-semibold text-fg-muted">Cancel</Text>
+                </Pressable>
+              </View>
+            );
+          })}
+        </>
+      )}
+
+      {/* ── Section 3: Invitations ──────────────────────────────────────── */}
       <SectionHeader title="Invitations" />
 
       {invitations.length === 0 ? (
@@ -188,7 +239,7 @@ function WingpeopleContent({ userId, onOpenInvite }: ContentProps) {
         })
       )}
 
-      {/* ── Section 3: You're Winging For ──────────────────────────────── */}
+      {/* ── Section 4: You're Winging For ──────────────────────────────── */}
       <SectionHeader title="You're Winging For" />
 
       {wingingFor.length === 0 ? (
