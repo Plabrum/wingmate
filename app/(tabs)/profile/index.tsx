@@ -157,7 +157,7 @@ function ProfileScreenInner() {
         <LargeHeader title="My Profile" right={<LogOutButton />} />
         <ProfileBanner
           title="You're in winging mode"
-          sub="Your dating profile is hidden. Tap to resume dating."
+          sub="Tap here to create a dating profile."
           onPress={handleResumeDating}
         />
         <WingerView name={profile?.chosen_name ?? null} />
