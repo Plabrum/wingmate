@@ -4,11 +4,14 @@ import { useRouter } from 'expo-router';
 import { toast } from 'sonner-native';
 import { useForm } from 'react-hook-form';
 
+import { useQueryClient } from '@tanstack/react-query';
+
 import { colors } from '@/constants/theme';
 import { useAuth } from '@/context/auth';
-import { useProfileData } from '@/queries/profiles';
+import { useProfileData, updateDatingProfile } from '@/queries/profiles';
 import type { OwnDatingProfile } from '@/queries/profiles';
 import { useMyWingpeople } from '@/queries/contacts';
+import { supabase } from '@/lib/supabase';
 
 import { View, Text, Pressable, SafeAreaView } from '@/lib/tw';
 import { LargeHeader } from '@/components/ui/LargeHeader';
@@ -41,7 +44,33 @@ function LogOutButton() {
   );
 }
 
-// ── Winger view ───────────────────────────────────────────────────────────────
+// ── Shared banner strip ───────────────────────────────────────────────────────
+
+function ProfileBanner({
+  title,
+  sub,
+  onPress,
+}: {
+  title: string;
+  sub: string;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      className="flex-row items-center gap-3 px-5 py-4 bg-purple-pale"
+      style={{ borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.divider }}
+      onPress={onPress}
+    >
+      <View className="flex-1">
+        <Text className="text-sm font-semibold text-accent">{title}</Text>
+        <Text className="text-xs text-accent/70 mt-0.5">{sub}</Text>
+      </View>
+      <IconSymbol name="chevron.right" size={13} color={colors.purple} />
+    </Pressable>
+  );
+}
+
+// ── Winger view (shared by role=winger and dating_status=winging) ─────────────
 
 function WingerView({ name }: { name: string | null }) {
   const router = useRouter();
@@ -66,6 +95,7 @@ function WingerView({ name }: { name: string | null }) {
 function ProfileScreenInner() {
   const router = useRouter();
   const { userId } = useAuth();
+  const queryClient = useQueryClient();
 
   const {
     data: { profile, datingProfile },
@@ -85,10 +115,25 @@ function ProfileScreenInner() {
     if (result.data?.datingProfile) form.reset(result.data.datingProfile);
   }, [refetch, form]);
 
+  // ── Role = winger ─────────────────────────────────────────────────────────
   if (profile?.role === 'winger') {
+    const handleSwitchToDater = async () => {
+      const { error } = await supabase.from('profiles').update({ role: 'dater' }).eq('id', userId);
+      if (error) {
+        toast.error("Couldn't switch profile. Try again.");
+        return;
+      }
+      queryClient.invalidateQueries({ queryKey: ['profile', userId] });
+    };
+
     return (
       <SafeAreaView className="flex-1 bg-page" edges={['top']}>
         <LargeHeader title="My Profile" right={<LogOutButton />} />
+        <ProfileBanner
+          title="Want to start dating too?"
+          sub="Set up a dater profile and start swiping."
+          onPress={handleSwitchToDater}
+        />
         <WingerView name={profile.chosen_name} />
       </SafeAreaView>
     );
@@ -96,6 +141,31 @@ function ProfileScreenInner() {
 
   if (!datingProfile) return null; // routing should prevent this
 
+  // ── dating_status = winging ───────────────────────────────────────────────
+  if (dating_status === 'winging') {
+    const handleResumeDating = async () => {
+      form.setValue('dating_status', 'open');
+      const { error } = await updateDatingProfile(userId, { dating_status: 'open' });
+      if (error) {
+        form.setValue('dating_status', 'winging');
+        toast.error("Couldn't update status. Try again.");
+      }
+    };
+
+    return (
+      <SafeAreaView className="flex-1 bg-page" edges={['top']}>
+        <LargeHeader title="My Profile" right={<LogOutButton />} />
+        <ProfileBanner
+          title="You're in winging mode"
+          sub="Your dating profile is hidden. Tap to resume dating."
+          onPress={handleResumeDating}
+        />
+        <WingerView name={profile?.chosen_name ?? null} />
+      </SafeAreaView>
+    );
+  }
+
+  // ── Dater view ────────────────────────────────────────────────────────────
   const wingInitials = wingpeople.map((w) => getInitials((w as any).winger?.chosen_name));
 
   return (
@@ -123,24 +193,16 @@ function ProfileScreenInner() {
         <IconSymbol name="chevron.right" size={13} color={colors.inkGhost} />
       </Pressable>
 
-      {dating_status === 'winging' ? (
-        <AboutMeTab form={form} data={datingProfile} userId={userId} />
-      ) : (
-        <>
-          <TextTabBar
-            tabs={['About Me', 'Photos', 'Prompts']}
-            active={activeTab}
-            setActive={setActiveTab}
-          />
-          {activeTab === 0 && <AboutMeTab form={form} data={datingProfile} userId={userId} />}
-          {activeTab === 1 && (
-            <PhotosTab form={form} data={datingProfile} userId={userId} onRefresh={handleRefresh} />
-          )}
-          {activeTab === 2 && (
-            <PromptsTab form={form} data={datingProfile} onRefresh={handleRefresh} />
-          )}
-        </>
+      <TextTabBar
+        tabs={['About Me', 'Photos', 'Prompts']}
+        active={activeTab}
+        setActive={setActiveTab}
+      />
+      {activeTab === 0 && <AboutMeTab form={form} data={datingProfile} userId={userId} />}
+      {activeTab === 1 && (
+        <PhotosTab form={form} data={datingProfile} userId={userId} onRefresh={handleRefresh} />
       )}
+      {activeTab === 2 && <PromptsTab form={form} data={datingProfile} onRefresh={handleRefresh} />}
     </SafeAreaView>
   );
 }
