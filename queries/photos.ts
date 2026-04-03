@@ -31,6 +31,36 @@ export async function pickAndResizePhoto(): Promise<string | null> {
   return saved.uri;
 }
 
+// ── Avatar ────────────────────────────────────────────────────────────────────
+
+/**
+ * Upload a JPEG to the avatars bucket as <userId>.jpg (upsert), then persist
+ * the resulting public URL to profiles.avatar_url.
+ */
+export async function uploadAvatar(
+  userId: string,
+  uri: string
+): Promise<{ url: string | null; error: Error | null }> {
+  const path = `${userId}.jpg`;
+  const arrayBuffer = await fetch(uri).then((res) => res.arrayBuffer());
+
+  const { error: uploadError } = await supabase.storage
+    .from('avatars')
+    .upload(path, arrayBuffer, { contentType: 'image/jpeg', upsert: true });
+
+  if (uploadError) return { url: null, error: uploadError };
+
+  const { data } = supabase.storage.from('avatars').getPublicUrl(path);
+  const url = data.publicUrl;
+
+  const { error: profileError } = await supabase
+    .from('profiles')
+    .update({ avatar_url: url })
+    .eq('id', userId);
+
+  return { url, error: profileError ?? null };
+}
+
 // ── Upload ────────────────────────────────────────────────────────────────────
 
 /**
