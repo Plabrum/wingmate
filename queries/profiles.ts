@@ -77,6 +77,49 @@ export function useProfileData(userId: string) {
   });
 }
 
+// ── Winger: read a dater's profile ───────────────────────────────────────────
+
+/**
+ * Fetch a dater's dating profile as seen by their winger.
+ * Includes approved photos, winger-suggested photos, and profile prompts.
+ * Does NOT include prompt responses (those are private to the dater).
+ */
+export function getDaterProfile(daterId: string) {
+  return supabase
+    .from('dating_profiles')
+    .select(
+      `
+      id,
+      user:profiles!dating_profiles_user_id_fkey (id, chosen_name),
+      photos:profile_photos (
+        id, storage_url, display_order, approved_at, suggester_id
+      ),
+      prompts:profile_prompts (
+        id, answer, created_at,
+        template:prompt_templates (id, question)
+      )
+    `
+    )
+    .eq('user_id', daterId)
+    .order('display_order', { referencedTable: 'profile_photos', ascending: true })
+    .order('created_at', { referencedTable: 'profile_prompts', ascending: true })
+    .maybeSingle();
+}
+
+export type DaterProfile = NonNullable<Awaited<ReturnType<typeof getDaterProfile>>['data']>;
+
+export function useDaterProfile(daterId: string) {
+  return useSuspenseQuery({
+    queryKey: [getDaterProfile, daterId],
+    queryFn: async () => {
+      const { data, error } = await getDaterProfile(daterId);
+      if (error) throw error;
+      return data;
+    },
+    staleTime: 2 * 60_000,
+  });
+}
+
 // ── Onboarding writes ─────────────────────────────────────────────────────────
 
 /** Step 1: write name, DOB, phone, gender, role collected during onboarding. */
