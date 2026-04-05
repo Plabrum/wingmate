@@ -474,6 +474,123 @@ async function seedDecisions(targetId: string, gender: 'Male' | 'Female'): Promi
   console.log(`  ${actorIds.length} ${gender} seed users → liked dev user`);
 }
 
+// ── Wingpeople seed ───────────────────────────────────────────────────────────
+
+// Three sample wingpeople who are actively winging for the dev user.
+const SAMPLE_WINGERS = [
+  { first: 'Alex', last: 'Chen', gender: 'Male' as const, phone: '+15550010001' },
+  { first: 'Jordan', last: 'Kim', gender: 'Female' as const, phone: '+15550010002' },
+  { first: 'Sam', last: 'Rivera', gender: 'Male' as const, phone: '+15550010003' },
+];
+
+// Two seed daters (by email) that the dev user will wing for.
+const WINGING_FOR_EMAILS = [
+  'seed.emma.sullivan@seed.orbit.test',
+  'seed.liam.murphy@seed.orbit.test',
+];
+
+async function ensureWingerProfile(
+  first: string,
+  last: string,
+  gender: 'Male' | 'Female',
+  phone: string
+): Promise<string> {
+  const email = `winger.${first.toLowerCase()}.${last.toLowerCase()}@seed.orbit.test`;
+
+  const { data: listData } = await supabase.auth.admin.listUsers({ perPage: 1000 });
+  const existing = listData?.users.find((u) => u.email === email);
+  if (existing) {
+    console.log(`  winger ${first} ${last} already exists, skipping`);
+    return existing.id;
+  }
+
+  const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+    email,
+    password: 'Orbit123!',
+    email_confirm: true,
+  });
+  if (authError) throw new Error(`winger ${first} auth error: ${authError.message}`);
+
+  const userId = authData.user.id;
+
+  const { error: profileError } = await supabase
+    .from('profiles')
+    .update({
+      chosen_name: first,
+      last_name: last,
+      gender,
+      date_of_birth: randomDob(22, 35),
+      role: 'winger',
+      phone_number: phone,
+    })
+    .eq('id', userId);
+  if (profileError) throw new Error(`winger ${first} profile error: ${profileError.message}`);
+
+  console.log(`  winger ${first} ${last} created (${userId})`);
+  return userId;
+}
+
+async function seedWingpeopleContacts(devUserId: string): Promise<void> {
+  // 1. Create winger profiles and link them as active wingpeople of the dev user.
+  for (const w of SAMPLE_WINGERS) {
+    const wingerId = await ensureWingerProfile(w.first, w.last, w.gender, w.phone);
+
+    const { data: existing } = await supabase
+      .from('contacts')
+      .select('id')
+      .eq('user_id', devUserId)
+      .eq('winger_id', wingerId)
+      .maybeSingle();
+
+    if (!existing) {
+      const { error } = await supabase.from('contacts').insert({
+        user_id: devUserId,
+        winger_id: wingerId,
+        phone_number: w.phone,
+        wingperson_status: 'active',
+      });
+      if (error) throw new Error(`contact for winger ${w.first} error: ${error.message}`);
+    }
+  }
+
+  // 2. Find the two seed daters and create contacts with dev user as their winger.
+  const { data: listData } = await supabase.auth.admin.listUsers({ perPage: 1000 });
+  for (const email of WINGING_FOR_EMAILS) {
+    const dater = listData?.users.find((u) => u.email === email);
+    if (!dater) {
+      console.log(`  dater ${email} not found — skipping`);
+      continue;
+    }
+
+    const { data: daterProfile } = await supabase
+      .from('profiles')
+      .select('phone_number')
+      .eq('id', dater.id)
+      .single();
+
+    const phone = daterProfile?.phone_number ?? `+1555999${WINGING_FOR_EMAILS.indexOf(email)}`;
+
+    const { data: existing } = await supabase
+      .from('contacts')
+      .select('id')
+      .eq('user_id', dater.id)
+      .eq('winger_id', devUserId)
+      .maybeSingle();
+
+    if (!existing) {
+      const { error } = await supabase.from('contacts').insert({
+        user_id: dater.id,
+        winger_id: devUserId,
+        phone_number: phone,
+        wingperson_status: 'active',
+      });
+      if (error) throw new Error(`contact winging-for ${email} error: ${error.message}`);
+    }
+
+    console.log(`  dev user is now winging for ${email}`);
+  }
+}
+
 async function main(): Promise<void> {
   console.log('Setting up local dev database…\n');
 
@@ -499,6 +616,9 @@ async function main(): Promise<void> {
   console.log('\nSeeding decisions (all seed users like the dev user)…');
   await seedDecisions(devUserId, 'Female'); // 25 women like dev user
   await seedDecisions(devUserId, 'Male'); // 25 men like dev user
+
+  console.log('\nSeeding wingpeople relationships…');
+  await seedWingpeopleContacts(devUserId);
 
   console.log('\nDone. Local DB is ready. Sign in as dev@local.test / devpassword');
 }

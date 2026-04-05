@@ -18,23 +18,6 @@ import { cardButtonShadow } from '@/lib/styles';
 
 const PAGE_SIZE = 20;
 
-// ── DaterCallout ──────────────────────────────────────────────────────────────
-
-function DaterCallout({ name, interests }: { name: string; interests: string[] }) {
-  return (
-    <View className="bg-accent-muted rounded-xl p-[14px] mb-4 gap-[10px]">
-      <Text className="text-sm font-semibold text-accent">You think {name} would like this?</Text>
-      {interests.length > 0 && (
-        <View className="flex-row flex-wrap gap-2">
-          {interests.map((interest) => (
-            <Pill key={interest} label={interest} />
-          ))}
-        </View>
-      )}
-    </View>
-  );
-}
-
 // ── WingCardView ──────────────────────────────────────────────────────────────
 
 type WingCardViewProps = {
@@ -46,10 +29,9 @@ type WingCardViewProps = {
     bio: string | null;
     first_photo: string | null;
   };
-  callout: React.ReactNode;
 };
 
-function WingCardView({ card, callout }: WingCardViewProps) {
+function WingCardView({ card }: WingCardViewProps) {
   return (
     <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
       <PhotoRect uri={card.first_photo} ratio={4 / 5} />
@@ -58,7 +40,6 @@ function WingCardView({ card, callout }: WingCardViewProps) {
           {card.chosen_name}, {card.age}
         </Text>
         <Text className="text-sm text-fg-muted mt-1 mb-3">{card.city}</Text>
-        {callout}
         {card.interests.length > 0 && (
           <View className="flex-row flex-wrap gap-2 mb-4">
             {card.interests.map((interest) => (
@@ -158,8 +139,6 @@ function WingSwipeContent() {
   const card = pool[index] ?? null;
 
   const daterName = daterContext?.chosen_name ?? '';
-  const daterInterests =
-    (daterContext?.dating_profiles as { interests: string[] } | null)?.interests ?? [];
   const firstName = daterName.split(' ')[0] || daterName;
 
   const [noteVisible, setNoteVisible] = useState(false);
@@ -179,10 +158,7 @@ function WingSwipeContent() {
 
       <View className="flex-1">
         {card != null ? (
-          <WingCardView
-            card={card}
-            callout={<DaterCallout name={firstName || 'them'} interests={daterInterests} />}
-          />
+          <WingCardView card={card} />
         ) : (
           <EmptyState daterName={firstName || 'them'} />
         )}
@@ -200,7 +176,9 @@ function WingSwipeContent() {
           <Pressable
             className="w-16 h-16 rounded-[32px] justify-center items-center bg-accent"
             style={cardButtonShadow}
-            onPress={() => setNoteVisible(true)}
+            onPress={() => suggest(null)}
+            onLongPress={() => setNoteVisible(true)}
+            delayLongPress={400}
           >
             <Text className="text-2xl text-white">♥</Text>
           </Pressable>
