@@ -8,8 +8,6 @@ import {
   StyleSheet,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import * as ImagePicker from 'expo-image-picker';
-import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import { toast } from 'sonner-native';
 import { useQueryClient } from '@tanstack/react-query';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -17,7 +15,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '@/constants/theme';
 import { useAuth } from '@/context/auth';
 import { useDaterProfile, getDaterProfile } from '@/queries/profiles';
-import { uploadPhoto, insertPhoto, getPhotoUrl } from '@/queries/photos';
+import { uploadPhoto, insertPhoto, getPhotoUrl, pickAndResizePhoto } from '@/queries/photos';
 import { addPromptResponse } from '@/queries/prompts';
 
 import { View, Text, Pressable, ScrollView, SafeAreaView, TextInput } from '@/lib/tw';
@@ -119,27 +117,13 @@ function DaterProfileContent() {
   );
 
   const handleSuggestPhoto = async () => {
-    const { granted } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!granted) {
-      toast.error('Allow photo access in Settings to suggest photos.');
-      return;
-    }
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      allowsEditing: true,
-      quality: 1,
-    });
-    if (result.canceled || !result.assets[0]) return;
+    const uri = await pickAndResizePhoto();
+    if (!uri) return;
 
     setUploading(true);
     try {
-      const asset = result.assets[0];
-      const ctx = ImageManipulator.manipulate(asset.uri);
-      ctx.resize({ width: 1200 });
-      const imageRef = await ctx.renderAsync();
-      const saved = await imageRef.saveAsync({ compress: 0.8, format: SaveFormat.JPEG });
       const filename = `${Date.now()}.jpg`;
-      const { path, error: upErr } = await uploadPhoto(wingerId, saved.uri, filename);
+      const { path, error: upErr } = await uploadPhoto(wingerId, uri, filename);
       if (upErr) throw upErr;
       const nextOrder = approvedPhotos.length + myPendingPhotos.length;
       const { error: insErr } = await insertPhoto(daterProfile!.id, path, nextOrder, wingerId);

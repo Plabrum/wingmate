@@ -1,4 +1,35 @@
+import * as ImagePicker from 'expo-image-picker';
+import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
+import { toast } from 'sonner-native';
+
 import { supabase } from '@/lib/supabase';
+
+// ── Photo picker ──────────────────────────────────────────────────────────────
+
+/**
+ * Prompts for media library permission, opens the image picker, and resizes
+ * the selected image to a max width of 1200px at 0.8 JPEG quality.
+ * Returns the local URI of the processed image, or null if cancelled/denied.
+ */
+export async function pickAndResizePhoto(): Promise<string | null> {
+  const { granted } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+  if (!granted) {
+    toast.error('Allow photo access in Settings.');
+    return null;
+  }
+  const result = await ImagePicker.launchImageLibraryAsync({
+    mediaTypes: ['images'],
+    allowsEditing: true,
+    quality: 1,
+  });
+  if (result.canceled || !result.assets[0]) return null;
+
+  const ctx = ImageManipulator.manipulate(result.assets[0].uri);
+  ctx.resize({ width: 1200 });
+  const imageRef = await ctx.renderAsync();
+  const saved = await imageRef.saveAsync({ compress: 0.8, format: SaveFormat.JPEG });
+  return saved.uri;
+}
 
 // ── Upload ────────────────────────────────────────────────────────────────────
 
