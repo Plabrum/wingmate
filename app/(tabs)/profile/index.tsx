@@ -3,8 +3,6 @@ import { StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { toast } from 'sonner-native';
 import { useForm } from 'react-hook-form';
-import * as ImagePicker from 'expo-image-picker';
-import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import { useQueryClient } from '@tanstack/react-query';
 
 import { colors } from '@/constants/theme';
@@ -13,7 +11,7 @@ import { useProfileData, updateDatingProfile } from '@/queries/profiles';
 import type { OwnDatingProfile } from '@/queries/profiles';
 import { useMyWingpeople } from '@/queries/contacts';
 import { supabase } from '@/lib/supabase';
-import { uploadAvatar } from '@/queries/photos';
+import { pickAndResizePhoto, uploadAvatar } from '@/queries/photos';
 
 import { View, Text, Pressable, SafeAreaView } from '@/lib/tw';
 import { LargeHeader } from '@/components/ui/LargeHeader';
@@ -86,22 +84,11 @@ function AvatarPicker({ name, avatarUrl, size, userId }: AvatarPickerProps) {
   const [uploading, setUploading] = useState(false);
 
   const handlePick = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.9,
-    });
-    if (result.canceled) return;
+    const uri = await pickAndResizePhoto({ width: 400, aspect: [1, 1] });
+    if (!uri) return;
 
     setUploading(true);
-    const asset = result.assets[0];
-    const manipulated = await ImageManipulator.manipulate(asset.uri)
-      .resize({ width: 400 })
-      .renderAsync();
-    const file = await manipulated.saveAsync({ format: SaveFormat.JPEG, compress: 0.8 });
-
-    const { error } = await uploadAvatar(userId, file.uri);
+    const { error } = await uploadAvatar(userId, uri);
     setUploading(false);
     if (error) {
       toast.error("Couldn't upload photo. Try again.");

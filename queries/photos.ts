@@ -11,7 +11,12 @@ import { supabase } from '@/lib/supabase';
  * the selected image to a max width of 1200px at 0.8 JPEG quality.
  * Returns the local URI of the processed image, or null if cancelled/denied.
  */
-export async function pickAndResizePhoto(): Promise<string | null> {
+export async function pickAndResizePhoto(opts?: {
+  width?: number;
+  aspect?: [number, number];
+}): Promise<string | null> {
+  const { width = 1200, aspect } = opts ?? {};
+
   const { granted } = await ImagePicker.requestMediaLibraryPermissionsAsync();
   if (!granted) {
     toast.error('Allow photo access in Settings.');
@@ -20,12 +25,13 @@ export async function pickAndResizePhoto(): Promise<string | null> {
   const result = await ImagePicker.launchImageLibraryAsync({
     mediaTypes: ['images'],
     allowsEditing: true,
+    aspect,
     quality: 1,
   });
   if (result.canceled || !result.assets[0]) return null;
 
   const ctx = ImageManipulator.manipulate(result.assets[0].uri);
-  ctx.resize({ width: 1200 });
+  ctx.resize({ width });
   const imageRef = await ctx.renderAsync();
   const saved = await imageRef.saveAsync({ compress: 0.8, format: SaveFormat.JPEG });
   return saved.uri;
