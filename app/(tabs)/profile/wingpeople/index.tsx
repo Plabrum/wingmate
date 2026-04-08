@@ -265,6 +265,16 @@ function WingpeopleContent({ userId, onOpenInvite }: ContentProps) {
               <Pressable
                 className="px-[14px] py-2 rounded-full bg-accent-muted"
                 onPress={() =>
+                  router.push(
+                    `/(tabs)/profile/wingpeople/dater-profile?daterId=${dater?.id}` as any
+                  )
+                }
+              >
+                <Text className="text-sm font-semibold text-accent">Add to profile</Text>
+              </Pressable>
+              <Pressable
+                className="px-[14px] py-2 rounded-full bg-accent-muted"
+                onPress={() =>
                   router.push(`/(tabs)/profile/wingpeople/wingswipe?daterId=${dater?.id}` as any)
                 }
               >

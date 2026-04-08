@@ -45,10 +45,21 @@ function DiscoverPausedScreen({
     formState: { isSubmitting },
   } = useForm();
 
-  const copy =
-    status === 'break'
-      ? "You've paused Discover. Take all the time you need — your profile is hidden while you're on a break."
-      : "You're in winging mode. You can't browse Discover while winging for someone else.";
+  if (status === 'winging') {
+    return (
+      <SafeAreaView className="flex-1 bg-page">
+        <LargeHeader title="Discover" />
+        <View className="flex-1 justify-center items-center p-6">
+          <Text className="text-2xl font-bold font-serif text-fg text-center">
+            Nothing to see here...
+          </Text>
+          <Text className="text-sm text-fg-muted text-center mt-2" style={{ lineHeight: 22 }}>
+            you{"'"}re just winging!
+          </Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   async function resume() {
     const { error: err } = await updateDatingProfile(userId, { dating_status: 'open' });
@@ -64,10 +75,10 @@ function DiscoverPausedScreen({
       <LargeHeader title="Discover" />
       <View className="flex-1 justify-center items-center p-6 gap-4">
         <Text className="text-2xl font-bold font-serif text-fg text-center">
-          {status === 'break' ? "You're on a break" : "You're winging"}
+          You{"'"}re on a break
         </Text>
         <Text className="text-sm text-fg-muted text-center" style={{ lineHeight: 22 }}>
-          {copy}
+          Your profile is hidden while you{"'"}re on a break. Take all the time you need.
         </Text>
         <PurpleButton
           label="Resume Discover"

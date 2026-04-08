@@ -1,6 +1,4 @@
 import { Alert, ActivityIndicator, Dimensions } from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
-import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import { useState } from 'react';
 import { toast } from 'sonner-native';
 import type { UseFormReturn } from 'react-hook-form';
@@ -15,6 +13,7 @@ import {
   getPhotoUrl,
   reorderPhotos,
   deleteOwnPhoto,
+  pickAndResizePhoto,
 } from '@/queries/photos';
 
 import { ScrollView, Text, Pressable, View } from '@/lib/tw';
@@ -109,27 +108,13 @@ export function PhotosTab({ form, data, userId, onRefresh }: Props) {
   };
 
   const handleAddPhoto = async () => {
-    const { granted } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!granted) {
-      toast.error('Allow photo access in Settings to add photos.');
-      return;
-    }
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      allowsEditing: true,
-      quality: 1,
-    });
-    if (result.canceled || !result.assets[0]) return;
+    const uri = await pickAndResizePhoto();
+    if (!uri) return;
 
     setUploading(true);
     try {
-      const asset = result.assets[0];
-      const ctx = ImageManipulator.manipulate(asset.uri);
-      ctx.resize({ width: 1200 });
-      const imageRef = await ctx.renderAsync();
-      const saved = await imageRef.saveAsync({ compress: 0.8, format: SaveFormat.JPEG });
       const filename = `${Date.now()}.jpg`;
-      const { path, error: upErr } = await uploadPhoto(userId, saved.uri, filename);
+      const { path, error: upErr } = await uploadPhoto(userId, uri, filename);
       if (upErr) throw upErr;
       const { error: insErr } = await insertPhoto(data.id, path, selfPhotos.length, null);
       if (insErr) throw insErr;
