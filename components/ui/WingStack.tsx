@@ -5,18 +5,28 @@ import { FaceAvatar } from './FaceAvatar';
 const BG_COLORS = ['#D9D4FF', '#C7F2E0', '#FEF3C7', '#FCE7F3', '#DBEAFE'];
 const OVERLAP = 10;
 
+export type WingStackItem = {
+  initials: string;
+  photoUri?: string | null;
+};
+
 type Props = {
-  initials: string[];
+  items: WingStackItem[];
   size?: number;
 };
 
-export function WingStack({ initials, size = 36 }: Props) {
-  if (initials.length === 0) return null;
+export function WingStack({ items, size = 36 }: Props) {
+  if (items.length === 0) return null;
   return (
     <View className="flex-row">
-      {initials.map((init, i) => (
+      {items.map((item, i) => (
         <View key={i} style={{ marginLeft: i === 0 ? 0 : -OVERLAP, zIndex: i }}>
-          <FaceAvatar initials={init} size={size} bg={BG_COLORS[i % BG_COLORS.length]} />
+          <FaceAvatar
+            initials={item.initials}
+            size={size}
+            bg={BG_COLORS[i % BG_COLORS.length]}
+            photoUri={item.photoUri}
+          />
         </View>
       ))}
     </View>

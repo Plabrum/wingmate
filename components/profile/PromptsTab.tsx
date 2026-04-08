@@ -124,7 +124,11 @@ export function PromptsTab({ form, data, onRefresh }: Props) {
                 className="flex-row gap-2.5 mt-[14px] pt-3"
                 style={{ borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.divider }}
               >
-                <FaceAvatar initials={getInitials((r as any).author?.chosen_name)} size={28} />
+                <FaceAvatar
+                  initials={getInitials((r as any).author?.chosen_name)}
+                  size={28}
+                  photoUri={(r as any).author?.avatar_url ?? null}
+                />
                 <View className="flex-1">
                   <Text className="text-xs font-semibold text-fg-muted mb-[3px]">
                     {(r as any).author?.chosen_name ?? 'Wingperson'}
@@ -160,6 +164,7 @@ export function PromptsTab({ form, data, onRefresh }: Props) {
                       <FaceAvatar
                         initials={getInitials((r as any).author?.chosen_name)}
                         size={28}
+                        photoUri={(r as any).author?.avatar_url ?? null}
                       />
                       <View className="flex-1">
                         <Text className="text-sm text-fg leading-5">{r.message}</Text>

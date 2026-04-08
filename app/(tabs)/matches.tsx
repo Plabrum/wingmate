@@ -119,7 +119,7 @@ function SheetBody({ match, currentUserId }: { match: MatchRow; currentUserId: s
       {wingNote?.note != null && (
         <View className="mx-5 mt-4 bg-accent-muted rounded-xl p-[14px]">
           <View className="flex-row items-center gap-2 mb-[6px]">
-            <WingStack initials={[getInitials(wingNote.winger?.chosen_name)]} />
+            <WingStack items={[{ initials: getInitials(wingNote.winger?.chosen_name) }]} />
             <Text className="text-sm font-semibold text-accent">
               {wingNote.winger?.chosen_name ?? 'Your wing'} introduced you
             </Text>

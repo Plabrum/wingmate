@@ -13,7 +13,7 @@ export function getMyWingpeople(daterId: string) {
     .select(
       `
       id, created_at,
-      winger:profiles!contacts_winger_id_fkey (id, chosen_name, gender)
+      winger:profiles!contacts_winger_id_fkey (id, chosen_name, gender, avatar_url)
     `
     )
     .eq('user_id', daterId)
@@ -79,7 +79,7 @@ export function getWingingFor(wingerId: string) {
       `
       id, created_at,
       dater:profiles!contacts_user_id_fkey (
-        id, chosen_name,
+        id, chosen_name, avatar_url,
         dating_profiles (interests, bio)
       )
     `

@@ -2,10 +2,14 @@ import { useState, useEffect } from 'react';
 import { Alert, ActivityIndicator, Dimensions } from 'react-native';
 import { View, Text, SafeAreaView, Pressable } from '@/lib/tw';
 import { Image } from 'expo-image';
-import * as ImagePicker from 'expo-image-picker';
-import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import { createDatingProfile, getOwnDatingProfile } from '@/queries/profiles';
-import { uploadPhoto, insertPhoto, deleteOwnPhoto, getPhotoUrl } from '@/queries/photos';
+import {
+  pickAndResizePhoto,
+  uploadPhoto,
+  insertPhoto,
+  deleteOwnPhoto,
+  getPhotoUrl,
+} from '@/queries/photos';
 import { colors } from '@/constants/theme';
 import { toast } from 'sonner-native';
 import { cn } from '@/lib/cn';
@@ -73,28 +77,12 @@ export default function PhotosStep({ userId, dpId: initialDpId, onDpCreated, onN
   async function handleAddPhoto() {
     if (photos.length >= MAX_PHOTOS || !localDpId) return;
 
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert('Permission needed', 'Please allow access to your photo library in Settings.');
-      return;
-    }
-
-    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: 'images', quality: 1 });
-    if (result.canceled || !result.assets?.[0]) return;
+    const uri = await pickAndResizePhoto();
+    if (!uri) return;
 
     setUploading(true);
     try {
-      const asset = result.assets[0];
-      const ctx = ImageManipulator.manipulate(asset.uri);
-      ctx.resize({ width: 1200 });
-      const imageRef = await ctx.renderAsync();
-      const saved = await imageRef.saveAsync({ compress: 0.8, format: SaveFormat.JPEG });
-
-      const { path, error: uploadError } = await uploadPhoto(
-        userId,
-        saved.uri,
-        `${Date.now()}.jpg`
-      );
+      const { path, error: uploadError } = await uploadPhoto(userId, uri, `${Date.now()}.jpg`);
       if (uploadError) throw uploadError;
 
       const { error: insertError } = await insertPhoto(localDpId, path, photos.length, null);

@@ -27,7 +27,7 @@ export function getOwnDatingProfile(userId: string) {
         template:prompt_templates (id, question),
         responses:prompt_responses (
           id, message, is_approved, user_id, created_at,
-          author:profiles!prompt_responses_user_id_fkey (id, chosen_name)
+          author:profiles!prompt_responses_user_id_fkey (id, chosen_name, avatar_url)
         )
       )
     `

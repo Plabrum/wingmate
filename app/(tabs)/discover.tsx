@@ -99,7 +99,7 @@ function WingNoteSection({ card }: { card: DiscoverCard }) {
   return (
     <View className="bg-accent-muted rounded-xl p-3 mb-4 gap-[6px]">
       <View className="flex-row items-center gap-2">
-        <WingStack initials={[initial]} />
+        <WingStack items={[{ initials: initial }]} />
         <Text className="text-sm font-semibold text-fg flex-1">
           {card.suggester_name} thinks you{"'"}d get along
         </Text>

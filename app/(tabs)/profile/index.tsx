@@ -3,7 +3,6 @@ import { StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { toast } from 'sonner-native';
 import { useForm } from 'react-hook-form';
-
 import { useQueryClient } from '@tanstack/react-query';
 
 import { colors } from '@/constants/theme';
@@ -12,6 +11,7 @@ import { useProfileData, updateDatingProfile } from '@/queries/profiles';
 import type { OwnDatingProfile } from '@/queries/profiles';
 import { useMyWingpeople } from '@/queries/contacts';
 import { supabase } from '@/lib/supabase';
+import { pickAndResizePhoto, uploadAvatar } from '@/queries/photos';
 
 import { View, Text, Pressable, SafeAreaView } from '@/lib/tw';
 import { LargeHeader } from '@/components/ui/LargeHeader';
@@ -70,13 +70,70 @@ function ProfileBanner({
   );
 }
 
+// ── Tappable avatar (shared by dater + winger) ────────────────────────────────
+
+type AvatarPickerProps = {
+  name: string | null;
+  avatarUrl: string | null;
+  size: number;
+  userId: string;
+};
+
+function AvatarPicker({ name, avatarUrl, size, userId }: AvatarPickerProps) {
+  const queryClient = useQueryClient();
+  const [uploading, setUploading] = useState(false);
+
+  const handlePick = async () => {
+    const uri = await pickAndResizePhoto({ width: 400, aspect: [1, 1] });
+    if (!uri) return;
+
+    setUploading(true);
+    const { error } = await uploadAvatar(userId, uri);
+    setUploading(false);
+    if (error) {
+      toast.error("Couldn't upload photo. Try again.");
+      return;
+    }
+    queryClient.invalidateQueries({ queryKey: ['profile', userId] });
+  };
+
+  return (
+    <Pressable onPress={handlePick} className="relative" style={{ width: size, height: size }}>
+      <FaceAvatar initials={getInitials(name)} size={size} photoUri={avatarUrl} />
+      {uploading ? (
+        <View
+          className="absolute inset-0 items-center justify-center rounded-full bg-black/40"
+          style={{ borderRadius: size / 2 }}
+        >
+          <IconSymbol name="arrow.clockwise" size={size * 0.3} color="white" />
+        </View>
+      ) : (
+        <View
+          className="absolute bottom-0 right-0 items-center justify-center bg-white rounded-full"
+          style={{ width: size * 0.32, height: size * 0.32, borderRadius: (size * 0.32) / 2 }}
+        >
+          <IconSymbol name="camera.fill" size={size * 0.17} color={colors.purple} />
+        </View>
+      )}
+    </Pressable>
+  );
+}
+
 // ── Winger view (shared by role=winger and dating_status=winging) ─────────────
 
-function WingerView({ name }: { name: string | null }) {
+function WingerView({
+  name,
+  userId,
+  avatarUrl,
+}: {
+  name: string | null;
+  userId: string;
+  avatarUrl: string | null;
+}) {
   const router = useRouter();
   return (
     <View className="flex-1 items-center justify-center p-10">
-      <FaceAvatar initials={getInitials(name)} size={72} />
+      <AvatarPicker name={name} avatarUrl={avatarUrl} size={72} userId={userId} />
       <Text className="text-2xl font-bold text-fg mt-4 font-serif">{name ?? 'Winger'}</Text>
       <Text className="text-sm text-fg-muted mt-1">Winger</Text>
       <View className="mt-8 w-full">
@@ -134,7 +191,11 @@ function ProfileScreenInner() {
           sub="Set up a dater profile and start swiping."
           onPress={handleSwitchToDater}
         />
-        <WingerView name={profile.chosen_name} />
+        <WingerView
+          name={profile.chosen_name}
+          userId={userId}
+          avatarUrl={profile.avatar_url ?? null}
+        />
       </SafeAreaView>
     );
   }
@@ -160,38 +221,55 @@ function ProfileScreenInner() {
           sub="Tap here to create a dating profile."
           onPress={handleResumeDating}
         />
-        <WingerView name={profile?.chosen_name ?? null} />
+        <WingerView
+          name={profile?.chosen_name ?? null}
+          userId={userId}
+          avatarUrl={profile?.avatar_url ?? null}
+        />
       </SafeAreaView>
     );
   }
 
   // ── Dater view ────────────────────────────────────────────────────────────
-  const wingInitials = wingpeople.map((w) => getInitials((w as any).winger?.chosen_name));
+  const wingItems = wingpeople.map((w) => ({
+    initials: getInitials((w as any).winger?.chosen_name),
+    photoUri: (w as any).winger?.avatar_url ?? null,
+  }));
 
   return (
     <SafeAreaView className="flex-1 bg-page" edges={['top']}>
       <LargeHeader title="My Profile" right={<LogOutButton />} />
 
-      {/* Wingpeople row */}
-      <Pressable
-        className="flex-row items-center px-5 py-[10px] gap-[10px]"
+      {/* Avatar + wingpeople row */}
+      <View
+        className="flex-row items-center px-5 py-[10px] gap-3"
         style={{ borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.divider }}
-        onPress={() => router.push('/(tabs)/profile/wingpeople' as any)}
       >
-        {wingInitials.length > 0 ? (
-          <>
-            <WingStack initials={wingInitials} size={30} />
-            <Text className="flex-1 text-sm font-semibold text-fg">
-              {wingpeople.length} wingperson{wingpeople.length !== 1 ? 'e' : ''}
+        <AvatarPicker
+          name={profile?.chosen_name ?? null}
+          avatarUrl={profile?.avatar_url ?? null}
+          size={44}
+          userId={userId}
+        />
+        <Pressable
+          className="flex-1 flex-row items-center gap-[10px]"
+          onPress={() => router.push('/(tabs)/profile/wingpeople' as any)}
+        >
+          {wingItems.length > 0 ? (
+            <>
+              <WingStack items={wingItems} size={30} />
+              <Text className="flex-1 text-sm font-semibold text-fg">
+                {wingpeople.length} wingperson{wingpeople.length !== 1 ? 'e' : ''}
+              </Text>
+            </>
+          ) : (
+            <Text className="flex-1 text-sm text-fg-muted">
+              No wingpeople yet — tap to invite one
             </Text>
-          </>
-        ) : (
-          <Text className="flex-1 text-sm text-fg-muted">
-            No wingpeople yet — tap to invite one
-          </Text>
-        )}
-        <IconSymbol name="chevron.right" size={13} color={colors.inkGhost} />
-      </Pressable>
+          )}
+          <IconSymbol name="chevron.right" size={13} color={colors.inkGhost} />
+        </Pressable>
+      </View>
 
       <TextTabBar
         tabs={['About Me', 'Photos', 'Prompts']}

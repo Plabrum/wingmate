@@ -141,7 +141,11 @@ function WingpeopleContent({ userId, onOpenInvite }: ContentProps) {
         </Text>
       ) : (
         wingpeople.map((w) => {
-          const winger = (w as any).winger as { id: string; chosen_name: string | null } | null;
+          const winger = (w as any).winger as {
+            id: string;
+            chosen_name: string | null;
+            avatar_url: string | null;
+          } | null;
           const name = winger?.chosen_name ?? 'Unknown';
           const count = weeklyCounts[w.id] ?? 0;
           return (
@@ -155,7 +159,7 @@ function WingpeopleContent({ userId, onOpenInvite }: ContentProps) {
               onLongPress={() => handleRemove(w.id)}
               delayLongPress={500}
             >
-              <FaceAvatar initials={getInitials(name)} size={40} />
+              <FaceAvatar initials={getInitials(name)} size={40} photoUri={winger?.avatar_url} />
               <View className="flex-1">
                 <Text className="text-sm font-semibold text-fg">{name}</Text>
                 <Text className="text-xs text-fg-muted mt-0.5">
@@ -248,7 +252,11 @@ function WingpeopleContent({ userId, onOpenInvite }: ContentProps) {
         </Text>
       ) : (
         wingingFor.map((wf) => {
-          const dater = (wf as any).dater as { id: string; chosen_name: string | null } | null;
+          const dater = (wf as any).dater as {
+            id: string;
+            chosen_name: string | null;
+            avatar_url: string | null;
+          } | null;
           const name = dater?.chosen_name ?? 'Unknown';
           const firstName = name.split(' ')[0];
           return (
@@ -260,7 +268,7 @@ function WingpeopleContent({ userId, onOpenInvite }: ContentProps) {
                 borderBottomColor: colors.divider,
               }}
             >
-              <FaceAvatar initials={getInitials(name)} size={40} />
+              <FaceAvatar initials={getInitials(name)} size={40} photoUri={dater?.avatar_url} />
               <Text className="flex-1 text-sm font-semibold text-fg">{name}</Text>
               <Pressable
                 className="px-[14px] py-2 rounded-full bg-accent-muted"
