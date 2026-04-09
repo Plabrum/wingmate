@@ -221,20 +221,23 @@ function DiscoverPool({
   tabs,
   onDecrement,
 }: DiscoverPoolProps) {
+  const isForYou = activeTabIndex === 1;
   const isAll = activeTabIndex === tabs.length - 1;
   const wingerId =
-    !isAll && activeTabIndex >= 2 ? (wingerTabs[activeTabIndex - 2]?.id ?? null) : null;
+    !isAll && !isForYou && activeTabIndex >= 2
+      ? (wingerTabs[activeTabIndex - 2]?.id ?? null)
+      : null;
 
   const fetchPool = useCallback<PoolFetcher>(
     (uid, pageSize, offset) => {
       if (activeTabIndex === 0) return getLikesYouPool(uid, pageSize, offset);
-      return getDiscoverPool(uid, wingerId, pageSize, offset);
+      return getDiscoverPool(uid, wingerId, pageSize, offset, isForYou);
     },
-    [activeTabIndex, wingerId]
+    [activeTabIndex, wingerId, isForYou]
   );
 
   const mode = activeTabIndex === 0 ? 'likesYou' : 'discover';
-  const { data: initialPool } = useInitialPool(userId, mode, wingerId, PAGE_SIZE);
+  const { data: initialPool } = useInitialPool(userId, mode, wingerId, PAGE_SIZE, isForYou);
 
   const queryClient = useQueryClient();
   const { pool, index, like, pass } = useDiscover(fetchPool, userId, initialPool);
