@@ -2,6 +2,7 @@ import { StyleSheet } from 'react-native';
 import { ScrollView, Text, Pressable, View } from '@/lib/tw';
 import { useRouter } from 'expo-router';
 import { toast } from 'sonner-native';
+import { useQueryClient } from '@tanstack/react-query';
 import type { UseFormReturn } from 'react-hook-form';
 
 import { colors } from '@/constants/theme';
@@ -28,6 +29,7 @@ interface Props {
 
 export function AboutMeTab({ form, data, userId }: Props) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const dating_status = form.watch('dating_status');
 
   const handleStatus = async (status: DatingStatus) => {
@@ -36,6 +38,7 @@ export function AboutMeTab({ form, data, userId }: Props) {
     try {
       const { error } = await updateDatingProfile(userId, { dating_status: status });
       if (error) throw error;
+      queryClient.invalidateQueries({ queryKey: ['profile', userId] });
     } catch {
       form.setValue('dating_status', prev);
       toast.error('Could not update status. Please try again.');
