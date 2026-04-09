@@ -176,9 +176,7 @@ function WingSwipeContent() {
           <Pressable
             className="w-16 h-16 rounded-[32px] justify-center items-center bg-accent"
             style={cardButtonShadow}
-            onPress={() => suggest(null)}
-            onLongPress={() => setNoteVisible(true)}
-            delayLongPress={400}
+            onPress={() => setNoteVisible(true)}
           >
             <Text className="text-2xl text-white">♥</Text>
           </Pressable>
