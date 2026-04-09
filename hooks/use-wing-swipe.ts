@@ -31,7 +31,7 @@ export function useWingSwipe(wingerId: string, daterId: string, initialPool: Win
     setIndex(newIndex);
     if (newIndex >= pool.length - 3) loadMore();
 
-    const { error } = await wingSuggestApprove(daterId, card.profile_id, wingerId, note);
+    const { error } = await wingSuggestApprove(daterId, card.user_id, wingerId, note);
     if (error) {
       // Roll back on failure
       setIndex((prev) => prev - 1);
@@ -47,7 +47,7 @@ export function useWingSwipe(wingerId: string, daterId: string, initialPool: Win
     setIndex(newIndex);
     if (newIndex >= pool.length - 3) loadMore();
 
-    await wingSuggestDecline(daterId, card.profile_id, wingerId);
+    await wingSuggestDecline(daterId, card.user_id, wingerId);
   }
 
   return { pool, index, suggest, decline };
