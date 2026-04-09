@@ -210,7 +210,9 @@ function ProfileScreenInner() {
       if (error) {
         form.setValue('dating_status', 'winging');
         toast.error("Couldn't update status. Try again.");
+        return;
       }
+      queryClient.invalidateQueries({ queryKey: ['profile', userId] });
     };
 
     return (
