@@ -39,13 +39,15 @@ export async function getDiscoverPool(
   viewerId: string,
   filterWingerId: string | null = null,
   pageSize = 20,
-  pageOffset = 0
+  pageOffset = 0,
+  wingerOnly = false
 ): Promise<{ data: DiscoverCard[] | null; error: Error | null }> {
   const { data, error } = await supabase.rpc('get_discover_pool', {
     viewer_id: viewerId,
     filter_winger_id: filterWingerId,
     page_size: pageSize,
     page_offset: pageOffset,
+    winger_only: wingerOnly,
   });
   return { data: data as DiscoverCard[] | null, error };
 }
@@ -170,15 +172,16 @@ export function useInitialPool(
   userId: string,
   mode: 'likesYou' | 'discover',
   wingerId: string | null,
-  pageSize: number
+  pageSize: number,
+  wingerOnly = false
 ) {
   return useSuspenseQuery({
-    queryKey: ['pool', userId, mode, wingerId],
+    queryKey: ['pool', userId, mode, wingerId, wingerOnly],
     queryFn: async () => {
       const result =
         mode === 'likesYou'
           ? await getLikesYouPool(userId, pageSize, 0)
-          : await getDiscoverPool(userId, wingerId, pageSize, 0);
+          : await getDiscoverPool(userId, wingerId, pageSize, 0, wingerOnly);
       if (result.error) throw result.error;
       return result.data ?? [];
     },
