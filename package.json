@@ -27,6 +27,8 @@
     "build:local": "EAS_BUILD_NO_EXPO_GO_WARNING=true eas build --platform ios --profile production --local --output builds/app.ipa",
     "build:device": "expo run:ios --device",
     "submit:local": "eas submit --platform ios --profile production --path builds/app.ipa",
+    "seed:sam": "bash scripts/seed-sam.sh",
+    "seed:winger-responses": "bash scripts/seed-winger-responses.sh",
     "seed:prod": "npx tsx --env-file .env.local scripts/seed-prod.ts",
     "prepare": "husky"
   },
