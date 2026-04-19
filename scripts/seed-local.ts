@@ -477,6 +477,7 @@ async function seedDecisions(targetId: string, gender: 'Male' | 'Female'): Promi
 // ── Wingpeople seed ───────────────────────────────────────────────────────────
 
 // Three sample wingpeople who are actively winging for the dev user.
+// Order matters — seedWingerPromptResponses assumes [Alex, Jordan, Sam Rivera].
 const SAMPLE_WINGERS = [
   { first: 'Alex', last: 'Chen', gender: 'Male' as const, phone: '+15550010001' },
   { first: 'Jordan', last: 'Kim', gender: 'Female' as const, phone: '+15550010002' },
@@ -530,10 +531,13 @@ async function ensureWingerProfile(
   return userId;
 }
 
-async function seedWingpeopleContacts(devUserId: string): Promise<void> {
+async function seedWingpeopleContacts(devUserId: string): Promise<string[]> {
+  const wingerIds: string[] = [];
+
   // 1. Create winger profiles and link them as active wingpeople of the dev user.
   for (const w of SAMPLE_WINGERS) {
     const wingerId = await ensureWingerProfile(w.first, w.last, w.gender, w.phone);
+    wingerIds.push(wingerId);
 
     const { data: existing } = await supabase
       .from('contacts')
@@ -589,6 +593,407 @@ async function seedWingpeopleContacts(devUserId: string): Promise<void> {
 
     console.log(`  dev user is now winging for ${email}`);
   }
+
+  return wingerIds;
+}
+
+// ── Sam Taylor scenario ───────────────────────────────────────────────────────
+
+const SAM_PROMPTS: { question: string; answer: string }[] = [
+  {
+    question: 'A perfect Sunday looks like…',
+    answer:
+      'a slow morning run along the Hudson, eggs somewhere with too-good coffee, then zero plans.',
+  },
+  {
+    question: "I'm looking for someone who…",
+    answer: "is curious about the world and doesn't pretend to have it all figured out.",
+  },
+  {
+    question: 'My friends would describe me as…',
+    answer: 'the one who actually makes a reservation — and then talks everyone into a detour.',
+  },
+];
+
+const SAM_MATCHES: {
+  first: string;
+  last: string;
+  bio: string;
+  interests: string[];
+  religion: string;
+  photoIndex: number;
+}[] = [
+  {
+    first: 'Marcus',
+    last: 'Webb',
+    bio: 'Architecture nerd who will stop mid-walk to stare at a building. Zero apologies.',
+    interests: ['Art', 'Travel', 'Food'],
+    religion: 'Agnostic',
+    photoIndex: 10,
+  },
+  {
+    first: 'Daniel',
+    last: 'Okafor',
+    bio: 'Jazz bars and dive bars — ideally the same bar on the same night.',
+    interests: ['Music', 'Food', 'Outdoors'],
+    religion: 'Christian',
+    photoIndex: 15,
+  },
+  {
+    first: 'Tyler',
+    last: 'Brennan',
+    bio: 'I make really good playlists. This is not a small thing.',
+    interests: ['Music', 'Movies', 'Gaming'],
+    religion: 'Atheist',
+    photoIndex: 20,
+  },
+  {
+    first: 'Raj',
+    last: 'Iyer',
+    bio: 'Home cook who takes the farmers market too seriously. Farmer-market receipts available on request.',
+    interests: ['Cooking', 'Travel', 'Books'],
+    religion: 'Hindu',
+    photoIndex: 25,
+  },
+  {
+    first: 'Cole',
+    last: 'Nakamura',
+    bio: 'Will beat you at trivia night and apologize about it the whole way home.',
+    interests: ['Books', 'Technology', 'Fitness'],
+    religion: 'Agnostic',
+    photoIndex: 30,
+  },
+  {
+    first: 'Leo',
+    last: 'Ferreira',
+    bio: 'Ran the NYC Marathon once. Now I only run for the brunch at the finish line.',
+    interests: ['Fitness', 'Food', 'Travel'],
+    religion: 'Other',
+    photoIndex: 35,
+  },
+  {
+    first: 'Finn',
+    last: "O'Sullivan",
+    bio: 'True crime podcast listener who is, paradoxically, very optimistic about people.',
+    interests: ['Books', 'Movies', 'Outdoors'],
+    religion: 'Atheist',
+    photoIndex: 40,
+  },
+  {
+    first: 'Andre',
+    last: 'Moreau',
+    bio: 'Moved here from Montreal. The bagels are different but the energy is worth it.',
+    interests: ['Food', 'Art', 'Dance'],
+    religion: 'Agnostic',
+    photoIndex: 45,
+  },
+  {
+    first: 'Kai',
+    last: 'Hoffman',
+    bio: 'My ideal Saturday: bike ride along the Hudson, good coffee, no plans after noon.',
+    interests: ['Outdoors', 'Photography', 'Fitness'],
+    religion: 'Atheist',
+    photoIndex: 50,
+  },
+  {
+    first: 'Miles',
+    last: 'Ashford',
+    bio: 'Amateur stand-up comic. My friends laugh at me, not with me — close enough.',
+    interests: ['Movies', 'Music', 'Food'],
+    religion: 'Jewish',
+    photoIndex: 55,
+  },
+];
+
+async function getOrCreateUser(
+  email: string,
+  label: string
+): Promise<{ id: string; existed: boolean }> {
+  const { data: listData, error } = await supabase.auth.admin.listUsers({ perPage: 1000 });
+  if (error) throw new Error(`listUsers: ${error.message}`);
+
+  const existing = listData.users.find((u) => u.email === email);
+  if (existing) return { id: existing.id, existed: true };
+
+  const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+    email,
+    password: 'Orbit123!',
+    email_confirm: true,
+  });
+  if (authError) throw new Error(`${label} auth error: ${authError.message}`);
+  return { id: authData.user.id, existed: false };
+}
+
+async function ensureSamTaylor(): Promise<string> {
+  const email = 'sam.taylor@seed.orbit.test';
+  const { id: userId, existed } = await getOrCreateUser(email, 'Sam Taylor');
+
+  if (existed) {
+    console.log('  Sam Taylor already exists, skipping creation');
+    return userId;
+  }
+
+  const { error: profileError } = await supabase
+    .from('profiles')
+    .update({
+      chosen_name: 'Sam',
+      last_name: 'Taylor',
+      gender: 'Female',
+      date_of_birth: randomDob(25, 30),
+      role: 'dater',
+      phone_number: '+15550020001',
+    })
+    .eq('id', userId);
+  if (profileError) throw new Error(`Sam profile error: ${profileError.message}`);
+
+  const { data: dp, error: dpError } = await supabase
+    .from('dating_profiles')
+    .insert({
+      user_id: userId,
+      bio: 'Brooklyn native, always hunting for the best bagel in the borough. Big on live music and even bigger on people who can keep up with a 9pm whim.',
+      interested_gender: ['Male'],
+      age_from: 25,
+      age_to: 38,
+      religion: 'Agnostic',
+      interests: ['Music', 'Outdoors', 'Food', 'Travel', 'Art'],
+      city: 'New York',
+      is_active: true,
+      dating_status: 'winging',
+    })
+    .select('id')
+    .single();
+  if (dpError) throw new Error(`Sam dating_profile error: ${dpError.message}`);
+
+  const { data: templates } = await supabase.from('prompt_templates').select('id, question');
+  if (templates) {
+    const rows = SAM_PROMPTS.flatMap(({ question, answer }) => {
+      const template = templates.find((t) => t.question === question);
+      if (!template) {
+        console.warn(`  prompt template not found: "${question}" — skipping`);
+        return [];
+      }
+      return [{ dating_profile_id: dp.id, prompt_template_id: template.id, answer }];
+    });
+    if (rows.length > 0) {
+      const { error: promptError } = await supabase.from('profile_prompts').insert(rows);
+      if (promptError) throw new Error(`Sam prompts error: ${promptError.message}`);
+    }
+  }
+
+  const { error: photoError } = await supabase.from('profile_photos').insert({
+    dating_profile_id: dp.id,
+    storage_url: `https://randomuser.me/api/portraits/women/5.jpg`,
+    display_order: 0,
+    approved_at: new Date().toISOString(),
+  });
+  if (photoError) throw new Error(`Sam photo error: ${photoError.message}`);
+
+  console.log(`  Sam Taylor created (${userId})`);
+  return userId;
+}
+
+async function ensureSamMatch(index: number, m: (typeof SAM_MATCHES)[number]): Promise<void> {
+  const email = `sam.match.${m.first.toLowerCase()}.${m.last.toLowerCase()}@seed.orbit.test`;
+  const label = `${m.first} ${m.last}`;
+  const { id: userId, existed } = await getOrCreateUser(email, label);
+
+  if (existed) {
+    console.log(`  ${label} already exists, skipping`);
+    return;
+  }
+
+  const { error: profileError } = await supabase
+    .from('profiles')
+    .update({
+      chosen_name: m.first,
+      last_name: m.last,
+      date_of_birth: randomDob(25, 35),
+      gender: 'Male',
+      role: 'dater',
+      phone_number: `+1555002${String(index + 10).padStart(4, '0')}`,
+    })
+    .eq('id', userId);
+  if (profileError) throw new Error(`${label} profile error: ${profileError.message}`);
+
+  const { data: dp, error: dpError } = await supabase
+    .from('dating_profiles')
+    .insert({
+      user_id: userId,
+      bio: m.bio,
+      interested_gender: ['Female'],
+      age_from: 23,
+      age_to: 38,
+      religion: m.religion,
+      interests: m.interests,
+      city: 'New York',
+      is_active: true,
+      dating_status: 'open',
+    })
+    .select('id')
+    .single();
+  if (dpError) throw new Error(`${label} dating_profile error: ${dpError.message}`);
+
+  const { error: photoError } = await supabase.from('profile_photos').insert([
+    {
+      dating_profile_id: dp.id,
+      storage_url: `https://randomuser.me/api/portraits/men/${m.photoIndex % 99}.jpg`,
+      display_order: 0,
+      approved_at: new Date().toISOString(),
+    },
+    {
+      dating_profile_id: dp.id,
+      storage_url: `https://randomuser.me/api/portraits/men/${(m.photoIndex + 20) % 99}.jpg`,
+      display_order: 1,
+      approved_at: new Date().toISOString(),
+    },
+  ]);
+  if (photoError) throw new Error(`${label} photos error: ${photoError.message}`);
+
+  console.log(`  ${label} ✓`);
+}
+
+async function seedSamScenario(devUserId: string): Promise<void> {
+  const samId = await ensureSamTaylor();
+
+  for (let i = 0; i < SAM_MATCHES.length; i++) {
+    await ensureSamMatch(i, SAM_MATCHES[i]);
+  }
+
+  const { data: existing } = await supabase
+    .from('contacts')
+    .select('id')
+    .eq('user_id', samId)
+    .eq('winger_id', devUserId)
+    .maybeSingle();
+
+  if (existing) {
+    console.log("  dev user already linked as Sam's winger, skipping");
+    return;
+  }
+
+  const { error } = await supabase.from('contacts').insert({
+    user_id: samId,
+    winger_id: devUserId,
+    phone_number: '+15550020001',
+    wingperson_status: 'active',
+  });
+  if (error) throw new Error(`Sam contact error: ${error.message}`);
+  console.log(`  dev user linked as Sam's winger ✓`);
+}
+
+// ── Winger prompt responses ───────────────────────────────────────────────────
+
+// Each question maps to one response per winger: [Alex, Jordan, Sam Rivera]
+const RESPONSES_BY_QUESTION: Record<string, [string, string, string]> = {
+  'The way to my heart is…': [
+    'Can confirm — bring snacks and you have their full attention.',
+    'This is 100% accurate. I have tested this theory.',
+    "Honestly though, they mean it. Don't show up empty-handed.",
+  ],
+  'A perfect Sunday looks like…': [
+    "They will genuinely not check their phone until 2pm. It's impressive.",
+    'The farmers market thing is real. They know every vendor by name.',
+    'Add "convincing everyone else to cancel their plans too" and this is perfect.',
+  ],
+  'My love language is…': [
+    "I once watched them rearrange someone else's furniture unprompted. True story.",
+    'They say quality time but they also just show up with your favorite snacks. Both.',
+    'The quiet sitting together thing sounds boring until you experience it. It is not boring.',
+  ],
+  'I get way too excited about…': [
+    'You think they are joking about this. They are not joking.',
+    'I have received approximately 14 texts about new bakery openings in the last month.',
+    'The parking spot thing — I was there. Celebration lasted longer than finding it.',
+  ],
+  "The most spontaneous thing I've done…": [
+    'I heard about this trip 36 hours before departure. Zero hesitation.',
+    'They did not pack enough socks. They do not regret a single thing.',
+    'This is the most on-brand story I have ever heard about this person.',
+  ],
+  'Two truths and a lie…': [
+    'I know which one is the lie and I am not telling you.',
+    'Asked them and they refused to confirm. Part of the charm.',
+    'I guessed wrong. Very embarrassing. Do better than me.',
+  ],
+  'My friends would describe me as…': [
+    'Can confirm. They made the reservation for my birthday before I even mentioned it.',
+    'The questions thing is real. Best conversation starter I know.',
+    'Reliably late is generous. Worth the wait is accurate.',
+  ],
+  "I'm looking for someone who…": [
+    'They will know within five minutes whether you meet this standard.',
+    'The brunch thing is non-negotiable. I have seen people fail this test.',
+    'Curious and kind. Simple bar. Somehow rare.',
+  ],
+  'Unpopular opinion I hold…': [
+    'I have seen them eat cold pizza for breakfast with zero shame. Committed.',
+    'They sent me a voice note about this at 11pm. It was persuasive.',
+    'Wrong about the 6 train, right about everything else.',
+  ],
+  'My go-to karaoke song…': [
+    'I have witnessed this. It is a full performance. Respect.',
+    'They know every word. Every. Single. Word. Do not underestimate.',
+    'Nobody in the room is ready when this song comes on.',
+  ],
+};
+
+const FALLBACK_RESPONSES: [string, string, string] = [
+  'I can personally vouch for this. No notes.',
+  "This is the most accurate thing they've ever written about themselves.",
+  'Knew them for years and this tracks completely.',
+];
+
+async function seedWingerPromptResponses(devUserId: string, wingerIds: string[]): Promise<void> {
+  if (wingerIds.length !== 3) {
+    throw new Error(`Expected 3 winger IDs, got ${wingerIds.length}`);
+  }
+
+  const { data: dp, error: dpError } = await supabase
+    .from('dating_profiles')
+    .select(`id, prompts:profile_prompts(id, template:prompt_templates(question))`)
+    .eq('user_id', devUserId)
+    .single();
+  if (dpError) throw dpError;
+  if (!dp.prompts || dp.prompts.length === 0) {
+    console.log('  dev user has no prompts, skipping');
+    return;
+  }
+
+  let inserted = 0;
+  let skipped = 0;
+
+  for (const prompt of dp.prompts) {
+    const question = (prompt.template as { question?: string } | null)?.question ?? '';
+    const responses = RESPONSES_BY_QUESTION[question] ?? FALLBACK_RESPONSES;
+
+    for (let i = 0; i < wingerIds.length; i++) {
+      const wingerId = wingerIds[i];
+      const message = responses[i];
+
+      const { data: existing } = await supabase
+        .from('prompt_responses')
+        .select('id')
+        .eq('user_id', wingerId)
+        .eq('profile_prompt_id', prompt.id)
+        .maybeSingle();
+
+      if (existing) {
+        skipped++;
+        continue;
+      }
+
+      const { error } = await supabase.from('prompt_responses').insert({
+        user_id: wingerId,
+        profile_prompt_id: prompt.id,
+        message,
+        is_approved: false,
+      });
+      if (error) throw new Error(`prompt response insert error: ${error.message}`);
+      inserted++;
+    }
+  }
+
+  console.log(`  ${inserted} winger responses inserted, ${skipped} skipped`);
 }
 
 async function main(): Promise<void> {
@@ -618,7 +1023,13 @@ async function main(): Promise<void> {
   await seedDecisions(devUserId, 'Male'); // 25 men like dev user
 
   console.log('\nSeeding wingpeople relationships…');
-  await seedWingpeopleContacts(devUserId);
+  const wingerIds = await seedWingpeopleContacts(devUserId);
+
+  console.log('\nSeeding Sam Taylor scenario…');
+  await seedSamScenario(devUserId);
+
+  console.log('\nSeeding winger prompt responses on dev user…');
+  await seedWingerPromptResponses(devUserId, wingerIds);
 
   console.log('\nDone. Local DB is ready. Sign in as dev@local.test / devpassword');
 }
