@@ -163,7 +163,7 @@ function MessagesContent({ userId, onlineIds }: ContentProps) {
           onPress={() => {
             const other = getOtherParticipant(item, userId);
             router.push({
-              pathname: '/(tabs)/messages/[matchId]',
+              pathname: '/(dater-tabs)/messages/[matchId]',
               params: {
                 matchId: item.id,
                 otherName: other?.chosen_name ?? '',

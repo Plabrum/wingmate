@@ -52,7 +52,7 @@ export default function OnboardingScreen() {
     switch (role) {
       case 'winger': {
         queryClient.invalidateQueries({ queryKey: ['profile', userId] });
-        return router.replace('/(tabs)/profile' as any);
+        return router.replace('/(winger)' as any);
       }
       case 'dater': {
         const { data: dp, error: dpError } = await createDatingProfile({
@@ -95,7 +95,10 @@ export default function OnboardingScreen() {
     case 'prompts':
       return (
         <ScreenSuspense>
-          <PromptsStep dpId={dpId!} onFinish={() => router.replace('/(tabs)/discover' as any)} />
+          <PromptsStep
+            dpId={dpId!}
+            onFinish={() => router.replace('/(dater-tabs)/discover' as any)}
+          />
         </ScreenSuspense>
       );
   }

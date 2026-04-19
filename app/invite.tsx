@@ -9,7 +9,11 @@ export default function InviteRedirect() {
   useEffect(() => {
     if (loading) return;
     if (session) {
-      router.replace('/(tabs)/profile/wingpeople/' as any);
+      // User is already logged in — store flag so AuthenticatedNavigator
+      // handles the role-aware redirect on its next mount cycle.
+      AsyncStorage.setItem('pending_invite', '1').then(() => {
+        router.replace('/');
+      });
     } else {
       AsyncStorage.setItem('pending_invite', '1').then(() => {
         router.replace('/(auth)/login');

@@ -7,7 +7,7 @@ import { Stack, Redirect, router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Toaster } from 'sonner-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 
 import { QueryClientProvider, useSuspenseQuery } from '@tanstack/react-query';
 import { useColorScheme } from '@/hooks/use-color-scheme';
@@ -18,7 +18,7 @@ import { registerPushToken } from '@/lib/push';
 import ScreenSuspense from '@/components/ui/ScreenSuspense';
 
 export const unstable_settings = {
-  anchor: '(tabs)',
+  anchor: '(dater-tabs)',
 };
 
 function AuthenticatedNavigator({ userId }: { userId: string }) {
@@ -28,14 +28,25 @@ function AuthenticatedNavigator({ userId }: { userId: string }) {
     queryKey: ['profile', userId],
     queryFn: () => getProfileData(userId),
     staleTime: 5 * 60_000,
-    select: ({ profile, datingProfile }) =>
-      !profile?.chosen_name
-        ? '/(onboarding)'
-        : profile.role === 'winger'
-          ? '/(tabs)/profile'
-          : !datingProfile
-            ? '/(onboarding)'
-            : '/(tabs)/discover',
+    select: ({ profile, datingProfile }): string => {
+      type UserState = 'needs-onboarding' | 'winger' | 'dater';
+
+      const state: UserState =
+        !profile?.chosen_name || (!datingProfile && profile.role !== 'winger')
+          ? 'needs-onboarding'
+          : profile.role === 'winger' || datingProfile?.dating_status === 'winging'
+            ? 'winger'
+            : 'dater';
+
+      switch (state) {
+        case 'needs-onboarding':
+          return '/(onboarding)';
+        case 'winger':
+          return '/(winger)';
+        case 'dater':
+          return '/(dater-tabs)/discover';
+      }
+    },
   });
 
   // Mount-only: check for a pending deep-link invite (external async state)
@@ -43,9 +54,11 @@ function AuthenticatedNavigator({ userId }: { userId: string }) {
     AsyncStorage.getItem('pending_invite').then((val) => {
       if (!val) return;
       AsyncStorage.removeItem('pending_invite');
-      router.replace('/(tabs)/profile/wingpeople/' as any);
+      const wingpeoplePath =
+        dest === '/(winger)' ? '/(winger)/wingpeople/' : '/(dater-tabs)/profile/wingpeople/';
+      router.replace(wingpeoplePath as any);
     });
-  }, [userId]);
+  }, [userId, dest]);
 
   // Mount-only: register push token (external device event)
   useEffect(() => {
@@ -77,7 +90,8 @@ export default function RootLayout() {
         <AuthProvider>
           <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
             <Stack>
-              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+              <Stack.Screen name="(dater-tabs)" options={{ headerShown: false }} />
+              <Stack.Screen name="(winger)" options={{ headerShown: false }} />
               <Stack.Screen name="(auth)" options={{ headerShown: false }} />
               <Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
               <Stack.Screen name="invite" options={{ headerShown: false }} />
