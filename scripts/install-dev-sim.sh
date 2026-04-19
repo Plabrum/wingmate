@@ -19,7 +19,7 @@ tar -xzf "$SIM_BUILD" -C "$EXTRACT_DIR"
 APP_PATH=$(find "$EXTRACT_DIR" -name "*.app" -maxdepth 1 | head -1)
 
 echo "Installing on booted simulator..."
-BOOTED=$(xcrun simctl list devices booted | grep -c "(Booted)" 2>/dev/null || echo "0")
+BOOTED=$(xcrun simctl list devices booted 2>/dev/null | grep -c "(Booted)" || true)
 if [ "$BOOTED" -eq 0 ]; then
   UDID=$(xcrun simctl list devices available -j \
     | node -e "let s=''; process.stdin.on('data',d=>s+=d); process.stdin.on('end',()=>{

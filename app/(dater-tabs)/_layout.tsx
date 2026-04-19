@@ -7,13 +7,10 @@ import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useSession } from '@/context/auth';
 
-export default function TabLayout() {
+export default function DaterTabLayout() {
   const colorScheme = useColorScheme();
   const { session } = useSession();
 
-  // unstable_settings.anchor='(tabs)' keeps this layout in the background
-  // stack even during the auth flow. Guard here so no tab screens mount
-  // (and no data-fetching queries fire) until a session exists.
   if (!session) return null;
 
   return (
