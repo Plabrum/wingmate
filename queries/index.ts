@@ -6,3 +6,4 @@ export * from './messages';
 export * from './photos';
 export * from './profiles';
 export * from './prompts';
+export * from './wing-discussions';

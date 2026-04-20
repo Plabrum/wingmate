@@ -17,6 +17,7 @@ import {
   type DiscoverCard,
   type WingerTab,
 } from '@/queries/discover';
+import { getOrCreateWingDiscussion, useWingDiscussions } from '@/queries/wing-discussions';
 import { updateDatingProfile, useProfileData } from '@/queries/profiles';
 import { LargeHeader } from '@/components/ui/LargeHeader';
 import { TextTabBar } from '@/components/ui/TextTabBar';
@@ -24,6 +25,7 @@ import { PhotoRect } from '@/components/ui/PhotoRect';
 import { Pill } from '@/components/ui/Pill';
 import { PurpleButton } from '@/components/ui/PurpleButton';
 import { WingStack } from '@/components/ui/WingStack';
+import { WingDiscussionSheet } from '@/components/profile/WingDiscussionSheet';
 import { colors } from '@/constants/theme';
 import ScreenSuspense from '@/components/ui/ScreenSuspense';
 import { cardButtonShadow } from '@/lib/styles';
@@ -92,7 +94,15 @@ function DiscoverPausedScreen({
 
 // ── WingNoteSection ───────────────────────────────────────────────────────────
 
-function WingNoteSection({ card }: { card: DiscoverCard }) {
+function WingNoteSection({
+  card,
+  hasUnread,
+  onDiscuss,
+}: {
+  card: DiscoverCard;
+  hasUnread: boolean;
+  onDiscuss: () => void;
+}) {
   const [expanded, setExpanded] = useState(false);
   const initial = card.suggester_name ? card.suggester_name[0].toUpperCase() : '?';
 
@@ -103,6 +113,14 @@ function WingNoteSection({ card }: { card: DiscoverCard }) {
         <Text className="text-sm font-semibold text-fg flex-1">
           {card.suggester_name} thinks you{"'"}d get along
         </Text>
+        <Pressable
+          className="flex-row items-center gap-1 px-2 py-1 rounded-full bg-accent-soft"
+          onPress={onDiscuss}
+          hitSlop={8}
+        >
+          {hasUnread && <View className="w-2 h-2 rounded-full bg-accent" />}
+          <Text className="text-xs font-semibold text-accent">Discuss</Text>
+        </Pressable>
       </View>
       <Text
         className="text-sm text-fg-muted"
@@ -122,7 +140,15 @@ function WingNoteSection({ card }: { card: DiscoverCard }) {
 
 // ── CardView ──────────────────────────────────────────────────────────────────
 
-function CardView({ card }: { card: DiscoverCard }) {
+function CardView({
+  card,
+  hasUnread,
+  onDiscuss,
+}: {
+  card: DiscoverCard;
+  hasUnread: boolean;
+  onDiscuss: () => void;
+}) {
   return (
     <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
       <View className="px-4">
@@ -133,7 +159,9 @@ function CardView({ card }: { card: DiscoverCard }) {
           {card.chosen_name}, {card.age}
         </Text>
         <Text className="text-sm text-fg-muted mt-1 mb-3">{card.city}</Text>
-        {card.wing_note != null && <WingNoteSection card={card} />}
+        {card.wing_note != null && (
+          <WingNoteSection card={card} hasUnread={hasUnread} onDiscuss={onDiscuss} />
+        )}
         {card.interests.length > 0 && (
           <View className="flex-row flex-wrap gap-2 mb-4">
             {card.interests.map((interest) => (
@@ -212,6 +240,16 @@ type DiscoverPoolProps = {
   wingerTabs: WingerTab[];
   tabs: string[];
   onDecrement: (() => void) | null;
+  unreadByDecisionId: Record<string, boolean>;
+};
+
+type DiscussionSheet = {
+  visible: boolean;
+  discussionId: string | null;
+  profileName: string;
+  profileAge: number;
+  profilePhotoUri: string | null;
+  wingerName: string;
 };
 
 function DiscoverPool({
@@ -220,6 +258,7 @@ function DiscoverPool({
   wingerTabs,
   tabs,
   onDecrement,
+  unreadByDecisionId,
 }: DiscoverPoolProps) {
   const isForYou = activeTabIndex === 1;
   const isAll = activeTabIndex === tabs.length - 1;
@@ -244,6 +283,33 @@ function DiscoverPool({
   const [matchCard, setMatchCard] = useState<DiscoverCard | null>(null);
   const card = pool[index] ?? null;
 
+  const [discussionSheet, setDiscussionSheet] = useState<DiscussionSheet>({
+    visible: false,
+    discussionId: null,
+    profileName: '',
+    profileAge: 0,
+    profilePhotoUri: null,
+    wingerName: '',
+  });
+
+  async function handleDiscuss(c: DiscoverCard) {
+    if (!c.decision_id || !c.suggested_by) return;
+    setDiscussionSheet({
+      visible: true,
+      discussionId: null,
+      profileName: c.chosen_name,
+      profileAge: c.age,
+      profilePhotoUri: c.first_photo,
+      wingerName: c.suggester_name ?? 'your winger',
+    });
+    const id = await getOrCreateWingDiscussion(c.decision_id, userId, c.suggested_by, c.user_id);
+    setDiscussionSheet((prev) => ({ ...prev, discussionId: id }));
+  }
+
+  function closeDiscussionSheet() {
+    setDiscussionSheet((prev) => ({ ...prev, visible: false }));
+  }
+
   async function handleLike() {
     if (!card) return;
     onDecrement?.();
@@ -264,7 +330,11 @@ function DiscoverPool({
     <>
       <View className="flex-1">
         {card != null ? (
-          <CardView card={card} />
+          <CardView
+            card={card}
+            hasUnread={card.decision_id != null && (unreadByDecisionId[card.decision_id] ?? false)}
+            onDiscuss={() => handleDiscuss(card)}
+          />
         ) : (
           <EmptyState tabIndex={activeTabIndex} wingerName={wingerTabs[activeTabIndex - 2]?.name} />
         )}
@@ -290,6 +360,19 @@ function DiscoverPool({
       )}
 
       {matchCard && <MatchOverlay card={matchCard} onDismiss={() => setMatchCard(null)} />}
+
+      <WingDiscussionSheet
+        visible={discussionSheet.visible}
+        onClose={closeDiscussionSheet}
+        discussionId={discussionSheet.discussionId}
+        currentUserId={userId}
+        otherParticipantName={discussionSheet.wingerName}
+        suggestedProfile={{
+          name: discussionSheet.profileName,
+          age: discussionSheet.profileAge,
+          photoUri: discussionSheet.profilePhotoUri,
+        }}
+      />
     </>
   );
 }
@@ -299,12 +382,20 @@ function DiscoverPool({
 function DiscoverContent({ userId }: { userId: string }) {
   const { data: wingerTabs } = useWingerTabs(userId);
   const { data: initialLikesYouCount } = useLikesYouCount(userId);
+  const { data: discussions } = useWingDiscussions(userId);
   const [activeTabIndex, setActiveTabIndex] = useState(0);
   const [likesYouDecrements, setLikesYouDecrements] = useState(0);
 
   const likesYouCount = Math.max(0, initialLikesYouCount - likesYouDecrements);
   // tabs: [Likes You, For You, ...wingers, All]
   const tabs = ['Likes You', 'For You', ...wingerTabs.map((w: WingerTab) => w.name), 'All'];
+
+  const unreadByDecisionId: Record<string, boolean> = {};
+  for (const d of discussions) {
+    const msgs = d.wing_discussion_messages ?? [];
+    const hasUnread = msgs.some((m) => !m.is_read && m.sender_id !== userId);
+    if (hasUnread) unreadByDecisionId[d.decision_id] = true;
+  }
 
   return (
     <SafeAreaView className="flex-1 bg-page">
@@ -331,6 +422,7 @@ function DiscoverContent({ userId }: { userId: string }) {
           wingerTabs={wingerTabs}
           tabs={tabs}
           onDecrement={activeTabIndex === 0 ? () => setLikesYouDecrements((d) => d + 1) : null}
+          unreadByDecisionId={unreadByDecisionId}
         />
       </Suspense>
     </SafeAreaView>
