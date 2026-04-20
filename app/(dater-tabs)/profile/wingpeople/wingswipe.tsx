@@ -9,7 +9,6 @@ import { useWingSwipe } from '@/hooks/use-wing-swipe';
 import { View, Text, Pressable, ScrollView, TextInput, SafeAreaView } from '@/lib/tw';
 import { NavHeader } from '@/components/ui/NavHeader';
 import { PhotoRect } from '@/components/ui/PhotoRect';
-import { Pill } from '@/components/ui/Pill';
 import { PurpleButton } from '@/components/ui/PurpleButton';
 import { useDaterContext } from '@/queries/profiles';
 import { useWingPool } from '@/queries/discover';
@@ -40,13 +39,6 @@ function WingCardView({ card }: WingCardViewProps) {
           {card.chosen_name}, {card.age}
         </Text>
         <Text className="text-sm text-fg-muted mt-1 mb-3">{card.city}</Text>
-        {card.interests.length > 0 && (
-          <View className="flex-row flex-wrap gap-2 mb-4">
-            {card.interests.map((interest) => (
-              <Pill key={interest} label={interest} />
-            ))}
-          </View>
-        )}
         {card.bio != null && (
           <Text className="text-sm text-fg-muted leading-[22px]">{card.bio}</Text>
         )}

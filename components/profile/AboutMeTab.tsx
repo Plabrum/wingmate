@@ -9,7 +9,6 @@ import { colors } from '@/constants/theme';
 import type { OwnDatingProfile } from '@/queries/profiles';
 import { updateDatingProfile } from '@/queries/profiles';
 
-import { Pill } from '@/components/ui/Pill';
 import { PurpleButton } from '@/components/ui/PurpleButton';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 
@@ -148,19 +147,6 @@ export function AboutMeTab({ form, data, userId }: Props) {
               </View>
             </>
           ) : null}
-
-          {data.interests.length > 0 && (
-            <>
-              <Text className="text-xs font-bold text-fg-subtle uppercase tracking-[0.6px] mt-5 mb-2">
-                Interests
-              </Text>
-              <View className="flex-row flex-wrap gap-2">
-                {data.interests.map((interest) => (
-                  <Pill key={interest} label={interest} />
-                ))}
-              </View>
-            </>
-          )}
         </>
       )}
 

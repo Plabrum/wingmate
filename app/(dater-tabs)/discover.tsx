@@ -21,7 +21,6 @@ import { updateDatingProfile, useProfileData } from '@/queries/profiles';
 import { LargeHeader } from '@/components/ui/LargeHeader';
 import { TextTabBar } from '@/components/ui/TextTabBar';
 import { PhotoRect } from '@/components/ui/PhotoRect';
-import { Pill } from '@/components/ui/Pill';
 import { PurpleButton } from '@/components/ui/PurpleButton';
 import { WingStack } from '@/components/ui/WingStack';
 import { colors } from '@/constants/theme';
@@ -134,13 +133,6 @@ function CardView({ card }: { card: DiscoverCard }) {
         </Text>
         <Text className="text-sm text-fg-muted mt-1 mb-3">{card.city}</Text>
         {card.wing_note != null && <WingNoteSection card={card} />}
-        {card.interests.length > 0 && (
-          <View className="flex-row flex-wrap gap-2 mb-4">
-            {card.interests.map((interest) => (
-              <Pill key={interest} label={interest} />
-            ))}
-          </View>
-        )}
         {card.bio != null && (
           <Text className="text-sm text-fg-muted" style={{ lineHeight: 22 }}>
             {card.bio}
