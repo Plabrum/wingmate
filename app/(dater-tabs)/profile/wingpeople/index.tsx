@@ -21,6 +21,7 @@ import { NavHeader } from '@/components/ui/NavHeader';
 import { FaceAvatar } from '@/components/ui/FaceAvatar';
 import { PurpleButton } from '@/components/ui/PurpleButton';
 import { getInitials } from '@/components/profile/profile-helpers';
+import { PhotoRect } from '@/components/ui/PhotoRect';
 import { View, Text, TextInput, ScrollView, SafeAreaView, Pressable } from '@/lib/tw';
 import { useProfileData } from '@/queries/profiles';
 import {
@@ -30,6 +31,12 @@ import {
   declineInvitation,
   removeWingperson,
 } from '@/queries/contacts';
+import {
+  useWingDiscussions,
+  getOrCreateWingDiscussion,
+  type WingDiscussionRow,
+} from '@/queries/wing-discussions';
+import { WingDiscussionSheet } from '@/components/profile/WingDiscussionSheet';
 import { formatPhoneInput, toE164 } from '@/lib/phoneUtils';
 
 // ── Section header ─────────────────────────────────────────────────────────────
@@ -50,14 +57,16 @@ function SectionHeader({ title, right }: { title: string; right?: React.ReactNod
 interface ContentProps {
   userId: string;
   onOpenInvite: () => void;
+  onOpenDiscussion: (row: WingDiscussionRow) => void;
 }
 
-function WingpeopleContent({ userId, onOpenInvite }: ContentProps) {
+function WingpeopleContent({ userId, onOpenInvite, onOpenDiscussion }: ContentProps) {
   const router = useRouter();
   const {
     data: { wingpeople, invitations, wingingFor, sentInvitations, weeklyCounts },
     refetch,
   } = useWingpeopleData(userId);
+  const { data: discussions } = useWingDiscussions(userId);
 
   // ── Mutations ─────────────────────────────────────────────────────────────
 
@@ -243,7 +252,60 @@ function WingpeopleContent({ userId, onOpenInvite }: ContentProps) {
         })
       )}
 
-      {/* ── Section 4: You're Winging For ──────────────────────────────── */}
+      {/* ── Section 4: Discussions ──────────────────────────────────────── */}
+      {discussions.length > 0 && (
+        <>
+          <SectionHeader title="Discussions" />
+          {discussions.map((d) => {
+            const suggested = d.suggested_profile as {
+              id: string;
+              chosen_name: string | null;
+              avatar_url: string | null;
+            } | null;
+            const other =
+              d.winger_id === userId
+                ? (d.dater as {
+                    id: string;
+                    chosen_name: string | null;
+                    avatar_url: string | null;
+                  } | null)
+                : (d.winger as {
+                    id: string;
+                    chosen_name: string | null;
+                    avatar_url: string | null;
+                  } | null);
+            const msgs = d.wing_discussion_messages ?? [];
+            const lastMsg = msgs[0];
+            const hasUnread = msgs.some((m) => !m.is_read && m.sender_id !== userId);
+            const otherName = other?.chosen_name ?? 'Unknown';
+            const suggestedName = suggested?.chosen_name ?? 'Unknown';
+            return (
+              <Pressable
+                key={d.id}
+                className="flex-row items-center px-5 py-3 gap-3 bg-white"
+                style={{
+                  borderBottomWidth: StyleSheet.hairlineWidth,
+                  borderBottomColor: colors.divider,
+                }}
+                onPress={() => onOpenDiscussion(d)}
+              >
+                <View style={{ width: 40, height: 40, borderRadius: 8, overflow: 'hidden' }}>
+                  <PhotoRect uri={suggested?.avatar_url ?? null} ratio={1} />
+                </View>
+                <View className="flex-1">
+                  <Text className="text-sm font-semibold text-fg">{suggestedName}</Text>
+                  <Text className="text-xs text-fg-muted mt-0.5" numberOfLines={1}>
+                    {lastMsg ? lastMsg.body : `with ${otherName}`}
+                  </Text>
+                </View>
+                {hasUnread && <View className="w-2.5 h-2.5 rounded-full bg-accent" />}
+              </Pressable>
+            );
+          })}
+        </>
+      )}
+
+      {/* ── Section 5: You're Winging For ──────────────────────────────── */}
       <SectionHeader title="You're Winging For" />
 
       {wingingFor.length === 0 ? (
@@ -302,6 +364,15 @@ function WingpeopleContent({ userId, onOpenInvite }: ContentProps) {
 
 type InviteForm = { phone: string };
 
+type DiscussionSheet = {
+  visible: boolean;
+  discussionId: string | null;
+  profileName: string;
+  profileAge: number;
+  profilePhotoUri: string | null;
+  wingerName: string;
+};
+
 export default function WingpeopleScreen() {
   const router = useRouter();
   const { userId } = useAuth();
@@ -312,6 +383,49 @@ export default function WingpeopleScreen() {
   } = useProfileData(userId);
 
   const [inviteVisible, setInviteVisible] = useState(false);
+  const [discussionSheet, setDiscussionSheet] = useState<DiscussionSheet>({
+    visible: false,
+    discussionId: null,
+    profileName: '',
+    profileAge: 0,
+    profilePhotoUri: null,
+    wingerName: '',
+  });
+
+  async function handleOpenDiscussion(row: WingDiscussionRow) {
+    const suggested = row.suggested_profile as {
+      id: string;
+      chosen_name: string | null;
+      avatar_url: string | null;
+    } | null;
+    const other =
+      row.winger_id === userId
+        ? (row.dater as {
+            id: string;
+            chosen_name: string | null;
+            avatar_url: string | null;
+          } | null)
+        : (row.winger as {
+            id: string;
+            chosen_name: string | null;
+            avatar_url: string | null;
+          } | null);
+    setDiscussionSheet({
+      visible: true,
+      discussionId: null,
+      profileName: suggested?.chosen_name ?? 'Unknown',
+      profileAge: 0,
+      profilePhotoUri: suggested?.avatar_url ?? null,
+      wingerName: other?.chosen_name ?? 'your winger',
+    });
+    const id = await getOrCreateWingDiscussion(
+      row.decision_id,
+      row.dater_id,
+      row.winger_id,
+      (row.suggested_profile as any)?.id ?? ''
+    );
+    setDiscussionSheet((prev) => ({ ...prev, discussionId: id }));
+  }
 
   const {
     control,
@@ -379,7 +493,11 @@ export default function WingpeopleScreen() {
           </View>
         }
       >
-        <WingpeopleContent userId={userId} onOpenInvite={onOpenInvite} />
+        <WingpeopleContent
+          userId={userId}
+          onOpenInvite={onOpenInvite}
+          onOpenDiscussion={handleOpenDiscussion}
+        />
       </Suspense>
 
       {/* ── Invite Bottom Sheet ──────────────────────────────────────────────── */}
@@ -442,6 +560,19 @@ export default function WingpeopleScreen() {
           </KeyboardAvoidingView>
         </View>
       </Modal>
+
+      <WingDiscussionSheet
+        visible={discussionSheet.visible}
+        onClose={() => setDiscussionSheet((prev) => ({ ...prev, visible: false }))}
+        discussionId={discussionSheet.discussionId}
+        currentUserId={userId}
+        otherParticipantName={discussionSheet.wingerName}
+        suggestedProfile={{
+          name: discussionSheet.profileName,
+          age: discussionSheet.profileAge,
+          photoUri: discussionSheet.profilePhotoUri,
+        }}
+      />
     </SafeAreaView>
   );
 }

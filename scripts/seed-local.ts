@@ -996,6 +996,129 @@ async function seedWingerPromptResponses(devUserId: string, wingerIds: string[])
   console.log(`  ${inserted} winger responses inserted, ${skipped} skipped`);
 }
 
+// These profiles are seeded purely to be winger-suggested to the dev user.
+// They do NOT appear in seedDecisions (they haven't liked the dev user),
+// so they show up in the For You tab rather than Likes You.
+const SUGGESTION_WOMEN: { first: string; last: string }[] = [
+  { first: 'Zoe', last: 'Bennett' },
+  { first: 'Maya', last: 'Foster' },
+  { first: 'Aria', last: 'Hughes' },
+  { first: 'Nova', last: 'Price' },
+  { first: 'Iris', last: 'Coleman' },
+];
+
+const WINGER_SUGGESTION_NOTES: string[] = [
+  "She's exactly your vibe — you'd have so much to talk about.",
+  'Trust me on this one. You two would really click.',
+  "Okay hear me out — I think you'd genuinely like them.",
+  "They're hilarious and low-key brilliant. Just saying.",
+  "Met them at a party last month. You'd get along great.",
+];
+
+async function seedWingerSuggestions(devUserId: string): Promise<void> {
+  const { data: listData } = await supabase.auth.admin.listUsers({ perPage: 1000 });
+
+  const wingerEmails = SAMPLE_WINGERS.map(
+    (w) => `winger.${w.first.toLowerCase()}.${w.last.toLowerCase()}@seed.orbit.test`
+  );
+  const wingers = listData.users.filter((u) => u.email && wingerEmails.includes(u.email));
+
+  if (wingers.length === 0) {
+    console.log('  no wingers found — skipping suggestions');
+    return;
+  }
+
+  // Ensure each suggestion-only profile exists
+  let photoIdx = 50;
+  for (const p of SUGGESTION_WOMEN) {
+    const email = `suggest.${p.first.toLowerCase()}.${p.last.toLowerCase()}@seed.orbit.test`;
+    const existing = listData.users.find((u) => u.email === email);
+    if (!existing) {
+      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+        email,
+        password: 'Orbit123!',
+        email_confirm: true,
+      });
+      if (authError)
+        throw new Error(`suggestion profile ${p.first} auth error: ${authError.message}`);
+      const uid = authData.user.id;
+      await supabase
+        .from('profiles')
+        .update({
+          chosen_name: p.first,
+          last_name: p.last,
+          date_of_birth: randomDob(24, 32),
+          gender: 'Female',
+          role: 'dater',
+          phone_number: `+1555${String(9000000 + photoIdx * 13).slice(0, 7)}`,
+        })
+        .eq('id', uid);
+      const { data: dp } = await supabase
+        .from('dating_profiles')
+        .insert({
+          user_id: uid,
+          bio: pick(BIOS),
+          interested_gender: ['Male'],
+          age_from: 22,
+          age_to: 38,
+          religion: pick(RELIGIONS),
+          interests: pickN(ALL_INTERESTS, 4),
+          city: 'New York',
+          is_active: true,
+          dating_status: 'open',
+        })
+        .select('id')
+        .single();
+      if (dp) {
+        await supabase.from('profile_photos').insert({
+          dating_profile_id: dp.id,
+          storage_url: `https://randomuser.me/api/portraits/women/${photoIdx % 99}.jpg`,
+          display_order: 0,
+          approved_at: new Date().toISOString(),
+        });
+      }
+    }
+    photoIdx++;
+  }
+
+  // Re-fetch users after possible creation
+  const { data: refreshed } = await supabase.auth.admin.listUsers({ perPage: 1000 });
+  const suggestionEmails = SUGGESTION_WOMEN.map(
+    (p) => `suggest.${p.first.toLowerCase()}.${p.last.toLowerCase()}@seed.orbit.test`
+  );
+  const suggestedUsers = (refreshed?.users ?? []).filter(
+    (u) => u.email && suggestionEmails.includes(u.email)
+  );
+
+  let count = 0;
+  for (let i = 0; i < suggestedUsers.length; i++) {
+    const suggested = suggestedUsers[i];
+    const winger = wingers[i % wingers.length];
+    const note = WINGER_SUGGESTION_NOTES[i % WINGER_SUGGESTION_NOTES.length];
+
+    const { data: existing } = await supabase
+      .from('decisions')
+      .select('id')
+      .eq('actor_id', devUserId)
+      .eq('recipient_id', suggested.id)
+      .maybeSingle();
+
+    if (existing) continue;
+
+    const { error } = await supabase.from('decisions').insert({
+      actor_id: devUserId,
+      recipient_id: suggested.id,
+      decision: null,
+      suggested_by: winger.id,
+      note,
+    });
+    if (error) throw new Error(`suggestion error: ${error.message}`);
+    count++;
+  }
+
+  console.log(`  ${count} winger suggestions seeded for dev user`);
+}
+
 async function main(): Promise<void> {
   console.log('Setting up local dev database…\n');
 
@@ -1030,6 +1153,9 @@ async function main(): Promise<void> {
 
   console.log('\nSeeding winger prompt responses on dev user…');
   await seedWingerPromptResponses(devUserId, wingerIds);
+
+  console.log('\nSeeding winger suggestions…');
+  await seedWingerSuggestions(devUserId);
 
   console.log('\nDone. Local DB is ready. Sign in as dev@local.test / devpassword');
 }

@@ -451,34 +451,158 @@ export type Database = {
         };
         Relationships: [];
       };
+      wing_discussion_messages: {
+        Row: {
+          body: string;
+          created_at: string;
+          discussion_id: string;
+          id: string;
+          is_read: boolean;
+          sender_id: string;
+        };
+        Insert: {
+          body: string;
+          created_at?: string;
+          discussion_id: string;
+          id?: string;
+          is_read?: boolean;
+          sender_id: string;
+        };
+        Update: {
+          body?: string;
+          created_at?: string;
+          discussion_id?: string;
+          id?: string;
+          is_read?: boolean;
+          sender_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'wing_discussion_messages_discussion_id_fkey';
+            columns: ['discussion_id'];
+            isOneToOne: false;
+            referencedRelation: 'wing_discussions';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'wing_discussion_messages_sender_id_fkey';
+            columns: ['sender_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      wing_discussions: {
+        Row: {
+          created_at: string;
+          dater_id: string;
+          decision_id: string;
+          id: string;
+          suggested_profile_id: string;
+          winger_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          dater_id: string;
+          decision_id: string;
+          id?: string;
+          suggested_profile_id: string;
+          winger_id: string;
+        };
+        Update: {
+          created_at?: string;
+          dater_id?: string;
+          decision_id?: string;
+          id?: string;
+          suggested_profile_id?: string;
+          winger_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'wing_discussions_dater_id_fkey';
+            columns: ['dater_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'wing_discussions_decision_id_fkey';
+            columns: ['decision_id'];
+            isOneToOne: true;
+            referencedRelation: 'decisions';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'wing_discussions_suggested_profile_id_fkey';
+            columns: ['suggested_profile_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'wing_discussions_winger_id_fkey';
+            columns: ['winger_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
     };
     Views: {
       [_ in never]: never;
     };
     Functions: {
-      get_discover_pool: {
-        Args: {
-          filter_winger_id?: string;
-          page_offset?: number;
-          page_size?: number;
-          viewer_id: string;
-        };
-        Returns: {
-          age: number;
-          bio: string;
-          chosen_name: string;
-          city: Database['public']['Enums']['city'];
-          dating_status: Database['public']['Enums']['dating_status'];
-          first_photo: string;
-          gender: Database['public']['Enums']['gender'];
-          interests: Database['public']['Enums']['interest'][];
-          profile_id: string;
-          suggested_by: string;
-          suggester_name: string;
-          user_id: string;
-          wing_note: string;
-        }[];
-      };
+      get_discover_pool:
+        | {
+            Args: {
+              filter_winger_id?: string;
+              page_offset?: number;
+              page_size?: number;
+              viewer_id: string;
+            };
+            Returns: {
+              age: number;
+              bio: string;
+              chosen_name: string;
+              city: Database['public']['Enums']['city'];
+              dating_status: Database['public']['Enums']['dating_status'];
+              first_photo: string;
+              gender: Database['public']['Enums']['gender'];
+              interests: Database['public']['Enums']['interest'][];
+              profile_id: string;
+              suggested_by: string;
+              suggester_name: string;
+              user_id: string;
+              wing_note: string;
+            }[];
+          }
+        | {
+            Args: {
+              filter_winger_id?: string;
+              page_offset?: number;
+              page_size?: number;
+              viewer_id: string;
+              winger_only?: boolean;
+            };
+            Returns: {
+              age: number;
+              bio: string;
+              chosen_name: string;
+              city: Database['public']['Enums']['city'];
+              dating_status: Database['public']['Enums']['dating_status'];
+              decision_id: string;
+              first_photo: string;
+              gender: Database['public']['Enums']['gender'];
+              interests: Database['public']['Enums']['interest'][];
+              profile_id: string;
+              suggested_by: string;
+              suggester_name: string;
+              user_id: string;
+              wing_note: string;
+            }[];
+          };
       get_likes_you_count: { Args: { viewer_id: string }; Returns: number };
       get_likes_you_pool: {
         Args: { page_offset?: number; page_size?: number; viewer_id: string };

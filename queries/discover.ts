@@ -19,6 +19,7 @@ export type DiscoverCard = {
   wing_note: string | null;
   suggested_by: string | null;
   suggester_name: string | null;
+  decision_id: string | null;
 };
 
 export type WingCard = Omit<DiscoverCard, 'wing_note' | 'suggested_by' | 'suggester_name'>;
