@@ -9,7 +9,7 @@ import { useAuth } from '@/context/auth';
 import { updateDatingProfile, useProfileData } from '@/queries/profiles';
 import type { OwnDatingProfile } from '@/queries/profiles';
 import type { Database } from '@/types/database';
-import { CITIES, GENDERS, RELIGIONS, INTERESTS } from '@/constants/enums';
+import { CITIES, GENDERS, RELIGIONS } from '@/constants/enums';
 import { View, Text, TextInput, ScrollView, SafeAreaView, Pressable } from '@/lib/tw';
 import { cn } from '@/lib/cn';
 
@@ -20,8 +20,6 @@ import { PurpleButton } from '@/components/ui/PurpleButton';
 type Gender = Database['public']['Enums']['gender'];
 type Religion = Database['public']['Enums']['religion'];
 type City = Database['public']['Enums']['city'];
-type Interest = Database['public']['Enums']['interest'];
-
 type FormValues = {
   bio: string;
   city: City | null;
@@ -30,7 +28,6 @@ type FormValues = {
   interestedGender: Gender[];
   religion: Religion | null;
   religiousPref: Religion | null;
-  interests: Interest[];
 };
 
 const RELIGIOUS_PREFS: { value: Religion | null; label: string }[] = [
@@ -151,7 +148,6 @@ function EditProfileForm({
       interestedGender: data.interested_gender as Gender[],
       religion: data.religion as Religion | null,
       religiousPref: (data.religious_preference as Religion | null) ?? null,
-      interests: data.interests as Interest[],
     },
   });
 
@@ -179,7 +175,6 @@ function EditProfileForm({
       interested_gender: values.interestedGender,
       religion: values.religion,
       religious_preference: values.religiousPref,
-      interests: values.interests,
     });
 
     if (error) {
@@ -345,20 +340,6 @@ function EditProfileForm({
                   );
                 })}
               </View>
-            )}
-          />
-
-          {/* Interests */}
-          <SectionLabel label="Interests" />
-          <Controller
-            control={control}
-            name="interests"
-            render={({ field }) => (
-              <MultiPickerRow<Interest>
-                options={INTERESTS}
-                values={field.value}
-                onChange={field.onChange}
-              />
             )}
           />
 
