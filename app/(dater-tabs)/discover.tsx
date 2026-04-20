@@ -9,7 +9,7 @@ import { useAuth } from '@/context/auth';
 import { useDiscover, type PoolFetcher, type LikeResult } from '@/hooks/use-discover';
 import type { Enums } from '@/types/database';
 import {
-  getDiscoverPool,
+  discoverProfileToCard,
   getLikesYouPool,
   useLikesYouCount,
   useWingerTabs,
@@ -17,6 +17,7 @@ import {
   type DiscoverCard,
   type WingerTab,
 } from '@/queries/discover';
+import { getApiDiscover } from '@/lib/api/generated/discover/discover';
 import { updateDatingProfile, useProfileData } from '@/queries/profiles';
 import { LargeHeader } from '@/components/ui/LargeHeader';
 import { TextTabBar } from '@/components/ui/TextTabBar';
@@ -229,9 +230,20 @@ function DiscoverPool({
       : null;
 
   const fetchPool = useCallback<PoolFetcher>(
-    (uid, pageSize, offset) => {
+    async (uid, pageSize, offset) => {
       if (activeTabIndex === 0) return getLikesYouPool(uid, pageSize, offset);
-      return getDiscoverPool(uid, wingerId, pageSize, offset, isForYou);
+      try {
+        const res = await getApiDiscover({
+          filterWingerId: wingerId ?? undefined,
+          pageSize,
+          pageOffset: offset,
+          wingerOnly: isForYou,
+        });
+        if (res.status !== 200) throw new Error(`Unexpected status ${res.status}`);
+        return { data: res.data.map(discoverProfileToCard), error: null };
+      } catch (e) {
+        return { data: null, error: e instanceof Error ? e : new Error(String(e)) };
+      }
     },
     [activeTabIndex, wingerId, isForYou]
   );

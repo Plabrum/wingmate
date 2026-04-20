@@ -1,6 +1,20 @@
+// TRANSITIONAL: this file is being drained. The long-term end state is zero wrapper
+// functions here — screens import generated hooks from `@/lib/api/generated/` directly.
+// What remains below is the pre-migration surface:
+//   • Discover pool: PORTED — `getApiDiscover` is called at the callsite; only the
+//     `discoverProfileToCard` shape-bridge and `useInitialPool` wrapper for the likes-you
+//     branch still live here. Both die when `DiscoverCard` is replaced by `DiscoverProfile`
+//     (camelCase) and when likes-you is ported.
+//   • Wing pool, likes-you pool, winger tabs: NOT YET PORTED — still on `supabase.rpc`.
+//     Port each to `supabase/functions/api/domains/<name>/` and delete the corresponding
+//     wrappers + hooks from this file as they move.
+// Do not add new helpers here. New endpoints go on the `api` function.
+
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import type { Enums } from '@/types/database';
+import { getApiDiscover } from '@/lib/api/generated/discover/discover';
+import type { DiscoverProfile } from '@/lib/api/generated/model';
 
 // Shape returned by the get_discover_pool and get_wing_pool RPCs.
 // Keep in sync with the function return types in the migration.
@@ -24,32 +38,27 @@ export type DiscoverCard = {
 export type WingCard = Omit<DiscoverCard, 'wing_note' | 'suggested_by' | 'suggester_name'>;
 
 // ── Discover pool (dater's Discover screen) ───────────────────────────────────
+// Backed by the `api` edge function (see supabase/functions/api/routes/discover/).
+// Call `getApiDiscover` from `@/lib/api/generated/discover/discover` directly at the
+// callsite; `discoverProfileToCard` maps the camelCase response to the snake_case
+// `DiscoverCard` shape used by legacy consumers (use-discover hook, screen).
 
-/**
- * Fetch the next page of cards for the Discover feed.
- *
- * filterWingerId — when set, restricts to pending suggestions from that winger
- *                  (used for the per-winger tabs, e.g. "Emma").
- *                  Pass null for "For You" and "All" tabs.
- *
- * Pagination: call repeatedly with increasing pageOffset as the user swipes.
- * Recommended: prefetch the next page when the user reaches the last 3 cards.
- */
-export async function getDiscoverPool(
-  viewerId: string,
-  filterWingerId: string | null = null,
-  pageSize = 20,
-  pageOffset = 0,
-  wingerOnly = false
-): Promise<{ data: DiscoverCard[] | null; error: Error | null }> {
-  const { data, error } = await supabase.rpc('get_discover_pool', {
-    viewer_id: viewerId,
-    filter_winger_id: filterWingerId,
-    page_size: pageSize,
-    page_offset: pageOffset,
-    winger_only: wingerOnly,
-  });
-  return { data: data as DiscoverCard[] | null, error };
+export function discoverProfileToCard(p: DiscoverProfile): DiscoverCard {
+  return {
+    profile_id: p.profileId,
+    user_id: p.userId,
+    chosen_name: p.chosenName,
+    gender: p.gender,
+    age: p.age,
+    city: p.city,
+    bio: p.bio,
+    dating_status: p.datingStatus,
+    interests: p.interests,
+    first_photo: p.firstPhoto,
+    wing_note: p.wingNote,
+    suggested_by: p.suggestedBy,
+    suggester_name: p.suggesterName,
+  };
 }
 
 // ── Wing pool (wingperson's WingSwipe screen) ─────────────────────────────────
@@ -178,12 +187,19 @@ export function useInitialPool(
   return useSuspenseQuery({
     queryKey: ['pool', userId, mode, wingerId, wingerOnly],
     queryFn: async () => {
-      const result =
-        mode === 'likesYou'
-          ? await getLikesYouPool(userId, pageSize, 0)
-          : await getDiscoverPool(userId, wingerId, pageSize, 0, wingerOnly);
-      if (result.error) throw result.error;
-      return result.data ?? [];
+      if (mode === 'likesYou') {
+        const { data, error } = await getLikesYouPool(userId, pageSize, 0);
+        if (error) throw error;
+        return data ?? [];
+      }
+      const res = await getApiDiscover({
+        filterWingerId: wingerId ?? undefined,
+        pageSize,
+        pageOffset: 0,
+        wingerOnly,
+      });
+      if (res.status !== 200) throw new Error(`Unexpected status ${res.status}`);
+      return res.data.map(discoverProfileToCard);
     },
     staleTime: 0,
   });

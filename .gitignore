@@ -50,3 +50,6 @@ app-example
 .build-fingerprint
 .dev-sim-fingerprint
 .env.production
+
+# drizzle-kit introspect artifacts (we only commit schema.ts + relations.ts)
+.drizzle/

@@ -1,3 +1,10 @@
+// TRANSITIONAL: uses legacy `DiscoverCard` (snake_case) and `PoolFetcher`'s
+// `{ data, error }` shape to stay compatible with the pre-migration screens. When the
+// discover + likes-you endpoints are fully ported and `DiscoverCard` is replaced by the
+// Orval-generated `DiscoverProfile` (camelCase), flip `PoolFetcher` to return
+// `DiscoverProfile[]` and throw on error — the callsite try/catch in discover.tsx goes
+// away and this hook becomes a thin swipe-state machine around the generated hook.
+
 import { useRef, useState } from 'react';
 import { type DiscoverCard } from '@/queries/discover';
 import type { Enums } from '@/types/database';
