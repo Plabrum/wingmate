@@ -5,4 +5,3 @@
 
 export * from './discover';
 export * from './photos';
-export * from './prompts';

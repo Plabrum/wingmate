@@ -288,7 +288,7 @@ function ProfileScreenInner() {
       {activeTab === 1 && (
         <PhotosTab form={form} data={datingProfile} userId={userId} onRefresh={handleRefresh} />
       )}
-      {activeTab === 2 && <PromptsTab form={form} data={datingProfile} onRefresh={handleRefresh} />}
+      {activeTab === 2 && <PromptsTab form={form} onRefresh={handleRefresh} />}
     </SafeAreaView>
   );
 }

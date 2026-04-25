@@ -17,7 +17,7 @@ import { useAuth } from '@/context/auth';
 import { useDaterProfile, daterProfileQueryKey } from '@/hooks/use-profile';
 import { getPhotoUrl, pickAndResizePhoto, uploadPhoto } from '@/queries/photos';
 import { postApiPhotos } from '@/lib/api/generated/photos/photos';
-import { addPromptResponse } from '@/queries/prompts';
+import { postApiPromptResponses } from '@/lib/api/generated/prompts/prompts';
 
 import { View, Text, Pressable, ScrollView, SafeAreaView, TextInput } from '@/lib/tw';
 import { NavHeader } from '@/components/ui/NavHeader';
@@ -143,13 +143,15 @@ function DaterProfileContent() {
 
   const handleSubmitResponse = async (message: string) => {
     if (!respondingToPrompt) return;
-    const { error } = await addPromptResponse(wingerId, respondingToPrompt.id, message);
+    const promptId = respondingToPrompt.id;
     setRespondingToPrompt(null);
-    if (error) {
+    try {
+      const res = await postApiPromptResponses({ profilePromptId: promptId, message });
+      if (res.status !== 200) throw new Error(`reply failed: ${res.status}`);
+      toast.success(`Comment sent — ${firstName} will review it.`);
+    } catch {
       toast.error("Couldn't send comment. Try again.");
-      return;
     }
-    toast.success(`Comment sent — ${firstName} will review it.`);
   };
 
   return (

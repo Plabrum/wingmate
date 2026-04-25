@@ -11,6 +11,7 @@ import { mountMatches } from './domains/matches/route.ts';
 import { mountMessages } from './domains/messages/route.ts';
 import { mountPhotos } from './domains/photos/route.ts';
 import { mountProfiles } from './domains/profiles/route.ts';
+import { mountPrompts } from './domains/prompts/route.ts';
 import { mountWingerTabs } from './domains/winger-tabs/route.ts';
 import { mountWingPool } from './domains/wing-pool/route.ts';
 import type { AppEnv } from './types.ts';
@@ -97,6 +98,24 @@ export function createApp() {
   app.use('/photos/:id/reorder', authMiddleware);
   app.use('/photos/:id/reorder', transactionMiddleware);
   mountPhotos(app);
+
+  app.use('/prompt-templates', authMiddleware);
+  app.use('/prompt-templates', transactionMiddleware);
+  app.use('/prompt-templates/onboarding', authMiddleware);
+  app.use('/prompt-templates/onboarding', transactionMiddleware);
+  app.use('/profile-prompts', authMiddleware);
+  app.use('/profile-prompts', transactionMiddleware);
+  app.use('/profile-prompts/me', authMiddleware);
+  app.use('/profile-prompts/me', transactionMiddleware);
+  app.use('/profile-prompts/:id', authMiddleware);
+  app.use('/profile-prompts/:id', transactionMiddleware);
+  app.use('/prompt-responses', authMiddleware);
+  app.use('/prompt-responses', transactionMiddleware);
+  app.use('/prompt-responses/:id', authMiddleware);
+  app.use('/prompt-responses/:id', transactionMiddleware);
+  app.use('/prompt-responses/:id/approve', authMiddleware);
+  app.use('/prompt-responses/:id/approve', transactionMiddleware);
+  mountPrompts(app);
 
   app.use('/wingpeople', authMiddleware);
   app.use('/wingpeople', transactionMiddleware);

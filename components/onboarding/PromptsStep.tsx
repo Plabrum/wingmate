@@ -2,12 +2,15 @@ import { useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
 import { z } from 'zod';
 import { View, Text, ScrollView, Pressable, SafeAreaView } from '@/lib/tw';
-import { useOnboardingPromptTemplates, addProfilePrompt } from '@/queries/prompts';
+import {
+  postApiProfilePrompts,
+  useGetApiPromptTemplatesOnboardingSuspense,
+} from '@/lib/api/generated/prompts/prompts';
 import { colors } from '@/constants/theme';
 import { createForm, RootError, useFormSubmit } from '@/lib/forms';
 
 type AddedPrompt = { question: string; answer: string };
-type Props = { dpId: string; onFinish: () => void };
+type Props = { onFinish: () => void };
 
 const answerSchema = z.object({ answer: z.string().trim().min(1) });
 const answerForm = createForm(answerSchema);
@@ -30,8 +33,9 @@ function AddButton() {
   );
 }
 
-export default function PromptsStep({ dpId, onFinish }: Props) {
-  const { data: templates } = useOnboardingPromptTemplates();
+export default function PromptsStep({ onFinish }: Props) {
+  const { data: templatesRes } = useGetApiPromptTemplatesOnboardingSuspense();
+  const templates = templatesRes.status === 200 ? templatesRes.data : [];
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [addedPrompts, setAddedPrompts] = useState<AddedPrompt[]>([]);
   const [addedIds, setAddedIds] = useState<Set<string>>(new Set());
@@ -74,8 +78,13 @@ export default function PromptsStep({ dpId, onFinish }: Props) {
                     defaultValues={{ answer: '' }}
                     onSubmit={async ({ answer }) => {
                       const trimmed = answer.trim();
-                      const { error } = await addProfilePrompt(dpId, template.id, trimmed);
-                      if (error) throw new Error('Failed to add prompt. Please try again.');
+                      const res = await postApiProfilePrompts({
+                        promptTemplateId: template.id,
+                        answer: trimmed,
+                      });
+                      if (res.status !== 200) {
+                        throw new Error('Failed to add prompt. Please try again.');
+                      }
                       setAddedPrompts((prev) => [
                         ...prev,
                         { question: template.question, answer: trimmed },

@@ -3,7 +3,7 @@ import { FlatList, KeyboardAvoidingView, Modal, Platform, StyleSheet } from 'rea
 import { z } from 'zod';
 
 import { colors } from '@/constants/theme';
-import { getPromptTemplates, addProfilePrompt } from '@/queries/prompts';
+import { getApiPromptTemplates, postApiProfilePrompts } from '@/lib/api/generated/prompts/prompts';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { cn } from '@/lib/cn';
 import { View, Text, ScrollView, Pressable, SafeAreaView } from '@/lib/tw';
@@ -16,7 +16,6 @@ interface Props {
   visible: boolean;
   onClose: () => void;
   usedTemplateIds: Set<string>;
-  datingProfileId: string;
   onAdded: () => void;
 }
 
@@ -59,20 +58,15 @@ function HeaderRow({
   );
 }
 
-export function AddPromptModal({
-  visible,
-  onClose,
-  usedTemplateIds,
-  datingProfileId,
-  onAdded,
-}: Props) {
+export function AddPromptModal({ visible, onClose, usedTemplateIds, onAdded }: Props) {
   const [templates, setTemplates] = useState<{ id: string; question: string }[]>([]);
   const [selected, setSelected] = useState<{ id: string; question: string } | null>(null);
 
   const onOpen = async () => {
     setSelected(null);
-    const { data } = await getPromptTemplates();
-    setTemplates((data ?? []).filter((t) => !usedTemplateIds.has(t.id)));
+    const res = await getApiPromptTemplates();
+    const list = res.status === 200 ? res.data : [];
+    setTemplates(list.filter((t) => !usedTemplateIds.has(t.id)));
   };
 
   return (
@@ -124,12 +118,13 @@ export function AddPromptModal({
               <answerForm.Form
                 defaultValues={{ answer: '' }}
                 onSubmit={async ({ answer }) => {
-                  const { error } = await addProfilePrompt(
-                    datingProfileId,
-                    selected.id,
-                    answer.trim()
-                  );
-                  if (error) throw new Error('Could not save prompt. Please try again.');
+                  const res = await postApiProfilePrompts({
+                    promptTemplateId: selected.id,
+                    answer: answer.trim(),
+                  });
+                  if (res.status !== 200) {
+                    throw new Error('Could not save prompt. Please try again.');
+                  }
                   onAdded();
                   onClose();
                 }}

@@ -100,10 +100,7 @@ export default function OnboardingScreen() {
     case 'prompts':
       return (
         <ScreenSuspense>
-          <PromptsStep
-            dpId={dpId!}
-            onFinish={() => router.replace('/(dater-tabs)/discover' as any)}
-          />
+          <PromptsStep onFinish={() => router.replace('/(dater-tabs)/discover' as any)} />
         </ScreenSuspense>
       );
   }

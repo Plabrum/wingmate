@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { ActivityIndicator, FlatList, KeyboardAvoidingView, Modal, Platform } from 'react-native';
 import { router } from 'expo-router';
 
-import { useAuth } from '@/context/auth';
 import { View, Text, Pressable, ScrollView, TextInput, SafeAreaView } from '@/lib/tw';
 import { cn } from '@/lib/cn';
 import ScreenSuspense from '@/components/ui/ScreenSuspense';
@@ -11,7 +10,7 @@ import {
   useGetApiMatchesSuspense,
 } from '@/lib/api/generated/matches/matches';
 import type { MatchSummary } from '@/lib/api/generated/model';
-import { addPromptResponse } from '@/queries/prompts';
+import { postApiPromptResponses } from '@/lib/api/generated/prompts/prompts';
 import { getInitials } from '@/components/profile/profile-helpers';
 import { LargeHeader } from '@/components/ui/LargeHeader';
 import { PhotoRect } from '@/components/ui/PhotoRect';
@@ -64,7 +63,7 @@ function MatchCard({ match, onPress }: MatchCardProps) {
 
 // ── SheetBody (lazy wing note + prompts) ──────────────────────────────────────
 
-function SheetBody({ match, currentUserId }: { match: MatchSummary; currentUserId: string }) {
+function SheetBody({ match }: { match: MatchSummary }) {
   const { other } = match;
   const { data } = useGetApiMatchesMatchIdSheetSuspense(match.matchId);
   if (data.status !== 200) throw new Error('Failed to load match sheet');
@@ -87,11 +86,15 @@ function SheetBody({ match, currentUserId }: { match: MatchSummary; currentUserI
     if (!state?.text.trim()) return;
 
     setPromptField(promptId, { sending: true, error: null });
-    const { error } = await addPromptResponse(currentUserId, promptId, state.text.trim());
-    if (error) {
-      setPromptField(promptId, { sending: false, error: 'Failed to send. Try again.' });
-    } else {
+    try {
+      const res = await postApiPromptResponses({
+        profilePromptId: promptId,
+        message: state.text.trim(),
+      });
+      if (res.status !== 200) throw new Error(`reply failed: ${res.status}`);
       setPromptField(promptId, { sending: false, sent: true });
+    } catch {
+      setPromptField(promptId, { sending: false, error: 'Failed to send. Try again.' });
     }
   }
 
@@ -187,12 +190,11 @@ function SheetBody({ match, currentUserId }: { match: MatchSummary; currentUserI
 
 type MatchSheetProps = {
   match: MatchSummary | null;
-  currentUserId: string;
   visible: boolean;
   onClose: () => void;
 };
 
-function MatchSheet({ match, currentUserId, visible, onClose }: MatchSheetProps) {
+function MatchSheet({ match, visible, onClose }: MatchSheetProps) {
   if (!match) return null;
 
   const { other } = match;
@@ -275,7 +277,7 @@ function MatchSheet({ match, currentUserId, visible, onClose }: MatchSheetProps)
             <ScreenSuspense
               fallback={<ActivityIndicator color={colors.purple} style={{ marginTop: 32 }} />}
             >
-              <SheetBody match={match} currentUserId={currentUserId} />
+              <SheetBody match={match} />
             </ScreenSuspense>
           )}
 
@@ -297,7 +299,7 @@ function MatchSheet({ match, currentUserId, visible, onClose }: MatchSheetProps)
 
 // ── MatchesList ───────────────────────────────────────────────────────────────
 
-function MatchesList({ userId }: { userId: string }) {
+function MatchesList() {
   const { data, refetch, isRefetching } = useGetApiMatchesSuspense();
   if (data.status !== 200) throw new Error('Failed to load matches');
   const matches = data.data;
@@ -329,7 +331,6 @@ function MatchesList({ userId }: { userId: string }) {
       />
       <MatchSheet
         match={selectedMatch}
-        currentUserId={userId}
         visible={selectedMatch != null}
         onClose={() => setSelectedMatch(null)}
       />
@@ -340,10 +341,9 @@ function MatchesList({ userId }: { userId: string }) {
 // ── MatchesScreen ─────────────────────────────────────────────────────────────
 
 export default function MatchesScreen() {
-  const { userId } = useAuth();
   return (
     <ScreenSuspense>
-      <MatchesList userId={userId} />
+      <MatchesList />
     </ScreenSuspense>
   );
 }

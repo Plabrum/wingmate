@@ -12,10 +12,10 @@ import type { UseFormReturn } from 'react-hook-form';
 import { colors } from '@/constants/theme';
 import type { OwnDatingProfile } from '@/hooks/use-profile';
 import {
-  approvePromptResponse,
-  rejectPromptResponse,
-  deleteProfilePrompt,
-} from '@/queries/prompts';
+  deleteApiProfilePromptsId,
+  deleteApiPromptResponsesId,
+  postApiPromptResponsesIdApprove,
+} from '@/lib/api/generated/prompts/prompts';
 
 import { FaceAvatar } from '@/components/ui/FaceAvatar';
 import { IconSymbol } from '@/components/ui/icon-symbol';
@@ -98,11 +98,10 @@ function ApprovedResponsesCarousel({ responses }: { responses: ApprovedResponse[
 
 interface Props {
   form: UseFormReturn<OwnDatingProfile>;
-  data: OwnDatingProfile;
   onRefresh: () => void;
 }
 
-export function PromptsTab({ form, data, onRefresh }: Props) {
+export function PromptsTab({ form, onRefresh }: Props) {
   const [modalVisible, setModalVisible] = useState(false);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
@@ -133,8 +132,8 @@ export function PromptsTab({ form, data, onRefresh }: Props) {
       )
     );
     try {
-      const { error } = await approvePromptResponse(responseId);
-      if (error) throw error;
+      const res = await postApiPromptResponsesIdApprove(responseId);
+      if (res.status !== 200) throw new Error(`approve failed: ${res.status}`);
     } catch {
       form.setValue('prompts', prev);
       toast.error('Could not approve comment.');
@@ -150,8 +149,8 @@ export function PromptsTab({ form, data, onRefresh }: Props) {
       )
     );
     try {
-      const { error } = await rejectPromptResponse(responseId);
-      if (error) throw error;
+      const res = await deleteApiPromptResponsesId(responseId);
+      if (res.status !== 200) throw new Error(`reject failed: ${res.status}`);
     } catch {
       form.setValue('prompts', prev);
       toast.error('Could not reject comment.');
@@ -165,8 +164,8 @@ export function PromptsTab({ form, data, onRefresh }: Props) {
       prompts.filter((p) => p.id !== promptId)
     );
     try {
-      const { error } = await deleteProfilePrompt(promptId);
-      if (error) throw error;
+      const res = await deleteApiProfilePromptsId(promptId);
+      if (res.status !== 200) throw new Error(`delete failed: ${res.status}`);
     } catch {
       form.setValue('prompts', prev);
       toast.error('Could not remove prompt.');
@@ -283,7 +282,6 @@ export function PromptsTab({ form, data, onRefresh }: Props) {
         visible={modalVisible}
         onClose={() => setModalVisible(false)}
         usedTemplateIds={usedTemplateIds}
-        datingProfileId={data.id}
         onAdded={onRefresh}
       />
     </ScrollView>
