@@ -459,6 +459,670 @@
         "items": {
           "$ref": "#/components/schemas/PendingSuggestion"
         }
+      },
+      "Profile": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "chosenName": {
+            "type": "string",
+            "nullable": true
+          },
+          "avatarUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "phoneNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "dateOfBirth": {
+            "type": "string",
+            "nullable": true
+          },
+          "gender": {
+            "type": "string",
+            "nullable": true,
+            "enum": ["Male", "Female", "Non-Binary"]
+          },
+          "role": {
+            "type": "string",
+            "enum": ["dater", "winger"]
+          },
+          "pushToken": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "chosenName",
+          "avatarUrl",
+          "phoneNumber",
+          "dateOfBirth",
+          "gender",
+          "role",
+          "pushToken"
+        ]
+      },
+      "UpdateProfileRequest": {
+        "type": "object",
+        "properties": {
+          "chosenName": {
+            "type": "string",
+            "minLength": 1
+          },
+          "dateOfBirth": {
+            "type": "string",
+            "nullable": true
+          },
+          "phoneNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "gender": {
+            "type": "string",
+            "nullable": true,
+            "enum": ["Male", "Female", "Non-Binary"]
+          },
+          "role": {
+            "type": "string",
+            "enum": ["dater", "winger"]
+          },
+          "pushToken": {
+            "type": "string",
+            "nullable": true
+          },
+          "avatarUrl": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "PhotoSuggester": {
+        "type": "object",
+        "nullable": true,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "chosenName": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": ["id", "chosenName"]
+      },
+      "OwnProfilePhoto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "storageUrl": {
+            "type": "string"
+          },
+          "displayOrder": {
+            "type": "integer"
+          },
+          "approvedAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "suggesterId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "suggester": {
+            "$ref": "#/components/schemas/PhotoSuggester"
+          }
+        },
+        "required": ["id", "storageUrl", "displayOrder", "approvedAt", "suggesterId", "suggester"]
+      },
+      "PromptTemplateRef": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "question": {
+            "type": "string"
+          }
+        },
+        "required": ["id", "question"]
+      },
+      "PromptResponseAuthor": {
+        "type": "object",
+        "nullable": true,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "chosenName": {
+            "type": "string",
+            "nullable": true
+          },
+          "avatarUrl": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": ["id", "chosenName", "avatarUrl"]
+      },
+      "OwnPromptResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "message": {
+            "type": "string"
+          },
+          "isApproved": {
+            "type": "boolean"
+          },
+          "userId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "author": {
+            "$ref": "#/components/schemas/PromptResponseAuthor"
+          }
+        },
+        "required": ["id", "message", "isApproved", "userId", "createdAt", "author"]
+      },
+      "OwnProfilePrompt": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "answer": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "template": {
+            "$ref": "#/components/schemas/PromptTemplateRef"
+          },
+          "responses": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OwnPromptResponse"
+            }
+          }
+        },
+        "required": ["id", "answer", "createdAt", "template", "responses"]
+      },
+      "OwnDatingProfileResponse": {
+        "type": "object",
+        "nullable": true,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "userId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "bio": {
+            "type": "string",
+            "nullable": true
+          },
+          "city": {
+            "type": "string",
+            "enum": ["Boston", "New York"]
+          },
+          "interestedGender": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["Male", "Female", "Non-Binary"]
+            }
+          },
+          "ageFrom": {
+            "type": "integer"
+          },
+          "ageTo": {
+            "type": "integer",
+            "nullable": true
+          },
+          "religion": {
+            "type": "string",
+            "enum": [
+              "Muslim",
+              "Christian",
+              "Jewish",
+              "Hindu",
+              "Buddhist",
+              "Sikh",
+              "Agnostic",
+              "Atheist",
+              "Other",
+              "Prefer not to say"
+            ]
+          },
+          "religiousPreference": {
+            "type": "string",
+            "nullable": true,
+            "enum": [
+              "Muslim",
+              "Christian",
+              "Jewish",
+              "Hindu",
+              "Buddhist",
+              "Sikh",
+              "Agnostic",
+              "Atheist",
+              "Other",
+              "Prefer not to say"
+            ]
+          },
+          "interests": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "Travel",
+                "Fitness",
+                "Cooking",
+                "Music",
+                "Art",
+                "Movies",
+                "Books",
+                "Gaming",
+                "Outdoors",
+                "Sports",
+                "Technology",
+                "Fashion",
+                "Food",
+                "Photography",
+                "Dance",
+                "Volunteering"
+              ]
+            }
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "datingStatus": {
+            "type": "string",
+            "enum": ["open", "break", "winging"]
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string"
+          },
+          "photos": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OwnProfilePhoto"
+            }
+          },
+          "prompts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OwnProfilePrompt"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "userId",
+          "bio",
+          "city",
+          "interestedGender",
+          "ageFrom",
+          "ageTo",
+          "religion",
+          "religiousPreference",
+          "interests",
+          "isActive",
+          "datingStatus",
+          "createdAt",
+          "updatedAt",
+          "photos",
+          "prompts"
+        ]
+      },
+      "CreateDatingProfileResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": ["id"]
+      },
+      "CreateDatingProfileRequest": {
+        "type": "object",
+        "properties": {
+          "city": {
+            "type": "string",
+            "enum": ["Boston", "New York"]
+          },
+          "bio": {
+            "type": "string"
+          },
+          "ageFrom": {
+            "type": "integer",
+            "minimum": 18
+          },
+          "ageTo": {
+            "type": "integer",
+            "nullable": true
+          },
+          "interestedGender": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["Male", "Female", "Non-Binary"]
+            }
+          },
+          "religion": {
+            "type": "string",
+            "enum": [
+              "Muslim",
+              "Christian",
+              "Jewish",
+              "Hindu",
+              "Buddhist",
+              "Sikh",
+              "Agnostic",
+              "Atheist",
+              "Other",
+              "Prefer not to say"
+            ]
+          },
+          "religiousPreference": {
+            "type": "string",
+            "nullable": true,
+            "enum": [
+              "Muslim",
+              "Christian",
+              "Jewish",
+              "Hindu",
+              "Buddhist",
+              "Sikh",
+              "Agnostic",
+              "Atheist",
+              "Other",
+              "Prefer not to say"
+            ]
+          },
+          "interests": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "Travel",
+                "Fitness",
+                "Cooking",
+                "Music",
+                "Art",
+                "Movies",
+                "Books",
+                "Gaming",
+                "Outdoors",
+                "Sports",
+                "Technology",
+                "Fashion",
+                "Food",
+                "Photography",
+                "Dance",
+                "Volunteering"
+              ]
+            }
+          },
+          "datingStatus": {
+            "type": "string",
+            "enum": ["open", "break", "winging"]
+          }
+        },
+        "required": ["city", "ageFrom", "interestedGender", "religion", "interests"]
+      },
+      "UpdateDatingProfileRequest": {
+        "type": "object",
+        "properties": {
+          "bio": {
+            "type": "string",
+            "nullable": true
+          },
+          "city": {
+            "type": "string",
+            "enum": ["Boston", "New York"]
+          },
+          "ageFrom": {
+            "type": "integer",
+            "minimum": 18
+          },
+          "ageTo": {
+            "type": "integer",
+            "nullable": true
+          },
+          "interestedGender": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["Male", "Female", "Non-Binary"]
+            }
+          },
+          "religion": {
+            "type": "string",
+            "enum": [
+              "Muslim",
+              "Christian",
+              "Jewish",
+              "Hindu",
+              "Buddhist",
+              "Sikh",
+              "Agnostic",
+              "Atheist",
+              "Other",
+              "Prefer not to say"
+            ]
+          },
+          "religiousPreference": {
+            "type": "string",
+            "nullable": true,
+            "enum": [
+              "Muslim",
+              "Christian",
+              "Jewish",
+              "Hindu",
+              "Buddhist",
+              "Sikh",
+              "Agnostic",
+              "Atheist",
+              "Other",
+              "Prefer not to say"
+            ]
+          },
+          "interests": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "Travel",
+                "Fitness",
+                "Cooking",
+                "Music",
+                "Art",
+                "Movies",
+                "Books",
+                "Gaming",
+                "Outdoors",
+                "Sports",
+                "Technology",
+                "Fashion",
+                "Food",
+                "Photography",
+                "Dance",
+                "Volunteering"
+              ]
+            }
+          },
+          "datingStatus": {
+            "type": "string",
+            "enum": ["open", "break", "winging"]
+          },
+          "isActive": {
+            "type": "boolean"
+          }
+        }
+      },
+      "PublicProfilePhoto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "storageUrl": {
+            "type": "string"
+          },
+          "displayOrder": {
+            "type": "integer"
+          },
+          "approvedAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "suggesterId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          }
+        },
+        "required": ["id", "storageUrl", "displayOrder", "approvedAt", "suggesterId"]
+      },
+      "PublicProfilePrompt": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "answer": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "template": {
+            "$ref": "#/components/schemas/PromptTemplateRef"
+          }
+        },
+        "required": ["id", "answer", "createdAt", "template"]
+      },
+      "PublicDatingProfile": {
+        "type": "object",
+        "nullable": true,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "bio": {
+            "type": "string",
+            "nullable": true
+          },
+          "city": {
+            "type": "string",
+            "enum": ["Boston", "New York"]
+          },
+          "interests": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "Travel",
+                "Fitness",
+                "Cooking",
+                "Music",
+                "Art",
+                "Movies",
+                "Books",
+                "Gaming",
+                "Outdoors",
+                "Sports",
+                "Technology",
+                "Fashion",
+                "Food",
+                "Photography",
+                "Dance",
+                "Volunteering"
+              ]
+            }
+          },
+          "religion": {
+            "type": "string",
+            "enum": [
+              "Muslim",
+              "Christian",
+              "Jewish",
+              "Hindu",
+              "Buddhist",
+              "Sikh",
+              "Agnostic",
+              "Atheist",
+              "Other",
+              "Prefer not to say"
+            ]
+          },
+          "photos": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PublicProfilePhoto"
+            }
+          },
+          "prompts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PublicProfilePrompt"
+            }
+          }
+        },
+        "required": ["id", "bio", "city", "interests", "religion", "photos", "prompts"]
+      },
+      "PublicProfile": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "chosenName": {
+            "type": "string",
+            "nullable": true
+          },
+          "avatarUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "datingProfile": {
+            "$ref": "#/components/schemas/PublicDatingProfile"
+          }
+        },
+        "required": ["id", "chosenName", "avatarUrl", "datingProfile"]
       }
     },
     "parameters": {}
@@ -830,6 +1494,211 @@
           },
           "401": {
             "description": "Unauthenticated"
+          }
+        }
+      }
+    },
+    "/api/profiles/me": {
+      "get": {
+        "tags": ["profiles"],
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Own profile",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Profile"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "404": {
+            "description": "Profile not found"
+          }
+        }
+      },
+      "patch": {
+        "tags": ["profiles"],
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProfileRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated own profile",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Profile"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "404": {
+            "description": "Profile not found"
+          }
+        }
+      }
+    },
+    "/api/dating-profiles/me": {
+      "get": {
+        "tags": ["profiles"],
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Own dating profile (or null if not yet created)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OwnDatingProfileResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated"
+          }
+        }
+      },
+      "patch": {
+        "tags": ["profiles"],
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDatingProfileRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated dating profile",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OwnDatingProfileResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "404": {
+            "description": "Dating profile not found"
+          }
+        }
+      }
+    },
+    "/api/dating-profiles": {
+      "post": {
+        "tags": ["profiles"],
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDatingProfileRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Dating profile created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateDatingProfileResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "409": {
+            "description": "Dating profile already exists"
+          }
+        }
+      }
+    },
+    "/api/profiles/{userId}": {
+      "get": {
+        "tags": ["profiles"],
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "userId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Public profile",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicProfile"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "404": {
+            "description": "Profile not found"
           }
         }
       }

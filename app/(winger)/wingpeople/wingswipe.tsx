@@ -10,7 +10,7 @@ import { NavHeader } from '@/components/ui/NavHeader';
 import { PhotoRect } from '@/components/ui/PhotoRect';
 import { Pill } from '@/components/ui/Pill';
 import { PurpleButton } from '@/components/ui/PurpleButton';
-import { useDaterContext } from '@/queries/profiles';
+import { useDaterContext } from '@/hooks/use-profile';
 import { wingProfileToCard } from '@/queries/discover';
 import { useGetApiWingPoolSuspense } from '@/lib/api/generated/wing-pool/wing-pool';
 import ScreenSuspense from '@/components/ui/ScreenSuspense';

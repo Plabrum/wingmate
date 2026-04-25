@@ -4,8 +4,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import { z } from 'zod';
 
 import { useAuth } from '@/context/auth';
-import { updateDatingProfile, useProfileData } from '@/queries/profiles';
-import type { OwnDatingProfile } from '@/queries/profiles';
+import { updateDatingProfile, useProfileData } from '@/hooks/use-profile';
+import type { OwnDatingProfile } from '@/hooks/use-profile';
 import type { Database } from '@/types/database';
 import { CITIES, GENDERS, RELIGIONS, INTERESTS } from '@/constants/enums';
 import { View, Text, ScrollView, SafeAreaView, Pressable } from '@/lib/tw';

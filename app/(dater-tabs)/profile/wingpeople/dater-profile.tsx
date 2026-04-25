@@ -14,7 +14,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { colors } from '@/constants/theme';
 import { useAuth } from '@/context/auth';
-import { useDaterProfile, getDaterProfile } from '@/queries/profiles';
+import { useDaterProfile, daterProfileQueryKey } from '@/hooks/use-profile';
 import { uploadPhoto, insertPhoto, getPhotoUrl, pickAndResizePhoto } from '@/queries/photos';
 import { addPromptResponse } from '@/queries/prompts';
 
@@ -128,7 +128,7 @@ function DaterProfileContent() {
       const nextOrder = approvedPhotos.length + myPendingPhotos.length;
       const { error: insErr } = await insertPhoto(daterProfile!.id, path, nextOrder, wingerId);
       if (insErr) throw insErr;
-      queryClient.invalidateQueries({ queryKey: [getDaterProfile, daterId] });
+      queryClient.invalidateQueries({ queryKey: daterProfileQueryKey(daterId) });
       toast.success(`Photo suggested — ${firstName} will review it.`);
     } catch {
       toast.error('Failed to suggest photo. Please try again.');

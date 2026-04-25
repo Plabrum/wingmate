@@ -17,7 +17,7 @@ import {
 } from '@/lib/api/generated/likes-you/likes-you';
 import { useGetApiWingerTabsSuspense } from '@/lib/api/generated/winger-tabs/winger-tabs';
 import type { WingerTab } from '@/lib/api/generated/model';
-import { updateDatingProfile, useProfileData } from '@/queries/profiles';
+import { updateDatingProfile, useProfileData } from '@/hooks/use-profile';
 import { LargeHeader } from '@/components/ui/LargeHeader';
 import { TextTabBar } from '@/components/ui/TextTabBar';
 import { PhotoRect } from '@/components/ui/PhotoRect';

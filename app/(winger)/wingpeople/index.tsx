@@ -22,7 +22,7 @@ import { FaceAvatar } from '@/components/ui/FaceAvatar';
 import { PurpleButton } from '@/components/ui/PurpleButton';
 import { getInitials } from '@/components/profile/profile-helpers';
 import { View, Text, TextInput, ScrollView, SafeAreaView, Pressable } from '@/lib/tw';
-import { useProfileData } from '@/queries/profiles';
+import { useProfileData } from '@/hooks/use-profile';
 import {
   useWingpeopleData,
   inviteWingperson,

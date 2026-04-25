@@ -3,7 +3,12 @@ import { router } from 'expo-router';
 import { useQueryClient } from '@tanstack/react-query';
 import ScreenSuspense from '@/components/ui/ScreenSuspense';
 import { useAuth } from '@/context/auth';
-import { updateBaseProfile, createDatingProfile, useProfileData } from '@/queries/profiles';
+import {
+  updateBaseProfile,
+  createDatingProfile,
+  useProfileData,
+  invalidateProfile,
+} from '@/hooks/use-profile';
 import type { Database } from '@/types/database';
 import RoleStep from '@/components/onboarding/RoleStep';
 import ProfileStep, { type ProfileFields } from '@/components/onboarding/ProfileStep';
@@ -51,7 +56,7 @@ export default function OnboardingScreen() {
 
     switch (role) {
       case 'winger': {
-        queryClient.invalidateQueries({ queryKey: ['profile', userId] });
+        invalidateProfile(queryClient);
         return router.replace('/(winger)' as any);
       }
       case 'dater': {

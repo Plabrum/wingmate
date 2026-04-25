@@ -6,8 +6,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import type { UseFormReturn } from 'react-hook-form';
 
 import { colors } from '@/constants/theme';
-import type { OwnDatingProfile } from '@/queries/profiles';
-import { updateDatingProfile } from '@/queries/profiles';
+import type { OwnDatingProfile } from '@/hooks/use-profile';
+import { updateDatingProfile, invalidateProfile } from '@/hooks/use-profile';
 
 import { Pill } from '@/components/ui/Pill';
 import { PurpleButton } from '@/components/ui/PurpleButton';
@@ -38,7 +38,7 @@ export function AboutMeTab({ form, data, userId }: Props) {
     try {
       const { error } = await updateDatingProfile(userId, { dating_status: status });
       if (error) throw error;
-      queryClient.invalidateQueries({ queryKey: ['profile', userId] });
+      invalidateProfile(queryClient);
     } catch {
       form.setValue('dating_status', prev);
       toast.error('Could not update status. Please try again.');

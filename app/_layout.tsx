@@ -9,10 +9,10 @@ import { Toaster } from 'sonner-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useEffect } from 'react';
 
-import { QueryClientProvider, useSuspenseQuery } from '@tanstack/react-query';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { AuthProvider, useSession } from '@/context/auth';
-import { getProfileData } from '@/queries/profiles';
+import { useProfileData } from '@/hooks/use-profile';
 import { queryClient } from '@/lib/queryClient';
 import { registerPushToken } from '@/lib/push';
 import ScreenSuspense from '@/components/ui/ScreenSuspense';
@@ -22,32 +22,30 @@ export const unstable_settings = {
 };
 
 function AuthenticatedNavigator({ userId }: { userId: string }) {
-  // select derives a stable string — this component only re-renders when dest
-  // actually changes (e.g. onboarding → discover), not on every profile refetch.
-  const { data: dest } = useSuspenseQuery({
-    queryKey: ['profile', userId],
-    queryFn: () => getProfileData(userId),
-    staleTime: 5 * 60_000,
-    select: ({ profile, datingProfile }): string => {
-      type UserState = 'needs-onboarding' | 'winger' | 'dater';
+  const {
+    data: { profile, datingProfile },
+  } = useProfileData(userId);
 
-      const state: UserState =
-        !profile?.chosen_name || (!datingProfile && profile.role !== 'winger')
-          ? 'needs-onboarding'
-          : profile.role === 'winger' || datingProfile?.dating_status === 'winging'
-            ? 'winger'
-            : 'dater';
+  type UserState = 'needs-onboarding' | 'winger' | 'dater';
+  const state: UserState =
+    !profile?.chosen_name || (!datingProfile && profile.role !== 'winger')
+      ? 'needs-onboarding'
+      : profile.role === 'winger' || datingProfile?.dating_status === 'winging'
+        ? 'winger'
+        : 'dater';
 
-      switch (state) {
-        case 'needs-onboarding':
-          return '/(onboarding)';
-        case 'winger':
-          return '/(winger)';
-        case 'dater':
-          return '/(dater-tabs)/discover';
-      }
-    },
-  });
+  let dest: string;
+  switch (state) {
+    case 'needs-onboarding':
+      dest = '/(onboarding)';
+      break;
+    case 'winger':
+      dest = '/(winger)';
+      break;
+    case 'dater':
+      dest = '/(dater-tabs)/discover';
+      break;
+  }
 
   // Mount-only: check for a pending deep-link invite (external async state)
   useEffect(() => {

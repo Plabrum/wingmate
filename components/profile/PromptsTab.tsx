@@ -10,7 +10,7 @@ import { toast } from 'sonner-native';
 import type { UseFormReturn } from 'react-hook-form';
 
 import { colors } from '@/constants/theme';
-import type { OwnDatingProfile } from '@/queries/profiles';
+import type { OwnDatingProfile } from '@/hooks/use-profile';
 import {
   approvePromptResponse,
   rejectPromptResponse,

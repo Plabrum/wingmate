@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Alert, ActivityIndicator, Dimensions } from 'react-native';
 import { View, Text, SafeAreaView, Pressable } from '@/lib/tw';
 import { Image } from 'expo-image';
-import { createDatingProfile, getOwnDatingProfile } from '@/queries/profiles';
+import { createDatingProfile, getOwnDatingProfileSnapshot } from '@/hooks/use-profile';
 import {
   pickAndResizePhoto,
   uploadPhoto,
@@ -62,7 +62,7 @@ export default function PhotosStep({ userId, dpId: initialDpId, onDpCreated, onN
   }, []);
 
   async function refreshPhotos() {
-    const { data } = await getOwnDatingProfile(userId);
+    const { data } = await getOwnDatingProfileSnapshot();
     if (data) {
       setPhotos(
         data.photos.map((p) => ({

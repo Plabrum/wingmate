@@ -6,6 +6,7 @@ import { errorHandler } from './middleware/error.ts';
 import { mountDecisions } from './domains/decisions/route.ts';
 import { mountDiscover } from './domains/discover/route.ts';
 import { mountLikesYou } from './domains/likes-you/route.ts';
+import { mountProfiles } from './domains/profiles/route.ts';
 import { mountWingerTabs } from './domains/winger-tabs/route.ts';
 import { mountWingPool } from './domains/wing-pool/route.ts';
 import type { AppEnv } from './types.ts';
@@ -56,6 +57,16 @@ export function createApp() {
   app.use('/decisions/pending-suggestions', authMiddleware);
   app.use('/decisions/pending-suggestions', transactionMiddleware);
   mountDecisions(app);
+
+  app.use('/profiles/me', authMiddleware);
+  app.use('/profiles/me', transactionMiddleware);
+  app.use('/profiles/:userId', authMiddleware);
+  app.use('/profiles/:userId', transactionMiddleware);
+  app.use('/dating-profiles', authMiddleware);
+  app.use('/dating-profiles', transactionMiddleware);
+  app.use('/dating-profiles/me', authMiddleware);
+  app.use('/dating-profiles/me', transactionMiddleware);
+  mountProfiles(app);
 
   app.onError(errorHandler);
 

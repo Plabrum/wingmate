@@ -7,10 +7,14 @@ import { useQueryClient } from '@tanstack/react-query';
 
 import { colors } from '@/constants/theme';
 import { useAuth } from '@/context/auth';
-import { useProfileData, updateDatingProfile } from '@/queries/profiles';
-import type { OwnDatingProfile } from '@/queries/profiles';
+import {
+  useProfileData,
+  updateDatingProfile,
+  updateBaseProfile,
+  invalidateProfile,
+} from '@/hooks/use-profile';
+import type { OwnDatingProfile } from '@/hooks/use-profile';
 import { useMyWingpeople } from '@/queries/contacts';
-import { supabase } from '@/lib/supabase';
 import { pickAndResizePhoto, uploadAvatar } from '@/queries/photos';
 
 import { View, Text, Pressable, SafeAreaView } from '@/lib/tw';
@@ -94,7 +98,7 @@ function AvatarPicker({ name, avatarUrl, size, userId }: AvatarPickerProps) {
       toast.error("Couldn't upload photo. Try again.");
       return;
     }
-    queryClient.invalidateQueries({ queryKey: ['profile', userId] });
+    invalidateProfile(queryClient);
   };
 
   return (
@@ -175,12 +179,12 @@ function ProfileScreenInner() {
   // ── Role = winger ─────────────────────────────────────────────────────────
   if (profile?.role === 'winger') {
     const handleSwitchToDater = async () => {
-      const { error } = await supabase.from('profiles').update({ role: 'dater' }).eq('id', userId);
+      const { error } = await updateBaseProfile(userId, { role: 'dater' });
       if (error) {
         toast.error("Couldn't switch profile. Try again.");
         return;
       }
-      queryClient.invalidateQueries({ queryKey: ['profile', userId] });
+      invalidateProfile(queryClient);
     };
 
     return (
@@ -212,7 +216,7 @@ function ProfileScreenInner() {
         toast.error("Couldn't update status. Try again.");
         return;
       }
-      queryClient.invalidateQueries({ queryKey: ['profile', userId] });
+      invalidateProfile(queryClient);
     };
 
     return (
