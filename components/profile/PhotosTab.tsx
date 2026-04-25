@@ -5,16 +5,13 @@ import type { UseFormReturn } from 'react-hook-form';
 
 import { colors } from '@/constants/theme';
 import type { OwnDatingProfile } from '@/hooks/use-profile';
+import { getPhotoUrl, pickAndResizePhoto, removePhotoStorage, uploadPhoto } from '@/queries/photos';
 import {
-  approvePhoto,
-  rejectPhoto,
-  uploadPhoto,
-  insertPhoto,
-  getPhotoUrl,
-  reorderPhotos,
-  deleteOwnPhoto,
-  pickAndResizePhoto,
-} from '@/queries/photos';
+  patchApiPhotosIdReorder,
+  postApiPhotos,
+  postApiPhotosIdApprove,
+  postApiPhotosIdReject,
+} from '@/lib/api/generated/photos/photos';
 
 import { ScrollView, Text, Pressable, View } from '@/lib/tw';
 import { PhotoRect } from '@/components/ui/PhotoRect';
@@ -44,8 +41,7 @@ export function PhotosTab({ form, data, userId, onRefresh }: Props) {
       photos.map((p) => (p.id === photoId ? { ...p, approved_at: now } : p))
     );
     try {
-      const { error } = await approvePhoto(photoId);
-      if (error) throw error;
+      await postApiPhotosIdApprove(photoId);
     } catch {
       form.setValue('photos', prev);
       toast.error('Could not approve photo.');
@@ -59,8 +55,8 @@ export function PhotosTab({ form, data, userId, onRefresh }: Props) {
       photos.filter((p) => p.id !== photoId)
     );
     try {
-      const { dbResult } = await rejectPhoto(photoId, storagePath);
-      if (dbResult.error) throw dbResult.error;
+      await postApiPhotosIdReject(photoId);
+      await removePhotoStorage(storagePath);
     } catch {
       form.setValue('photos', prev);
       toast.error('Could not reject photo.');
@@ -75,7 +71,11 @@ export function PhotosTab({ form, data, userId, onRefresh }: Props) {
     const prev = photos;
     form.setValue('photos', [...updated.map((p, i) => ({ ...p, display_order: i })), ...pending]);
     try {
-      await reorderPhotos(payload);
+      await Promise.all(
+        payload.map(({ id, display_order }) =>
+          patchApiPhotosIdReorder(id, { displayOrder: display_order })
+        )
+      );
       onRefresh();
     } catch {
       form.setValue('photos', prev);
@@ -97,7 +97,8 @@ export function PhotosTab({ form, data, userId, onRefresh }: Props) {
             photos.filter((p) => p.id !== photo.id)
           );
           try {
-            await deleteOwnPhoto(photo.id, photo.storage_url);
+            await postApiPhotosIdReject(photo.id);
+            await removePhotoStorage(photo.storage_url);
           } catch {
             form.setValue('photos', prev);
             toast.error('Could not delete photo.');
@@ -116,8 +117,11 @@ export function PhotosTab({ form, data, userId, onRefresh }: Props) {
       const filename = `${Date.now()}.jpg`;
       const { path, error: upErr } = await uploadPhoto(userId, uri, filename);
       if (upErr) throw upErr;
-      const { error: insErr } = await insertPhoto(data.id, path, selfPhotos.length, null);
-      if (insErr) throw insErr;
+      await postApiPhotos({
+        datingProfileId: data.id,
+        storageUrl: path,
+        displayOrder: selfPhotos.length,
+      });
       await onRefresh();
     } catch {
       toast.error('Failed to upload photo. Please try again.');

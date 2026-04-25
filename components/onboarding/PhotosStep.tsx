@@ -3,13 +3,8 @@ import { Alert, ActivityIndicator, Dimensions } from 'react-native';
 import { View, Text, SafeAreaView, Pressable } from '@/lib/tw';
 import { Image } from 'expo-image';
 import { createDatingProfile, getOwnDatingProfileSnapshot } from '@/hooks/use-profile';
-import {
-  pickAndResizePhoto,
-  uploadPhoto,
-  insertPhoto,
-  deleteOwnPhoto,
-  getPhotoUrl,
-} from '@/queries/photos';
+import { getPhotoUrl, pickAndResizePhoto, removePhotoStorage, uploadPhoto } from '@/queries/photos';
+import { postApiPhotos, postApiPhotosIdReject } from '@/lib/api/generated/photos/photos';
 import { colors } from '@/constants/theme';
 import { toast } from 'sonner-native';
 import { cn } from '@/lib/cn';
@@ -85,8 +80,11 @@ export default function PhotosStep({ userId, dpId: initialDpId, onDpCreated, onN
       const { path, error: uploadError } = await uploadPhoto(userId, uri, `${Date.now()}.jpg`);
       if (uploadError) throw uploadError;
 
-      const { error: insertError } = await insertPhoto(localDpId, path, photos.length, null);
-      if (insertError) throw insertError;
+      await postApiPhotos({
+        datingProfileId: localDpId,
+        storageUrl: path,
+        displayOrder: photos.length,
+      });
 
       await refreshPhotos();
     } catch {
@@ -106,7 +104,8 @@ export default function PhotosStep({ userId, dpId: initialDpId, onDpCreated, onN
           const previous = photos;
           setPhotos((p) => p.filter((x) => x.id !== photo.id));
           try {
-            await deleteOwnPhoto(photo.id, photo.storagePath);
+            await postApiPhotosIdReject(photo.id);
+            await removePhotoStorage(photo.storagePath);
           } catch {
             setPhotos(previous);
             toast.error('Failed to remove photo. Please try again.');

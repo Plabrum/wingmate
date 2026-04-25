@@ -9,6 +9,7 @@ import { mountDiscover } from './domains/discover/route.ts';
 import { mountLikesYou } from './domains/likes-you/route.ts';
 import { mountMatches } from './domains/matches/route.ts';
 import { mountMessages } from './domains/messages/route.ts';
+import { mountPhotos } from './domains/photos/route.ts';
 import { mountProfiles } from './domains/profiles/route.ts';
 import { mountWingerTabs } from './domains/winger-tabs/route.ts';
 import { mountWingPool } from './domains/wing-pool/route.ts';
@@ -84,6 +85,18 @@ export function createApp() {
   app.use('/matches/:matchId/messages/read', authMiddleware);
   app.use('/matches/:matchId/messages/read', transactionMiddleware);
   mountMessages(app);
+
+  app.use('/photos', authMiddleware);
+  app.use('/photos', transactionMiddleware);
+  app.use('/photos/me', authMiddleware);
+  app.use('/photos/me', transactionMiddleware);
+  app.use('/photos/:id/approve', authMiddleware);
+  app.use('/photos/:id/approve', transactionMiddleware);
+  app.use('/photos/:id/reject', authMiddleware);
+  app.use('/photos/:id/reject', transactionMiddleware);
+  app.use('/photos/:id/reorder', authMiddleware);
+  app.use('/photos/:id/reorder', transactionMiddleware);
+  mountPhotos(app);
 
   app.use('/wingpeople', authMiddleware);
   app.use('/wingpeople', transactionMiddleware);
