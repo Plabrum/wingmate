@@ -56,3 +56,6 @@ app-example
 
 # agent prompts (scratch / per-milestone notes)
 .agent-prompts/
+
+# QA agent scratchpad
+flow_tests.md
