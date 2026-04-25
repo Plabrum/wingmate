@@ -12,12 +12,12 @@ import {
   discoverProfileToCard,
   getLikesYouPool,
   useLikesYouCount,
-  useWingerTabs,
   useInitialPool,
   type DiscoverCard,
-  type WingerTab,
 } from '@/queries/discover';
 import { getApiDiscover } from '@/lib/api/generated/discover/discover';
+import { useGetApiWingerTabsSuspense } from '@/lib/api/generated/winger-tabs/winger-tabs';
+import type { WingerTab } from '@/lib/api/generated/model';
 import { updateDatingProfile, useProfileData } from '@/queries/profiles';
 import { LargeHeader } from '@/components/ui/LargeHeader';
 import { TextTabBar } from '@/components/ui/TextTabBar';
@@ -309,7 +309,11 @@ function DiscoverPool({
 // ── DiscoverContent ───────────────────────────────────────────────────────────
 
 function DiscoverContent({ userId }: { userId: string }) {
-  const { data: wingerTabs } = useWingerTabs(userId);
+  const { data: wingerTabsResponse } = useGetApiWingerTabsSuspense();
+  if (wingerTabsResponse.status !== 200) {
+    throw new Error(`Unexpected status ${wingerTabsResponse.status}`);
+  }
+  const wingerTabs: WingerTab[] = wingerTabsResponse.data;
   const { data: initialLikesYouCount } = useLikesYouCount(userId);
   const [activeTabIndex, setActiveTabIndex] = useState(0);
   const [likesYouDecrements, setLikesYouDecrements] = useState(0);

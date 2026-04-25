@@ -12,3 +12,5 @@ export * from './discoverProfileGender';
 export * from './discoverProfileInterestsItem';
 export * from './discoverResponse';
 export * from './getApiDiscoverParams';
+export * from './wingerTab';
+export * from './wingerTabsResponse';

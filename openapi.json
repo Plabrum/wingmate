@@ -110,6 +110,25 @@
         "items": {
           "$ref": "#/components/schemas/DiscoverProfile"
         }
+      },
+      "WingerTab": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": ["id", "name"]
+      },
+      "WingerTabsResponse": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/WingerTab"
+        }
       }
     },
     "parameters": {}
@@ -173,6 +192,31 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/DiscoverResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated"
+          }
+        }
+      }
+    },
+    "/api/winger-tabs": {
+      "get": {
+        "tags": ["winger-tabs"],
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Distinct wingers with pending suggestions for the viewer, most recent first",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WingerTabsResponse"
                 }
               }
             }

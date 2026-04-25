@@ -5,7 +5,7 @@
 //     `discoverProfileToCard` shape-bridge and `useInitialPool` wrapper for the likes-you
 //     branch still live here. Both die when `DiscoverCard` is replaced by `DiscoverProfile`
 //     (camelCase) and when likes-you is ported.
-//   • Wing pool, likes-you pool, winger tabs: NOT YET PORTED — still on `supabase.rpc`.
+//   • Wing pool, likes-you pool: NOT YET PORTED — still on `supabase.rpc`.
 //     Port each to `supabase/functions/api/domains/<name>/` and delete the corresponding
 //     wrappers + hooks from this file as they move.
 // Do not add new helpers here. New endpoints go on the `api` function.
@@ -84,30 +84,6 @@ export async function getWingPool(
   return { data: data as WingCard[] | null, error };
 }
 
-// ── Winger tab list ───────────────────────────────────────────────────────────
-
-/**
- * Returns the distinct list of wingers who have pending suggestions for the dater.
- * Used to build the tab bar: ["For You", "Emma", "Josh", "All"].
- *
- * This is a lightweight query — just names + IDs, no profile data.
- */
-export async function getActiveWingerTabs(daterId: string) {
-  return supabase
-    .from('decisions')
-    .select(
-      `
-      suggested_by,
-      winger:profiles!decisions_suggested_by_fkey (id, chosen_name)
-    `
-    )
-    .eq('actor_id', daterId)
-    .is('decision', null)
-    .not('suggested_by', 'is', null);
-}
-
-export type WingerTab = { id: string; name: string };
-
 // ── Likes You pool (dater's "Likes You" tab) ──────────────────────────────────
 
 export async function getLikesYouPool(
@@ -132,31 +108,6 @@ export async function getLikesYouCount(
   return { data: data as number | null, error };
 }
 
-/**
- * Suspense-ready version of getActiveWingerTabs.
- * Deduplication logic lives here (CLAUDE.md: transforms belong in the query function).
- */
-export async function getWingerTabs(daterId: string): Promise<WingerTab[]> {
-  const { data, error } = await supabase
-    .from('decisions')
-    .select(`suggested_by, winger:profiles!decisions_suggested_by_fkey (id, chosen_name)`)
-    .eq('actor_id', daterId)
-    .is('decision', null)
-    .not('suggested_by', 'is', null);
-
-  if (error || !data) return [];
-  const seen = new Set<string>();
-  const distinct: WingerTab[] = [];
-  for (const row of data) {
-    const winger = row.winger as { id: string; chosen_name: string } | null;
-    if (winger && !seen.has(winger.id)) {
-      seen.add(winger.id);
-      distinct.push({ id: winger.id, name: winger.chosen_name });
-    }
-  }
-  return distinct;
-}
-
 export function useLikesYouCount(userId: string) {
   return useSuspenseQuery({
     queryKey: ['likes-you-count', userId],
@@ -166,14 +117,6 @@ export function useLikesYouCount(userId: string) {
       return data ?? 0;
     },
     staleTime: 60_000,
-  });
-}
-
-export function useWingerTabs(userId: string) {
-  return useSuspenseQuery({
-    queryKey: ['winger-tabs', userId],
-    queryFn: () => getWingerTabs(userId),
-    staleTime: 5 * 60_000,
   });
 }
 
