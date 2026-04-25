@@ -1430,6 +1430,234 @@
         "items": {
           "$ref": "#/components/schemas/Conversation"
         }
+      },
+      "WingerSummary": {
+        "type": "object",
+        "nullable": true,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "chosenName": {
+            "type": "string",
+            "nullable": true
+          },
+          "gender": {
+            "type": "string",
+            "nullable": true,
+            "enum": ["Male", "Female", "Non-Binary"]
+          },
+          "avatarUrl": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": ["id", "chosenName", "gender", "avatarUrl"]
+      },
+      "Wingperson": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "winger": {
+            "$ref": "#/components/schemas/WingerSummary"
+          }
+        },
+        "required": ["id", "createdAt", "winger"]
+      },
+      "DaterSummary": {
+        "type": "object",
+        "nullable": true,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "chosenName": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": ["id", "chosenName"]
+      },
+      "IncomingInvitation": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "dater": {
+            "$ref": "#/components/schemas/DaterSummary"
+          }
+        },
+        "required": ["id", "createdAt", "dater"]
+      },
+      "WingingForDater": {
+        "type": "object",
+        "nullable": true,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "chosenName": {
+            "type": "string",
+            "nullable": true
+          },
+          "avatarUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "interests": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string",
+              "enum": [
+                "Travel",
+                "Fitness",
+                "Cooking",
+                "Music",
+                "Art",
+                "Movies",
+                "Books",
+                "Gaming",
+                "Outdoors",
+                "Sports",
+                "Technology",
+                "Fashion",
+                "Food",
+                "Photography",
+                "Dance",
+                "Volunteering"
+              ]
+            }
+          },
+          "bio": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": ["id", "chosenName", "avatarUrl", "interests", "bio"]
+      },
+      "WingingForRow": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "dater": {
+            "$ref": "#/components/schemas/WingingForDater"
+          }
+        },
+        "required": ["id", "createdAt", "dater"]
+      },
+      "SentInvitation": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "phoneNumber": {
+            "type": "string"
+          },
+          "winger": {
+            "$ref": "#/components/schemas/DaterSummary"
+          }
+        },
+        "required": ["id", "createdAt", "phoneNumber", "winger"]
+      },
+      "WingpeopleResponse": {
+        "type": "object",
+        "properties": {
+          "wingpeople": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Wingperson"
+            }
+          },
+          "invitations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IncomingInvitation"
+            }
+          },
+          "wingingFor": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WingingForRow"
+            }
+          },
+          "sentInvitations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SentInvitation"
+            }
+          },
+          "weeklyCounts": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer"
+            }
+          }
+        },
+        "required": ["wingpeople", "invitations", "wingingFor", "sentInvitations", "weeklyCounts"]
+      },
+      "InviteWingpersonResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "phoneNumber": {
+            "type": "string"
+          },
+          "wingerId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          }
+        },
+        "required": ["id", "phoneNumber", "wingerId"]
+      },
+      "InviteWingpersonRequest": {
+        "type": "object",
+        "properties": {
+          "phoneNumber": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": ["phoneNumber"]
+      },
+      "ContactsOkResponse": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "enum": [true]
+          }
+        },
+        "required": ["ok"]
       }
     },
     "parameters": {}
@@ -2243,6 +2471,186 @@
           },
           "401": {
             "description": "Unauthenticated"
+          }
+        }
+      }
+    },
+    "/api/wingpeople": {
+      "get": {
+        "tags": ["contacts"],
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Combined wingperson roster, invitations, and weekly counts",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WingpeopleResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated"
+          }
+        }
+      }
+    },
+    "/api/wingpeople/invite": {
+      "post": {
+        "tags": ["contacts"],
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InviteWingpersonRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Pending contact created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InviteWingpersonResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Unauthenticated"
+          }
+        }
+      }
+    },
+    "/api/wingpeople/{id}/accept": {
+      "post": {
+        "tags": ["contacts"],
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Invitation accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContactsOkResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "404": {
+            "description": "No pending invitation for this caller"
+          }
+        }
+      }
+    },
+    "/api/wingpeople/{id}/decline": {
+      "post": {
+        "tags": ["contacts"],
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Invitation declined",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContactsOkResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "404": {
+            "description": "No pending invitation for this caller"
+          }
+        }
+      }
+    },
+    "/api/wingpeople/{id}": {
+      "delete": {
+        "tags": ["contacts"],
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Wingperson removed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContactsOkResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "404": {
+            "description": "Contact not found for this caller"
           }
         }
       }

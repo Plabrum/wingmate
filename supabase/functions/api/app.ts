@@ -3,6 +3,7 @@ import { swaggerUI } from '@hono/swagger-ui';
 import { authMiddleware } from './middleware/auth.ts';
 import { transactionMiddleware } from './middleware/transaction.ts';
 import { errorHandler } from './middleware/error.ts';
+import { mountContacts } from './domains/contacts/route.ts';
 import { mountDecisions } from './domains/decisions/route.ts';
 import { mountDiscover } from './domains/discover/route.ts';
 import { mountLikesYou } from './domains/likes-you/route.ts';
@@ -83,6 +84,18 @@ export function createApp() {
   app.use('/matches/:matchId/messages/read', authMiddleware);
   app.use('/matches/:matchId/messages/read', transactionMiddleware);
   mountMessages(app);
+
+  app.use('/wingpeople', authMiddleware);
+  app.use('/wingpeople', transactionMiddleware);
+  app.use('/wingpeople/invite', authMiddleware);
+  app.use('/wingpeople/invite', transactionMiddleware);
+  app.use('/wingpeople/:id', authMiddleware);
+  app.use('/wingpeople/:id', transactionMiddleware);
+  app.use('/wingpeople/:id/accept', authMiddleware);
+  app.use('/wingpeople/:id/accept', transactionMiddleware);
+  app.use('/wingpeople/:id/decline', authMiddleware);
+  app.use('/wingpeople/:id/decline', transactionMiddleware);
+  mountContacts(app);
 
   app.onError(errorHandler);
 

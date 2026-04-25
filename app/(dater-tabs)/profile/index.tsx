@@ -14,7 +14,7 @@ import {
   invalidateProfile,
 } from '@/hooks/use-profile';
 import type { OwnDatingProfile } from '@/hooks/use-profile';
-import { useMyWingpeople } from '@/queries/contacts';
+import { useGetApiWingpeopleSuspense } from '@/lib/api/generated/contacts/contacts';
 import { pickAndResizePhoto, uploadAvatar } from '@/queries/photos';
 
 import { View, Text, Pressable, SafeAreaView } from '@/lib/tw';
@@ -163,7 +163,9 @@ function ProfileScreenInner() {
     refetch,
   } = useProfileData(userId);
 
-  const { data: wingpeople } = useMyWingpeople(userId);
+  const { data: wingpeopleData } = useGetApiWingpeopleSuspense();
+  if (wingpeopleData.status !== 200) throw new Error('Failed to load wingpeople');
+  const wingpeople = wingpeopleData.data.wingpeople;
 
   const [activeTab, setActiveTab] = useState(0);
 
@@ -238,8 +240,8 @@ function ProfileScreenInner() {
 
   // ── Dater view ────────────────────────────────────────────────────────────
   const wingItems = wingpeople.map((w) => ({
-    initials: getInitials((w as any).winger?.chosen_name),
-    photoUri: (w as any).winger?.avatar_url ?? null,
+    initials: getInitials(w.winger?.chosenName ?? null),
+    photoUri: w.winger?.avatarUrl ?? null,
   }));
 
   return (

@@ -14,7 +14,6 @@ import { toast } from 'sonner-native';
 import * as SMS from 'expo-sms';
 
 import { useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
 import { colors } from '@/constants/theme';
 import { useAuth } from '@/context/auth';
 import { NavHeader } from '@/components/ui/NavHeader';
@@ -24,12 +23,13 @@ import { getInitials } from '@/components/profile/profile-helpers';
 import { View, Text, TextInput, ScrollView, SafeAreaView, Pressable } from '@/lib/tw';
 import { useProfileData } from '@/hooks/use-profile';
 import {
-  useWingpeopleData,
-  inviteWingperson,
-  acceptInvitation,
-  declineInvitation,
-  removeWingperson,
-} from '@/queries/contacts';
+  getGetApiWingpeopleQueryKey,
+  useDeleteApiWingpeopleId,
+  useGetApiWingpeopleSuspense,
+  usePostApiWingpeopleIdAccept,
+  usePostApiWingpeopleIdDecline,
+  usePostApiWingpeopleInvite,
+} from '@/lib/api/generated/contacts/contacts';
 import { formatPhoneInput, toE164 } from '@/lib/phoneUtils';
 
 // ── Section header ─────────────────────────────────────────────────────────────
@@ -48,35 +48,41 @@ function SectionHeader({ title, right }: { title: string; right?: React.ReactNod
 // ── Inner content (Suspense boundary child) ────────────────────────────────────
 
 interface ContentProps {
-  userId: string;
   onOpenInvite: () => void;
 }
 
-function WingpeopleContent({ userId, onOpenInvite }: ContentProps) {
+function WingpeopleContent({ onOpenInvite }: ContentProps) {
   const router = useRouter();
-  const {
-    data: { wingpeople, invitations, wingingFor, sentInvitations, weeklyCounts },
-    refetch,
-  } = useWingpeopleData(userId);
+  const queryClient = useQueryClient();
+  const { data } = useGetApiWingpeopleSuspense();
+  if (data.status !== 200) throw new Error('Failed to load wingpeople');
+  const { wingpeople, invitations, wingingFor, sentInvitations, weeklyCounts } = data.data;
+
+  const acceptMutation = usePostApiWingpeopleIdAccept();
+  const declineMutation = usePostApiWingpeopleIdDecline();
+  const removeMutation = useDeleteApiWingpeopleId();
+
+  const invalidate = () =>
+    queryClient.invalidateQueries({ queryKey: getGetApiWingpeopleQueryKey() });
 
   // ── Mutations ─────────────────────────────────────────────────────────────
 
   const handleAccept = async (contactId: string) => {
-    const { error } = await acceptInvitation(contactId, userId);
-    if (error) {
+    const result = await acceptMutation.mutateAsync({ id: contactId }).catch(() => null);
+    if (result == null) {
       toast.error("Couldn't accept invitation. Try again.");
-    } else {
-      refetch();
+      return;
     }
+    invalidate();
   };
 
   const handleDecline = async (contactId: string) => {
-    const { error } = await declineInvitation(contactId, userId);
-    if (error) {
+    const result = await declineMutation.mutateAsync({ id: contactId }).catch(() => null);
+    if (result == null) {
       toast.error("Couldn't decline invitation. Try again.");
-    } else {
-      refetch();
+      return;
     }
+    invalidate();
   };
 
   const handleCancelInvite = (contactId: string) => {
@@ -86,12 +92,12 @@ function WingpeopleContent({ userId, onOpenInvite }: ContentProps) {
         text: 'Cancel Invite',
         style: 'destructive',
         onPress: async () => {
-          const { error } = await removeWingperson(contactId, userId);
-          if (error) {
+          const result = await removeMutation.mutateAsync({ id: contactId }).catch(() => null);
+          if (result == null) {
             toast.error("Couldn't cancel invite. Try again.");
-          } else {
-            refetch();
+            return;
           }
+          invalidate();
         },
       },
     ]);
@@ -104,12 +110,12 @@ function WingpeopleContent({ userId, onOpenInvite }: ContentProps) {
         text: 'Remove',
         style: 'destructive',
         onPress: async () => {
-          const { error } = await removeWingperson(contactId, userId);
-          if (error) {
+          const result = await removeMutation.mutateAsync({ id: contactId }).catch(() => null);
+          if (result == null) {
             toast.error("Couldn't remove wingperson. Try again.");
-          } else {
-            refetch();
+            return;
           }
+          invalidate();
         },
       },
     ]);
@@ -141,12 +147,7 @@ function WingpeopleContent({ userId, onOpenInvite }: ContentProps) {
         </Text>
       ) : (
         wingpeople.map((w) => {
-          const winger = (w as any).winger as {
-            id: string;
-            chosen_name: string | null;
-            avatar_url: string | null;
-          } | null;
-          const name = winger?.chosen_name ?? 'Unknown';
+          const name = w.winger?.chosenName ?? 'Unknown';
           const count = weeklyCounts[w.id] ?? 0;
           return (
             <Pressable
@@ -159,7 +160,11 @@ function WingpeopleContent({ userId, onOpenInvite }: ContentProps) {
               onLongPress={() => handleRemove(w.id)}
               delayLongPress={500}
             >
-              <FaceAvatar initials={getInitials(name)} size={40} photoUri={winger?.avatar_url} />
+              <FaceAvatar
+                initials={getInitials(name)}
+                size={40}
+                photoUri={w.winger?.avatarUrl ?? null}
+              />
               <View className="flex-1">
                 <Text className="text-sm font-semibold text-fg">{name}</Text>
                 <Text className="text-xs text-fg-muted mt-0.5">
@@ -176,8 +181,7 @@ function WingpeopleContent({ userId, onOpenInvite }: ContentProps) {
         <>
           <SectionHeader title="Sent Invites" />
           {sentInvitations.map((inv) => {
-            const winger = (inv as any).winger as { id: string; chosen_name: string | null } | null;
-            const displayName = winger?.chosen_name ?? inv.phone_number ?? 'Unknown';
+            const displayName = inv.winger?.chosenName ?? inv.phoneNumber ?? 'Unknown';
             return (
               <View
                 key={inv.id}
@@ -213,8 +217,7 @@ function WingpeopleContent({ userId, onOpenInvite }: ContentProps) {
         </Text>
       ) : (
         invitations.map((inv) => {
-          const dater = (inv as any).dater as { id: string; chosen_name: string | null } | null;
-          const name = dater?.chosen_name ?? 'Unknown';
+          const name = inv.dater?.chosenName ?? 'Unknown';
           return (
             <View
               key={inv.id}
@@ -252,12 +255,7 @@ function WingpeopleContent({ userId, onOpenInvite }: ContentProps) {
         </Text>
       ) : (
         wingingFor.map((wf) => {
-          const dater = (wf as any).dater as {
-            id: string;
-            chosen_name: string | null;
-            avatar_url: string | null;
-          } | null;
-          const name = dater?.chosen_name ?? 'Unknown';
+          const name = wf.dater?.chosenName ?? 'Unknown';
           const firstName = name.split(' ')[0];
           return (
             <View
@@ -268,12 +266,16 @@ function WingpeopleContent({ userId, onOpenInvite }: ContentProps) {
                 borderBottomColor: colors.divider,
               }}
             >
-              <FaceAvatar initials={getInitials(name)} size={40} photoUri={dater?.avatar_url} />
+              <FaceAvatar
+                initials={getInitials(name)}
+                size={40}
+                photoUri={wf.dater?.avatarUrl ?? null}
+              />
               <Text className="flex-1 text-sm font-semibold text-fg">{name}</Text>
               <Pressable
                 className="px-[14px] py-2 rounded-full bg-accent-muted"
                 onPress={() =>
-                  router.push(`/(winger)/wingpeople/dater-profile?daterId=${dater?.id}` as any)
+                  router.push(`/(winger)/wingpeople/dater-profile?daterId=${wf.dater?.id}` as any)
                 }
               >
                 <Text className="text-sm font-semibold text-accent">Add to profile</Text>
@@ -281,7 +283,7 @@ function WingpeopleContent({ userId, onOpenInvite }: ContentProps) {
               <Pressable
                 className="px-[14px] py-2 rounded-full bg-accent-muted"
                 onPress={() =>
-                  router.push(`/(winger)/wingpeople/wingswipe?daterId=${dater?.id}` as any)
+                  router.push(`/(winger)/wingpeople/wingswipe?daterId=${wf.dater?.id}` as any)
                 }
               >
                 <Text className="text-sm font-semibold text-accent">Swipe for {firstName}</Text>
@@ -309,6 +311,8 @@ export default function WingpeopleScreen() {
 
   const [inviteVisible, setInviteVisible] = useState(false);
 
+  const inviteMutation = usePostApiWingpeopleInvite();
+
   const {
     control,
     handleSubmit,
@@ -328,25 +332,15 @@ export default function WingpeopleScreen() {
   const onSendInvite = handleSubmit(async ({ phone }) => {
     const e164 = toE164(phone)!;
 
-    const { error: insertError } = await inviteWingperson(userId, e164);
-    if (insertError) {
+    const result = await inviteMutation
+      .mutateAsync({ data: { phoneNumber: e164 } })
+      .catch(() => null);
+    if (result == null || result.status !== 200) {
       toast.error("Couldn't send invite. Try again.");
       return;
     }
 
-    const { data: existing } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('phone_number', e164)
-      .maybeSingle();
-
-    if (existing?.id) {
-      await supabase
-        .from('contacts')
-        .update({ winger_id: existing.id })
-        .eq('user_id', userId)
-        .eq('phone_number', e164);
-    } else {
+    if (result.data.wingerId == null) {
       const isAvailable = await SMS.isAvailableAsync();
       if (isAvailable) {
         const daterName = profile?.chosen_name ?? 'Someone';
@@ -360,7 +354,7 @@ export default function WingpeopleScreen() {
       }
     }
 
-    queryClient.invalidateQueries({ queryKey: ['wingpeople', userId] });
+    queryClient.invalidateQueries({ queryKey: getGetApiWingpeopleQueryKey() });
     closeInviteSheet();
   });
 
@@ -375,7 +369,7 @@ export default function WingpeopleScreen() {
           </View>
         }
       >
-        <WingpeopleContent userId={userId} onOpenInvite={onOpenInvite} />
+        <WingpeopleContent onOpenInvite={onOpenInvite} />
       </Suspense>
 
       {/* ── Invite Bottom Sheet ──────────────────────────────────────────────── */}
