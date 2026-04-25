@@ -1,25 +1,13 @@
-import { Controller, useForm } from 'react-hook-form';
-import { toast } from 'sonner-native';
-import { KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
-import { View, Text, SafeAreaView, TextInput, ScrollView, Pressable } from '@/lib/tw';
-import DateInput from '@/components/ui/DateInput';
+import { KeyboardAvoidingView, Platform } from 'react-native';
+import { z } from 'zod';
+import { View, Text, SafeAreaView, ScrollView } from '@/lib/tw';
+import { createForm, RootError, SubmitButton, phoneSchema } from '@/lib/forms';
 import { GENDERS, CITIES } from '@/constants/enums';
-import { colors } from '@/constants/theme';
-import { cn } from '@/lib/cn';
 import type { Database } from '@/types/database';
 
 type Role = Database['public']['Enums']['user_role'];
 type Gender = Database['public']['Enums']['gender'];
 type City = Database['public']['Enums']['city'];
-
-type FormValues = {
-  chosenName: string;
-  dateOfBirth: Date | null;
-  gender: Gender | null;
-  phoneNumber: string;
-  city: City | null;
-  bio: string;
-};
 
 export type ProfileFields = {
   chosenName: string;
@@ -36,37 +24,24 @@ type Props = {
   onNext: (fields: ProfileFields) => Promise<string | undefined>;
 };
 
-export default function ProfileStep({ role, defaultPhoneNumber, onNext }: Props) {
-  const isDater = role === 'dater';
+const baseShape = {
+  chosenName: z.string().min(1, 'Enter your name'),
+  dateOfBirth: z.date({ message: 'Pick a date' }),
+  gender: z.enum(GENDERS),
+  phoneNumber: phoneSchema,
+};
 
-  const {
-    control,
-    handleSubmit,
-    formState: { errors, isSubmitting, isValid },
-  } = useForm<FormValues>({
-    mode: 'onChange',
-    defaultValues: {
-      chosenName: '',
-      dateOfBirth: null,
-      gender: null,
-      phoneNumber: defaultPhoneNumber,
-      city: null,
-      bio: '',
-    },
-  });
+const wingerSchema = z.object(baseShape);
+const daterSchema = z.object({
+  ...baseShape,
+  city: z.enum(CITIES),
+  bio: z.string(),
+});
 
-  const onSubmit = handleSubmit(async (values) => {
-    const error = await onNext({
-      chosenName: values.chosenName,
-      dateOfBirth: values.dateOfBirth!,
-      gender: values.gender!,
-      phoneNumber: values.phoneNumber,
-      city: values.city,
-      bio: values.bio,
-    });
-    if (error) toast.error(error);
-  });
+const wingerForm = createForm(wingerSchema);
+const daterForm = createForm(daterSchema);
 
+function Layout({ children }: { children: React.ReactNode }) {
   return (
     <SafeAreaView className="flex-1 bg-page">
       <KeyboardAvoidingView
@@ -81,164 +56,102 @@ export default function ProfileStep({ role, defaultPhoneNumber, onNext }: Props)
           <Text className="font-serif text-3xl font-semibold text-fg mb-7">
             Tell us about yourself
           </Text>
-
-          <Text className="text-sm font-semibold text-fg-muted uppercase tracking-[0.5px] mb-2 mt-5">
-            Your name
-          </Text>
-          <Controller
-            control={control}
-            name="chosenName"
-            rules={{ required: true }}
-            render={({ field: { onChange, value } }) => (
-              <TextInput
-                className={cn(
-                  'bg-white rounded-xl border-[1.5px] border-separator px-4 py-[14px] text-base text-fg',
-                  errors.chosenName && 'border-[#EF4444]'
-                )}
-                placeholder="First name or nickname"
-                placeholderTextColor={colors.inkGhost}
-                value={value}
-                onChangeText={onChange}
-                autoCapitalize="words"
-                returnKeyType="next"
-              />
-            )}
-          />
-
-          <Text className="text-sm font-semibold text-fg-muted uppercase tracking-[0.5px] mb-2 mt-5">
-            Date of birth
-          </Text>
-          <Controller
-            control={control}
-            name="dateOfBirth"
-            rules={{ required: true }}
-            render={({ field: { onChange, value } }) => (
-              <DateInput value={value} onChange={onChange} />
-            )}
-          />
-
-          <Text className="text-sm font-semibold text-fg-muted uppercase tracking-[0.5px] mb-2 mt-5">
-            Gender
-          </Text>
-          <Controller
-            control={control}
-            name="gender"
-            rules={{ required: true }}
-            render={({ field: { onChange, value } }) => (
-              <View className="flex-row flex-wrap gap-2">
-                {GENDERS.map((g) => (
-                  <Pressable
-                    key={g}
-                    className={cn(
-                      'px-4 py-[10px] rounded-[24px] border-[1.5px] border-separator bg-white',
-                      value === g && 'border-accent bg-accent-muted'
-                    )}
-                    onPress={() => onChange(g)}
-                  >
-                    <Text
-                      className={cn(
-                        'text-sm text-fg-muted font-medium',
-                        value === g && 'text-accent'
-                      )}
-                    >
-                      {g}
-                    </Text>
-                  </Pressable>
-                ))}
-              </View>
-            )}
-          />
-
-          <Text className="text-sm font-semibold text-fg-muted uppercase tracking-[0.5px] mb-2 mt-5">
-            Phone number
-          </Text>
-          <Controller
-            control={control}
-            name="phoneNumber"
-            render={({ field: { onChange, value } }) => (
-              <TextInput
-                className="bg-white rounded-xl border-[1.5px] border-separator px-4 py-[14px] text-base text-fg"
-                placeholder="+1 555 000 0000"
-                placeholderTextColor={colors.inkGhost}
-                value={value}
-                onChangeText={onChange}
-                keyboardType="phone-pad"
-              />
-            )}
-          />
-
-          {isDater && (
-            <>
-              <Text className="text-sm font-semibold text-fg-muted uppercase tracking-[0.5px] mb-2 mt-5">
-                City
-              </Text>
-              <Controller
-                control={control}
-                name="city"
-                rules={{ required: isDater }}
-                render={({ field: { onChange, value } }) => (
-                  <View className="flex-row flex-wrap gap-2">
-                    {CITIES.map((c) => (
-                      <Pressable
-                        key={c}
-                        className={cn(
-                          'px-4 py-[10px] rounded-[24px] border-[1.5px] border-separator bg-white',
-                          value === c && 'border-accent bg-accent-muted'
-                        )}
-                        onPress={() => onChange(c)}
-                      >
-                        <Text
-                          className={cn(
-                            'text-sm text-fg-muted font-medium',
-                            value === c && 'text-accent'
-                          )}
-                        >
-                          {c}
-                        </Text>
-                      </Pressable>
-                    ))}
-                  </View>
-                )}
-              />
-
-              <Text className="text-sm font-semibold text-fg-muted uppercase tracking-[0.5px] mb-2 mt-5">
-                Bio (optional)
-              </Text>
-              <Controller
-                control={control}
-                name="bio"
-                render={({ field: { onChange, value } }) => (
-                  <TextInput
-                    className="bg-white rounded-xl border-[1.5px] border-separator px-4 pt-[14px] text-base text-fg h-[100px]"
-                    placeholder="A little about you (optional)"
-                    placeholderTextColor={colors.inkGhost}
-                    value={value}
-                    onChangeText={onChange}
-                    multiline
-                    numberOfLines={4}
-                    textAlignVertical="top"
-                  />
-                )}
-              />
-            </>
-          )}
-
-          <Pressable
-            className={cn(
-              'bg-accent rounded-xl py-4 items-center mt-8',
-              (!isValid || isSubmitting) && 'opacity-40'
-            )}
-            onPress={onSubmit}
-            disabled={!isValid || isSubmitting}
-          >
-            {isSubmitting ? (
-              <ActivityIndicator color={colors.white} />
-            ) : (
-              <Text className="text-white text-base font-semibold">Continue</Text>
-            )}
-          </Pressable>
+          {children}
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
+}
+
+function DaterProfileStep({ defaultPhoneNumber, onNext }: Omit<Props, 'role'>) {
+  return (
+    <Layout>
+      <daterForm.Form
+        defaultValues={{
+          chosenName: '',
+          dateOfBirth: undefined,
+          gender: undefined,
+          phoneNumber: defaultPhoneNumber,
+          city: undefined,
+          bio: '',
+        }}
+        onSubmit={async (v) => {
+          const error = await onNext({
+            chosenName: v.chosenName,
+            dateOfBirth: v.dateOfBirth,
+            gender: v.gender,
+            phoneNumber: v.phoneNumber,
+            city: v.city,
+            bio: v.bio,
+          });
+          if (error) throw new Error(error);
+        }}
+      >
+        <daterForm.TextField
+          name="chosenName"
+          label="Your name"
+          placeholder="First name or nickname"
+          autoCapitalize="words"
+        />
+        <daterForm.DateField name="dateOfBirth" label="Date of birth" />
+        <daterForm.ChoiceField name="gender" label="Gender" options={GENDERS} />
+        <daterForm.PhoneField name="phoneNumber" label="Phone number" />
+        <daterForm.ChoiceField name="city" label="City" options={CITIES} />
+        <daterForm.TextField
+          name="bio"
+          label="Bio (optional)"
+          placeholder="A little about you (optional)"
+          multiline
+        />
+        <View className="mt-8">
+          <SubmitButton label="Continue" />
+        </View>
+        <RootError />
+      </daterForm.Form>
+    </Layout>
+  );
+}
+
+function WingerProfileStep({ defaultPhoneNumber, onNext }: Omit<Props, 'role'>) {
+  return (
+    <Layout>
+      <wingerForm.Form
+        defaultValues={{
+          chosenName: '',
+          dateOfBirth: undefined,
+          gender: undefined,
+          phoneNumber: defaultPhoneNumber,
+        }}
+        onSubmit={async (v) => {
+          const error = await onNext({
+            chosenName: v.chosenName,
+            dateOfBirth: v.dateOfBirth,
+            gender: v.gender,
+            phoneNumber: v.phoneNumber,
+            city: null,
+            bio: '',
+          });
+          if (error) throw new Error(error);
+        }}
+      >
+        <wingerForm.TextField
+          name="chosenName"
+          label="Your name"
+          placeholder="First name or nickname"
+          autoCapitalize="words"
+        />
+        <wingerForm.DateField name="dateOfBirth" label="Date of birth" />
+        <wingerForm.ChoiceField name="gender" label="Gender" options={GENDERS} />
+        <wingerForm.PhoneField name="phoneNumber" label="Phone number" />
+        <View className="mt-8">
+          <SubmitButton label="Continue" />
+        </View>
+        <RootError />
+      </wingerForm.Form>
+    </Layout>
+  );
+}
+
+export default function ProfileStep({ role, ...rest }: Props) {
+  return role === 'dater' ? <DaterProfileStep {...rest} /> : <WingerProfileStep {...rest} />;
 }

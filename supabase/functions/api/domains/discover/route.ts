@@ -2,14 +2,22 @@
 // Feature code lives in `domains/<feature>/`. Four sibling files per feature dir:
 //   • route.ts        — Hono createRoute + mount<Feature>(app) (THIS FILE)
 //   • schemas.ts      — Zod request/response, enum literals derived from Drizzle pgEnum
-//   • queries.ts      — pure Drizzle fetch functions, no Hono/Zod imports
+//   • queries.ts      — pure Drizzle fetch functions, accept `db: DBOrTx` as first arg,
+//                       no Hono/Zod imports
 //   • transformers.ts — row → response mappers (snake_case → camelCase)
-// Shared helpers at api/ root (e.g. lib/, schemas/) are introduced ONLY when something is
-// genuinely reused across domains. Prefer duplication over premature hoisting.
+//
+// Handlers read the request-scoped transaction with `const db = c.get('db')` and pass
+// it to query helpers. NEVER import the module-level `db` from `db/client.ts` inside
+// handlers or queries — that bypasses the per-request transaction and its rollback
+// semantics. Normal returns (including `c.json(..., 4xx)`) commit; any thrown error
+// (including `HTTPException`) rolls back.
+//
+// Shared helpers at api/ root (e.g. lib/, schemas/) are introduced ONLY when something
+// is genuinely reused across domains. Prefer duplication over premature hoisting.
 
 import type { OpenAPIHono } from '@hono/zod-openapi';
 import { createRoute } from '@hono/zod-openapi';
-import type { AuthVars } from '../../middleware/auth.ts';
+import type { AppEnv } from '../../types.ts';
 import { DiscoverQuery, DiscoverResponse, type DiscoverProfile } from './schemas.ts';
 import { fetchDiscoverPool } from './queries.ts';
 import { rowToDiscoverProfile } from './transformers.ts';
@@ -29,12 +37,13 @@ const discoverRoute = createRoute({
   },
 });
 
-export function mountDiscover(app: OpenAPIHono<{ Variables: AuthVars }>) {
+export function mountDiscover(app: OpenAPIHono<AppEnv>) {
   app.openapi(discoverRoute, async (c) => {
     const viewerId = c.get('userId');
+    const db = c.get('db');
     const query = c.req.valid('query');
 
-    const rows = await fetchDiscoverPool({
+    const rows = await fetchDiscoverPool(db, {
       viewerId,
       filterWingerId: query.filterWingerId,
       pageSize: query.pageSize,

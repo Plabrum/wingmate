@@ -1,11 +1,13 @@
 import { OpenAPIHono } from '@hono/zod-openapi';
 import { swaggerUI } from '@hono/swagger-ui';
-import { authMiddleware, type AuthVars } from './middleware/auth.ts';
+import { authMiddleware } from './middleware/auth.ts';
+import { transactionMiddleware } from './middleware/transaction.ts';
 import { errorHandler } from './middleware/error.ts';
 import { mountDiscover } from './domains/discover/route.ts';
+import type { AppEnv } from './types.ts';
 
 export function createApp() {
-  const app = new OpenAPIHono<{ Variables: AuthVars }>().basePath('/api');
+  const app = new OpenAPIHono<AppEnv>().basePath('/api');
 
   app.openAPIRegistry.registerComponent('securitySchemes', 'Bearer', {
     type: 'http',
@@ -20,7 +22,11 @@ export function createApp() {
 
   app.get('/doc', swaggerUI({ url: '/api/openapi.json' }));
 
+  // Order matters: auth first so unauthenticated requests never open a
+  // transaction or consume the pool slot. Doc routes above intentionally
+  // skip both — they don't touch the DB.
   app.use('/discover', authMiddleware);
+  app.use('/discover', transactionMiddleware);
   mountDiscover(app);
 
   app.onError(errorHandler);

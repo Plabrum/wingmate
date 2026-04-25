@@ -1,37 +1,21 @@
-import { Controller, useForm } from 'react-hook-form';
 import { KeyboardAvoidingView, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner-native';
+import { z } from 'zod';
 
-import { colors } from '@/constants/theme';
 import { useAuth } from '@/context/auth';
 import { updateDatingProfile, useProfileData } from '@/queries/profiles';
 import type { OwnDatingProfile } from '@/queries/profiles';
 import type { Database } from '@/types/database';
 import { CITIES, GENDERS, RELIGIONS, INTERESTS } from '@/constants/enums';
-import { View, Text, TextInput, ScrollView, SafeAreaView, Pressable } from '@/lib/tw';
+import { View, Text, ScrollView, SafeAreaView, Pressable } from '@/lib/tw';
 import { cn } from '@/lib/cn';
+import { createForm, RootError, SubmitButton, useFormSubmit } from '@/lib/forms';
 
 import ScreenSuspense from '@/components/ui/ScreenSuspense';
 import { NavHeader } from '@/components/ui/NavHeader';
-import { PurpleButton } from '@/components/ui/PurpleButton';
 
-type Gender = Database['public']['Enums']['gender'];
 type Religion = Database['public']['Enums']['religion'];
-type City = Database['public']['Enums']['city'];
-type Interest = Database['public']['Enums']['interest'];
-
-type FormValues = {
-  bio: string;
-  city: City | null;
-  ageFrom: string;
-  ageTo: string;
-  interestedGender: Gender[];
-  religion: Religion | null;
-  religiousPref: Religion | null;
-  interests: Interest[];
-};
 
 const RELIGIOUS_PREFS: { value: Religion | null; label: string }[] = [
   { value: null, label: 'No preference' },
@@ -43,7 +27,35 @@ const RELIGIOUS_PREFS: { value: Religion | null; label: string }[] = [
   { value: 'Sikh', label: 'Must be Sikh' },
 ];
 
-// ── Mini components ───────────────────────────────────────────────────────────
+const editSchema = z
+  .object({
+    bio: z.string().max(500),
+    city: z.enum(CITIES),
+    ageFrom: z
+      .string()
+      .regex(/^\d+$/, 'Enter a valid age')
+      .refine((v) => parseInt(v, 10) >= 18, 'Must be 18 or above'),
+    ageTo: z.union([z.literal(''), z.string().regex(/^\d+$/, 'Enter a valid age')]),
+    interestedGender: z.array(z.enum(GENDERS)),
+    religion: z.enum(RELIGIONS),
+    religiousPref: z.enum(RELIGIONS).nullable(),
+    interests: z.array(z.enum(INTERESTS)),
+  })
+  .superRefine((data, ctx) => {
+    if (data.ageTo) {
+      const from = parseInt(data.ageFrom, 10);
+      const to = parseInt(data.ageTo, 10);
+      if (!isNaN(from) && to <= from) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['ageTo'],
+          message: 'Must be greater than From',
+        });
+      }
+    }
+  });
+
+const editForm = createForm(editSchema);
 
 function SectionLabel({ label }: { label: string }) {
   return (
@@ -53,76 +65,21 @@ function SectionLabel({ label }: { label: string }) {
   );
 }
 
-function PickerRow<T extends string>({
-  options,
-  value,
-  onChange,
-  getLabel,
-}: {
-  options: T[];
-  value: T | null;
-  onChange: (v: T) => void;
-  getLabel?: (v: T) => string;
-}) {
+function HeaderSave() {
+  const { submit, isValid, isSubmitting } = useFormSubmit();
+  const disabled = !isValid || isSubmitting;
   return (
-    <View className="flex-row flex-wrap gap-2">
-      {options.map((opt) => {
-        const active = value === opt;
-        return (
-          <Pressable
-            key={opt}
-            onPress={() => onChange(opt)}
-            className={cn(
-              'rounded-2xl px-3.5 py-2 bg-white border-[1.5px] border-separator',
-              active && 'bg-accent-muted border-accent'
-            )}
-          >
-            <Text className={cn('text-sm text-fg-muted font-medium', active && 'text-accent')}>
-              {getLabel ? getLabel(opt) : opt}
-            </Text>
-          </Pressable>
-        );
-      })}
-    </View>
+    <Pressable
+      onPress={submit}
+      disabled={disabled}
+      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+    >
+      <Text className={cn('text-sm font-semibold text-accent', disabled && 'opacity-40')}>
+        {isSubmitting ? 'Saving…' : 'Save'}
+      </Text>
+    </Pressable>
   );
 }
-
-function MultiPickerRow<T extends string>({
-  options,
-  values,
-  onChange,
-}: {
-  options: T[];
-  values: T[];
-  onChange: (v: T[]) => void;
-}) {
-  const toggle = (opt: T) => {
-    onChange(values.includes(opt) ? values.filter((v) => v !== opt) : [...values, opt]);
-  };
-  return (
-    <View className="flex-row flex-wrap gap-2">
-      {options.map((opt) => {
-        const active = values.includes(opt);
-        return (
-          <Pressable
-            key={opt}
-            onPress={() => toggle(opt)}
-            className={cn(
-              'rounded-2xl px-3.5 py-2 bg-white border-[1.5px] border-separator',
-              active && 'bg-accent-muted border-accent'
-            )}
-          >
-            <Text className={cn('text-sm text-fg-muted font-medium', active && 'text-accent')}>
-              {opt}
-            </Text>
-          </Pressable>
-        );
-      })}
-    </View>
-  );
-}
-
-// ── Form ──────────────────────────────────────────────────────────────────────
 
 function EditProfileForm({
   data,
@@ -136,242 +93,106 @@ function EditProfileForm({
   router: ReturnType<typeof useRouter>;
 }) {
   const queryClient = useQueryClient();
-  const {
-    control,
-    handleSubmit,
-    watch,
-    formState: { isSubmitting },
-  } = useForm<FormValues>({
-    mode: 'onChange',
-    defaultValues: {
-      bio: data.bio ?? '',
-      city: data.city as City | null,
-      ageFrom: String(data.age_from),
-      ageTo: data.age_to ? String(data.age_to) : '',
-      interestedGender: data.interested_gender as Gender[],
-      religion: data.religion as Religion | null,
-      religiousPref: (data.religious_preference as Religion | null) ?? null,
-      interests: data.interests as Interest[],
-    },
-  });
-
-  const handleSave = handleSubmit(async (values) => {
-    if (!values.city || !values.religion) {
-      toast.error('City and religion are required.');
-      return;
-    }
-    const fromNum = parseInt(values.ageFrom, 10);
-    const toNum = values.ageTo ? parseInt(values.ageTo, 10) : null;
-    if (isNaN(fromNum) || fromNum < 18) {
-      toast.error('Age from must be 18 or above.');
-      return;
-    }
-    if (toNum !== null && toNum <= fromNum) {
-      toast.error('Age to must be greater than age from.');
-      return;
-    }
-
-    const { error } = await updateDatingProfile(userId, {
-      bio: values.bio.trim() || undefined,
-      city: values.city,
-      age_from: fromNum,
-      age_to: toNum,
-      interested_gender: values.interestedGender,
-      religion: values.religion,
-      religious_preference: values.religiousPref,
-      interests: values.interests,
-    });
-
-    if (error) {
-      toast.error('Could not save changes. Please try again.');
-      return;
-    }
-    queryClient.invalidateQueries({ queryKey: ['pool'] });
-    queryClient.invalidateQueries({ queryKey: ['likes-you-count'] });
-    refresh();
-    router.back();
-  });
-
-  const bioValue = watch('bio');
-
-  const saveButton = (
-    <Pressable
-      onPress={handleSave}
-      disabled={isSubmitting}
-      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-    >
-      <Text className={cn('text-sm font-semibold text-accent', isSubmitting && 'opacity-40')}>
-        {isSubmitting ? 'Saving…' : 'Save'}
-      </Text>
-    </Pressable>
-  );
 
   return (
     <SafeAreaView className="flex-1 bg-page" edges={['top', 'bottom']}>
-      <NavHeader back title="Edit Profile" onBack={() => router.back()} right={saveButton} />
-
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={{ flex: 1 }}
+      <editForm.Form
+        defaultValues={{
+          bio: data.bio ?? '',
+          city: data.city ?? undefined,
+          ageFrom: String(data.age_from ?? 18),
+          ageTo: data.age_to ? String(data.age_to) : '',
+          interestedGender: data.interested_gender ?? [],
+          religion: data.religion ?? undefined,
+          religiousPref: (data.religious_preference as Religion | null) ?? null,
+          interests: data.interests ?? [],
+        }}
+        onSubmit={async (values) => {
+          const fromNum = parseInt(values.ageFrom, 10);
+          const toNum = values.ageTo ? parseInt(values.ageTo, 10) : null;
+          const { error } = await updateDatingProfile(userId, {
+            bio: values.bio.trim() || undefined,
+            city: values.city,
+            age_from: fromNum,
+            age_to: toNum,
+            interested_gender: values.interestedGender,
+            religion: values.religion,
+            religious_preference: values.religiousPref,
+            interests: values.interests,
+          });
+          if (error) throw new Error('Could not save changes. Please try again.');
+          queryClient.invalidateQueries({ queryKey: ['pool'] });
+          queryClient.invalidateQueries({ queryKey: ['likes-you-count'] });
+          refresh();
+          router.back();
+        }}
       >
-        <ScrollView
-          contentContainerClassName="p-5 pb-12"
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
+        <NavHeader back title="Edit Profile" onBack={() => router.back()} right={<HeaderSave />} />
+
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={{ flex: 1 }}
         >
-          {/* Bio */}
-          <SectionLabel label="Bio" />
-          <Controller
-            control={control}
-            name="bio"
-            render={({ field }) => (
-              <TextInput
-                className="bg-white rounded-xl px-3.5 py-3 text-sm text-fg min-h-[100px]"
-                style={{ textAlignVertical: 'top', lineHeight: 22 }}
-                placeholder="Tell people a bit about yourself…"
-                placeholderTextColor={colors.inkGhost}
-                value={field.value}
-                onChangeText={field.onChange}
-                multiline
-                maxLength={500}
-              />
-            )}
-          />
-          <Text className="text-xs text-fg-ghost text-right mt-1">{bioValue.length}/500</Text>
+          <ScrollView
+            contentContainerClassName="p-5 pb-12"
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          >
+            <SectionLabel label="Bio" />
+            <editForm.TextField
+              name="bio"
+              placeholder="Tell people a bit about yourself…"
+              multiline
+              maxLength={500}
+              showCount
+            />
 
-          {/* City */}
-          <SectionLabel label="City" />
-          <Controller
-            control={control}
-            name="city"
-            render={({ field }) => (
-              <PickerRow<City> options={CITIES} value={field.value} onChange={field.onChange} />
-            )}
-          />
+            <SectionLabel label="City" />
+            <editForm.ChoiceField name="city" options={CITIES} />
 
-          {/* Age range */}
-          <SectionLabel label="Age Range" />
-          <View className="flex-row items-center gap-3">
-            <View className="flex-1">
-              <Text className="text-xs text-fg-muted mb-1.5">From</Text>
-              <Controller
-                control={control}
-                name="ageFrom"
-                render={({ field }) => (
-                  <TextInput
-                    className="bg-white rounded-xl px-3.5 py-3 text-base text-fg text-center"
-                    value={field.value}
-                    onChangeText={field.onChange}
-                    keyboardType="number-pad"
-                    maxLength={2}
-                    placeholderTextColor={colors.inkGhost}
-                  />
-                )}
-              />
-            </View>
-            <Text className="text-xl text-fg-ghost mt-5">–</Text>
-            <View className="flex-1">
-              <Text className="text-xs text-fg-muted mb-1.5">To (optional)</Text>
-              <Controller
-                control={control}
-                name="ageTo"
-                render={({ field }) => (
-                  <TextInput
-                    className="bg-white rounded-xl px-3.5 py-3 text-base text-fg text-center"
-                    value={field.value}
-                    onChangeText={field.onChange}
-                    keyboardType="number-pad"
-                    maxLength={2}
-                    placeholder="—"
-                    placeholderTextColor={colors.inkGhost}
-                  />
-                )}
-              />
-            </View>
-          </View>
-
-          {/* Interested in */}
-          <SectionLabel label="Interested In" />
-          <Controller
-            control={control}
-            name="interestedGender"
-            render={({ field }) => (
-              <MultiPickerRow<Gender>
-                options={GENDERS}
-                values={field.value}
-                onChange={field.onChange}
-              />
-            )}
-          />
-
-          {/* Religion */}
-          <SectionLabel label="My Religion" />
-          <Controller
-            control={control}
-            name="religion"
-            render={({ field }) => (
-              <PickerRow<Religion>
-                options={RELIGIONS}
-                value={field.value}
-                onChange={field.onChange}
-              />
-            )}
-          />
-
-          {/* Religious preference */}
-          <SectionLabel label="Partner's Religion (optional)" />
-          <Controller
-            control={control}
-            name="religiousPref"
-            render={({ field }) => (
-              <View className="flex-row flex-wrap gap-2">
-                {RELIGIOUS_PREFS.map((opt) => {
-                  const active = field.value === opt.value;
-                  return (
-                    <Pressable
-                      key={String(opt.value)}
-                      onPress={() => field.onChange(opt.value)}
-                      className={cn(
-                        'rounded-2xl px-3.5 py-2 bg-white border-[1.5px] border-separator',
-                        active && 'bg-accent-muted border-accent'
-                      )}
-                    >
-                      <Text
-                        className={cn('text-sm text-fg-muted font-medium', active && 'text-accent')}
-                      >
-                        {opt.label}
-                      </Text>
-                    </Pressable>
-                  );
-                })}
+            <SectionLabel label="Age Range" />
+            <View className="flex-row items-start gap-3">
+              <View className="flex-1">
+                <Text className="text-xs text-fg-muted mb-1.5">From</Text>
+                <editForm.TextField name="ageFrom" keyboardType="number-pad" maxLength={2} />
               </View>
-            )}
-          />
+              <View className="flex-1">
+                <Text className="text-xs text-fg-muted mb-1.5">To (optional)</Text>
+                <editForm.TextField
+                  name="ageTo"
+                  keyboardType="number-pad"
+                  maxLength={2}
+                  placeholder="—"
+                />
+              </View>
+            </View>
 
-          {/* Interests */}
-          <SectionLabel label="Interests" />
-          <Controller
-            control={control}
-            name="interests"
-            render={({ field }) => (
-              <MultiPickerRow<Interest>
-                options={INTERESTS}
-                values={field.value}
-                onChange={field.onChange}
-              />
-            )}
-          />
+            <SectionLabel label="Interested In" />
+            <editForm.ChoiceField name="interestedGender" options={GENDERS} multi />
 
-          <View className="mt-8">
-            <PurpleButton label="Save Changes" onPress={handleSave} loading={isSubmitting} />
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
+            <SectionLabel label="My Religion" />
+            <editForm.ChoiceField name="religion" options={RELIGIONS} />
+
+            <SectionLabel label="Partner's Religion (optional)" />
+            <editForm.SelectSheetField
+              name="religiousPref"
+              options={RELIGIOUS_PREFS}
+              placeholder="No preference"
+            />
+
+            <SectionLabel label="Interests" />
+            <editForm.ChoiceField name="interests" options={INTERESTS} multi />
+
+            <View className="mt-8">
+              <SubmitButton label="Save Changes" />
+            </View>
+            <RootError />
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </editForm.Form>
     </SafeAreaView>
   );
 }
-
-// ── Orchestrator ──────────────────────────────────────────────────────────────
 
 function EditProfileScreenInner() {
   const router = useRouter();

@@ -1,50 +1,40 @@
 import { useState } from 'react';
-import { Controller, useForm } from 'react-hook-form';
-import { KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
-import { View, Text, ScrollView, TextInput, Pressable, SafeAreaView } from '@/lib/tw';
+import { ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
+import { z } from 'zod';
+import { View, Text, ScrollView, Pressable, SafeAreaView } from '@/lib/tw';
 import { useOnboardingPromptTemplates, addProfilePrompt } from '@/queries/prompts';
 import { colors } from '@/constants/theme';
-import { toast } from 'sonner-native';
+import { createForm, RootError, useFormSubmit } from '@/lib/forms';
 
-type FormValues = { answer: string };
 type AddedPrompt = { question: string; answer: string };
-
 type Props = { dpId: string; onFinish: () => void };
+
+const answerSchema = z.object({ answer: z.string().trim().min(1) });
+const answerForm = createForm(answerSchema);
+
+function AddButton() {
+  const { submit, isValid, isSubmitting } = useFormSubmit();
+  const disabled = !isValid || isSubmitting;
+  return (
+    <Pressable
+      className={`bg-accent rounded-lg py-2.5 items-center${disabled ? ' opacity-40' : ''}`}
+      onPress={submit}
+      disabled={disabled}
+    >
+      {isSubmitting ? (
+        <ActivityIndicator color={colors.white} size="small" />
+      ) : (
+        <Text className="text-white font-semibold text-sm">Add</Text>
+      )}
+    </Pressable>
+  );
+}
 
 export default function PromptsStep({ dpId, onFinish }: Props) {
   const { data: templates } = useOnboardingPromptTemplates();
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [addedPrompts, setAddedPrompts] = useState<AddedPrompt[]>([]);
   const [addedIds, setAddedIds] = useState<Set<string>>(new Set());
-
-  const {
-    control,
-    handleSubmit,
-    reset,
-    formState: { isSubmitting, isValid },
-  } = useForm<FormValues>({
-    mode: 'onChange',
-    defaultValues: { answer: '' },
-  });
-
-  function toggleExpand(templateId: string) {
-    setExpandedId((prev) => (prev === templateId ? null : templateId));
-    reset({ answer: '' });
-  }
-
-  const onAdd = handleSubmit(async ({ answer }) => {
-    if (!expandedId) return;
-    const question = templates.find((t) => t.id === expandedId)?.question ?? '';
-    const { error } = await addProfilePrompt(dpId, expandedId, answer.trim());
-    if (error) {
-      toast.error('Failed to add prompt. Please try again.');
-      return;
-    }
-    setAddedPrompts((prev) => [...prev, { question, answer: answer.trim() }]);
-    setAddedIds((prev) => new Set(prev).add(expandedId));
-    setExpandedId(null);
-    reset({ answer: '' });
-  });
 
   const visibleTemplates = templates.filter((t) => !addedIds.has(t.id));
 
@@ -70,7 +60,7 @@ export default function PromptsStep({ dpId, onFinish }: Props) {
             >
               <Pressable
                 className="flex-row items-center justify-between p-4"
-                onPress={() => toggleExpand(template.id)}
+                onPress={() => setExpandedId((prev) => (prev === template.id ? null : template.id))}
               >
                 <Text className="flex-1 text-sm text-fg font-medium">{template.question}</Text>
                 <Text className="text-xs text-fg-subtle ml-2">
@@ -80,35 +70,32 @@ export default function PromptsStep({ dpId, onFinish }: Props) {
 
               {expandedId === template.id && (
                 <View className="px-4 pb-4">
-                  <Controller
-                    control={control}
-                    name="answer"
-                    rules={{ required: true }}
-                    render={({ field: { onChange, value } }) => (
-                      <TextInput
-                        className="bg-page rounded-lg border border-separator p-3 text-sm text-fg min-h-20 mb-3"
-                        placeholder="Your answer..."
-                        placeholderTextColor={colors.inkGhost}
-                        value={value}
-                        onChangeText={onChange}
-                        multiline
-                        numberOfLines={3}
-                        textAlignVertical="top"
-                        autoFocus
-                      />
-                    )}
-                  />
-                  <Pressable
-                    className={`bg-accent rounded-lg py-2.5 items-center${!isValid || isSubmitting ? ' opacity-40' : ''}`}
-                    onPress={onAdd}
-                    disabled={!isValid || isSubmitting}
+                  <answerForm.Form
+                    defaultValues={{ answer: '' }}
+                    onSubmit={async ({ answer }) => {
+                      const trimmed = answer.trim();
+                      const { error } = await addProfilePrompt(dpId, template.id, trimmed);
+                      if (error) throw new Error('Failed to add prompt. Please try again.');
+                      setAddedPrompts((prev) => [
+                        ...prev,
+                        { question: template.question, answer: trimmed },
+                      ]);
+                      setAddedIds((prev) => new Set(prev).add(template.id));
+                      setExpandedId(null);
+                    }}
                   >
-                    {isSubmitting ? (
-                      <ActivityIndicator color={colors.white} size="small" />
-                    ) : (
-                      <Text className="text-white font-semibold text-sm">Add</Text>
-                    )}
-                  </Pressable>
+                    <answerForm.TextField
+                      name="answer"
+                      placeholder="Your answer..."
+                      multiline
+                      autoFocus
+                      minHeightClass="min-h-20"
+                    />
+                    <View className="mt-3">
+                      <AddButton />
+                    </View>
+                    <RootError />
+                  </answerForm.Form>
                 </View>
               )}
             </View>
@@ -129,18 +116,10 @@ export default function PromptsStep({ dpId, onFinish }: Props) {
           )}
 
           <View className="flex-row items-center justify-between mt-8">
-            <Pressable
-              className={`py-3.5 pr-2${isSubmitting ? ' opacity-40' : ''}`}
-              onPress={onFinish}
-              disabled={isSubmitting}
-            >
+            <Pressable className="py-3.5 pr-2" onPress={onFinish}>
               <Text className="text-base text-fg-muted font-medium">Skip</Text>
             </Pressable>
-            <Pressable
-              className={`bg-accent rounded-xl py-3.5 px-8 items-center${isSubmitting ? ' opacity-40' : ''}`}
-              onPress={onFinish}
-              disabled={isSubmitting}
-            >
+            <Pressable className="bg-accent rounded-xl py-3.5 px-8 items-center" onPress={onFinish}>
               <Text className="text-white text-base font-semibold">Finish</Text>
             </Pressable>
           </View>

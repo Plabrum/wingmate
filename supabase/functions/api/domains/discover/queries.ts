@@ -1,6 +1,6 @@
 import { and, desc, eq, isNotNull, isNull, ne, notExists, or, sql } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
-import { db } from '../../db/client.ts';
+import type { DBOrTx } from '../../db/client.ts';
 import { datingProfiles, decisions, profiles, profilePhotos } from '../../db/schema.ts';
 import type { DiscoverRow } from './transformers.ts';
 
@@ -13,6 +13,7 @@ export type FetchDiscoverPoolParams = {
 };
 
 export async function fetchDiscoverPool(
+  db: DBOrTx,
   params: FetchDiscoverPoolParams,
 ): Promise<DiscoverRow[]> {
   const { viewerId, filterWingerId, pageSize, pageOffset, wingerOnly } = params;

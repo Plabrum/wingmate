@@ -19,4 +19,7 @@
   --color-accent-muted: #eeeaff;
   --color-accent-soft: #d9d4ff;
   --color-accent-press: #5748c2;
+
+  /* Error */
+  --color-error: #ef4444;
 }

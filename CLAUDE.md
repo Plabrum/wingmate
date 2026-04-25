@@ -104,7 +104,8 @@ wingmate/
 │       │   ├── db/
 │       │   │   ├── client.ts   # drizzle + postgres.js client
 │       │   │   └── schema.ts   # READ-ONLY mirror, regenerate with `npm run db:drizzle`
-│       │   ├── middleware/     # auth (JWT verify via jose), error
+│       │   ├── middleware/     # auth (JWT verify via jose), transaction (per-request Drizzle tx), error
+│       │   ├── types.ts         # AppEnv = AuthVars & DbVars (shared Hono env)
 │       │   ├── domains/
 │       │   │   └── <feature>/  # one folder per feature (see layout below)
 │       │   │       ├── route.ts        # Hono createRoute + mount<Feature>(app)
@@ -426,15 +427,30 @@ Single Hono app that owns every client-facing HTTP endpoint. Structure:
 - `app.ts` — `createApp()`: registers middleware, routes, OpenAPI doc, Swagger UI. Exported so `scripts/emit-spec.ts` can construct the app without booting a server.
 - `index.ts` — `Deno.serve(createApp().fetch)`. This is the Supabase runtime entrypoint.
 - `middleware/auth.ts` — verifies JWTs with `jose` (secret from `JWT_SECRET`). Sets `c.var.userId`. Applied to protected routes only; `/api/openapi.json` and `/api/doc` are public.
+- `middleware/transaction.ts` — opens a Drizzle transaction per request and exposes it via `c.var.db`. Commits on normal return, rolls back on any thrown error. Applied to protected routes only.
 - `middleware/error.ts` — maps `HTTPException`, `ZodError`, and unknown errors to JSON responses.
-- `db/client.ts` — Drizzle client over `postgres.js` using `DATABASE_URL` (Supavisor transaction-mode pooler in prod). `max: 1`, `prepare: false`. Initialized at module scope so warm isolates reuse the pool.
+- `types.ts` — `AppEnv` = the combined `AuthVars & DbVars` Hono env used by every route and `mount<Feature>(app)`.
+- `db/client.ts` — Drizzle client over `postgres.js` using `DATABASE_URL` (Supavisor transaction-mode pooler in prod). `max: 1`, `prepare: false`. Initialized at module scope so warm isolates reuse the pool. Exports `DB`, `Tx`, `DBOrTx` types; the module-level `db` should only be imported by `middleware/transaction.ts`.
 - `db/schema.ts` — READ-ONLY Drizzle schema, generated via `drizzle-kit introspect` (see Data Model section).
 - `domains/<feature>/` — one folder per feature, holding the whole feature module (HTTP wiring + DB access + schemas + mappers):
   - `route.ts` — Hono `createRoute` + `mount<Feature>(app)` handler.
   - `schemas.ts` — Zod request/response schemas, tagged with `.openapi(name)`. Enum literals are derived from Drizzle `pgEnum.enumValues` so Zod can't drift from the DB.
-  - `queries.ts` — Drizzle fetch functions, pure database access. No Hono/Zod imports.
+  - `queries.ts` — Drizzle fetch functions. Accept `db: DBOrTx` as the first argument; no Hono/Zod imports.
   - `transformers.ts` — row → response mappers (snake_case → camelCase). One place the shape is translated.
     A shared `lib/` or `schemas/` at the `api/` level is introduced ONLY when something is genuinely reused across features — prefer duplication over premature hoisting.
+
+**Request-scoped transactions.** Every protected route runs inside a Drizzle transaction opened by `middleware/transaction.ts`. The handle is on `c.var.db` (type `Tx`, assignable to `DBOrTx`). Query helpers in `queries.ts` take `db: DBOrTx` as their first argument and must use it for every statement, **including subquery builders** — closing over the module-level `db` bypasses the request transaction. Commit/rollback follows return/throw:
+
+| Handler does                        | Transaction                                           |
+| ----------------------------------- | ----------------------------------------------------- |
+| `return c.json(data, 200)`          | Commits                                               |
+| `return c.json({error}, 400)`       | **Commits** — returned 4xx is an intentional response |
+| `throw new HTTPException(400, ...)` | **Rolls back** — escape hatch to void writes          |
+| `throw new Error(...)` (any kind)   | Rolls back                                            |
+| Drizzle constraint violation        | Rolls back                                            |
+| Commit itself fails                 | Propagates to `onError` → 500                         |
+
+The module-level `db` in `db/client.ts` is used only by the transaction middleware — never import it in handlers or queries. Public routes (`/openapi.json`, `/doc`) intentionally skip the transaction middleware so doc hits don't consume the isolate's single pool slot.
 
 **Authorization model.** No RLS on this path — the function uses the service role implicitly (connects as `postgres`). Every Drizzle query inside a handler MUST constrain results to `c.var.userId` via a WHERE or JOIN. This is enforced by code review, not the DB.
 
