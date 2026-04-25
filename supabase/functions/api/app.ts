@@ -6,6 +6,7 @@ import { errorHandler } from './middleware/error.ts';
 import { mountDiscover } from './domains/discover/route.ts';
 import { mountLikesYou } from './domains/likes-you/route.ts';
 import { mountWingerTabs } from './domains/winger-tabs/route.ts';
+import { mountWingPool } from './domains/wing-pool/route.ts';
 import type { AppEnv } from './types.ts';
 
 export function createApp() {
@@ -40,6 +41,10 @@ export function createApp() {
   app.use('/winger-tabs', authMiddleware);
   app.use('/winger-tabs', transactionMiddleware);
   mountWingerTabs(app);
+
+  app.use('/wing-pool', authMiddleware);
+  app.use('/wing-pool', transactionMiddleware);
+  mountWingPool(app);
 
   app.onError(errorHandler);
 

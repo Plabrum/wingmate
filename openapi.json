@@ -237,6 +237,88 @@
         "items": {
           "$ref": "#/components/schemas/WingerTab"
         }
+      },
+      "WingProfile": {
+        "type": "object",
+        "properties": {
+          "profileId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "userId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "chosenName": {
+            "type": "string"
+          },
+          "gender": {
+            "type": "string",
+            "nullable": true,
+            "enum": ["Male", "Female", "Non-Binary"]
+          },
+          "age": {
+            "type": "integer"
+          },
+          "city": {
+            "type": "string",
+            "enum": ["Boston", "New York"]
+          },
+          "bio": {
+            "type": "string",
+            "nullable": true
+          },
+          "datingStatus": {
+            "type": "string",
+            "enum": ["open", "break", "winging"]
+          },
+          "interests": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "Travel",
+                "Fitness",
+                "Cooking",
+                "Music",
+                "Art",
+                "Movies",
+                "Books",
+                "Gaming",
+                "Outdoors",
+                "Sports",
+                "Technology",
+                "Fashion",
+                "Food",
+                "Photography",
+                "Dance",
+                "Volunteering"
+              ]
+            }
+          },
+          "firstPhoto": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "profileId",
+          "userId",
+          "chosenName",
+          "gender",
+          "age",
+          "city",
+          "bio",
+          "datingStatus",
+          "interests",
+          "firstPhoto"
+        ]
+      },
+      "WingPoolResponse": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/WingProfile"
+        }
       }
     },
     "parameters": {}
@@ -405,6 +487,67 @@
           },
           "401": {
             "description": "Unauthenticated"
+          }
+        }
+      }
+    },
+    "/api/wing-pool": {
+      "get": {
+        "tags": ["wing-pool"],
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "daterId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            },
+            "required": false,
+            "name": "pageSize",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "nullable": true,
+              "minimum": 0,
+              "default": 0
+            },
+            "required": false,
+            "name": "pageOffset",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Profiles the wingperson can suggest for the given dater",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WingPoolResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "403": {
+            "description": "Caller is not an active wingperson for this dater"
           }
         }
       }
