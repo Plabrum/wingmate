@@ -73,20 +73,10 @@ wingmate/
 │   ├── queryClient.ts          # TanStack QueryClient (staleTime 60s, retry 1)
 │   ├── push.ts                 # Push token registration
 │   ├── phoneUtils.ts           # libphonenumber-js helpers
+│   ├── photos.ts               # Image picker + Supabase Storage helpers (upload/avatar/getPhotoUrl)
 │   └── api/                    # Orval codegen for the `api` edge function
-│       ├── http.ts             # Fetch mutator — attaches JWT, throws on !ok
+│       ├── http.ts             # Fetch mutator — attaches JWT, throws on !ok, returns the success body
 │       └── generated/          # Orval output (committed; regenerate with `npm run api:gen`)
-│
-├── queries/                    # Supabase query functions + React Query hooks for legacy RPC/PostgREST calls
-│   ├── index.ts                # Re-exports everything
-│   ├── profiles.ts             # Own profile + dating profile CRUD
-│   ├── discover.ts             # Discover pool via `api` + likes-you/wing-pool via legacy RPCs
-│   ├── decisions.ts            # Like/pass/winger-suggest
-│   ├── matches.ts              # Match fetching
-│   ├── messages.ts             # Conversations + real-time subscribe
-│   ├── contacts.ts             # Wingpeople relationships
-│   ├── photos.ts               # Profile photo upload/approve/reject
-│   └── prompts.ts              # Prompt templates + responses
 │
 ├── types/
 │   └── database.ts             # Auto-generated Supabase types (do not edit manually)
@@ -182,11 +172,7 @@ await verifyOTP(phone, token);
 
 ## Query Patterns
 
-All data fetching uses `useSuspenseQuery` from TanStack Query. Two patterns coexist during the migration off RPCs — pick the right one for the endpoint.
-
-### Pattern 1 — Orval-generated hooks (new endpoints)
-
-For anything served by the `api` edge function, import the generated hook from `@/lib/api/generated/<tag>/<tag>.ts`. These hooks already use `useSuspenseQuery` under the hood, attach the user's JWT, and throw on non-2xx. Callsites just destructure `data`:
+All client-facing data fetching goes through Orval-generated hooks against the `api` edge function. Import the generated hook from `@/lib/api/generated/<tag>/<tag>.ts` — it already uses `useSuspenseQuery`, attaches the user's JWT, and throws on non-2xx. Callsites just destructure `data`, which is the success body (camelCase):
 
 ```ts
 import { useGetApiDiscoverSuspense } from '@/lib/api/generated/discover/discover';
@@ -198,31 +184,18 @@ const { data } = useGetApiDiscoverSuspense({
 });
 ```
 
-Do **not** apply Supabase `{ data, error }` unwrapping to these — Orval's shape is `{ data, status, headers }`, and `lib/api/http.ts` already throws on failure.
+The mutator (`lib/api/http.ts`) returns the parsed body directly — there is **no** `{ data, status, headers }` wrapper to peel off, and **no** `if (res.status !== 200)` checks at callsites. This is enabled by `override.fetch.includeHttpResponseReturnType: false` in `orval.config.ts`. For one-shot calls (mutations, modal opens), call the generated function directly: `await postApiPromptResponses({ ... })` returns the success body or throws.
 
-### Pattern 2 — Legacy Supabase calls (not-yet-ported endpoints)
-
-For RPCs and PostgREST queries that haven't been moved to the `api` function (e.g. `get_likes_you_pool`, `get_wing_pool`, PostgREST selects), keep the existing pattern: function reference as cache key, `{ data, error }` unwrapped in the `queryFn`, errors thrown:
-
-```ts
-useSuspenseQuery({
-  queryKey: [getLikesYouPool, userId],
-  queryFn: async () => {
-    const { data, error } = await getLikesYouPool(userId, 20, 0);
-    if (error) throw error;
-    return data ?? [];
-  },
-});
-```
+For Supabase realtime/auth/storage (channels, `supabase.auth.*`, `supabase.storage.*`), keep using the supabase-js client directly — those aren't HTTP endpoints on the `api` function.
 
 ### When adding a new feature
 
-Prefer Pattern 1. If the endpoint doesn't exist yet, add a route to `supabase/functions/api/routes/` with a Zod schema + Drizzle query, regenerate with `npm run api:all`, and call the generated hook from the screen. Don't add new RPCs.
+Add a route under `supabase/functions/api/domains/<feature>/` with a Zod schema + Drizzle query, regenerate with `npm run api:all`, and call the generated hook from the screen. Don't add new RPCs or PostgREST selects from the client.
 
 ### Regenerating types
 
 ```bash
-npm run db:types      # supabase-js types (types/database.ts) — still used by Pattern 2
+npm run db:types      # supabase-js types (types/database.ts) — used by realtime/storage/auth callsites
 npm run db:drizzle    # Drizzle schema (supabase/functions/api/db/schema.ts)
 npm run api:spec      # openapi.json (from the Hono app)
 npm run api:gen       # lib/api/generated/ (Orval)

@@ -15,7 +15,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '@/constants/theme';
 import { useAuth } from '@/context/auth';
 import { useDaterProfile, daterProfileQueryKey } from '@/hooks/use-profile';
-import { getPhotoUrl, pickAndResizePhoto, uploadPhoto } from '@/queries/photos';
+import { getPhotoUrl, pickAndResizePhoto, uploadPhoto } from '@/lib/photos';
 import { postApiPhotos } from '@/lib/api/generated/photos/photos';
 import { postApiPromptResponses } from '@/lib/api/generated/prompts/prompts';
 
@@ -146,8 +146,7 @@ function DaterProfileContent() {
     const promptId = respondingToPrompt.id;
     setRespondingToPrompt(null);
     try {
-      const res = await postApiPromptResponses({ profilePromptId: promptId, message });
-      if (res.status !== 200) throw new Error(`reply failed: ${res.status}`);
+      await postApiPromptResponses({ profilePromptId: promptId, message });
       toast.success(`Comment sent — ${firstName} will review it.`);
     } catch {
       toast.error("Couldn't send comment. Try again.");

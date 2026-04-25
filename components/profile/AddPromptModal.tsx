@@ -64,8 +64,7 @@ export function AddPromptModal({ visible, onClose, usedTemplateIds, onAdded }: P
 
   const onOpen = async () => {
     setSelected(null);
-    const res = await getApiPromptTemplates();
-    const list = res.status === 200 ? res.data : [];
+    const list = await getApiPromptTemplates();
     setTemplates(list.filter((t) => !usedTemplateIds.has(t.id)));
   };
 
@@ -118,13 +117,10 @@ export function AddPromptModal({ visible, onClose, usedTemplateIds, onAdded }: P
               <answerForm.Form
                 defaultValues={{ answer: '' }}
                 onSubmit={async ({ answer }) => {
-                  const res = await postApiProfilePrompts({
+                  await postApiProfilePrompts({
                     promptTemplateId: selected.id,
                     answer: answer.trim(),
                   });
-                  if (res.status !== 200) {
-                    throw new Error('Could not save prompt. Please try again.');
-                  }
                   onAdded();
                   onClose();
                 }}

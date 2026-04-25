@@ -108,9 +108,7 @@ type ContentProps = {
 };
 
 function MessagesContent({ userId, onlineIds }: ContentProps) {
-  const { data, refetch, isRefetching } = useGetApiConversationsSuspense();
-  if (data.status !== 200) throw new Error('Failed to load conversations');
-  const convos = data.data;
+  const { data: convos, refetch, isRefetching } = useGetApiConversationsSuspense();
 
   const sections: Section[] = useMemo(() => {
     const active = convos.filter((c) => c.lastMessage != null);

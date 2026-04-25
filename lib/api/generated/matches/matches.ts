@@ -20,31 +20,12 @@ import { wyngFetch } from '../../http';
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
-export type getApiMatchesResponse200 = {
-  data: MatchesResponse;
-  status: 200;
-};
-
-export type getApiMatchesResponse401 = {
-  data: void;
-  status: 401;
-};
-
-export type getApiMatchesResponseSuccess = getApiMatchesResponse200 & {
-  headers: Headers;
-};
-export type getApiMatchesResponseError = getApiMatchesResponse401 & {
-  headers: Headers;
-};
-
-export type getApiMatchesResponse = getApiMatchesResponseSuccess | getApiMatchesResponseError;
-
 export const getGetApiMatchesUrl = () => {
   return `/api/matches`;
 };
 
-export const getApiMatches = async (options?: RequestInit): Promise<getApiMatchesResponse> => {
-  return wyngFetch<getApiMatchesResponse>(getGetApiMatchesUrl(), {
+export const getApiMatches = async (options?: RequestInit): Promise<MatchesResponse> => {
+  return wyngFetch<MatchesResponse>(getGetApiMatchesUrl(), {
     ...options,
     method: 'GET',
   });
@@ -141,35 +122,6 @@ export function useGetApiMatchesSuspense<
   return { ...query, queryKey: queryOptions.queryKey };
 }
 
-export type getApiMatchesMatchIdSheetResponse200 = {
-  data: MatchSheet;
-  status: 200;
-};
-
-export type getApiMatchesMatchIdSheetResponse401 = {
-  data: void;
-  status: 401;
-};
-
-export type getApiMatchesMatchIdSheetResponse404 = {
-  data: void;
-  status: 404;
-};
-
-export type getApiMatchesMatchIdSheetResponseSuccess = getApiMatchesMatchIdSheetResponse200 & {
-  headers: Headers;
-};
-export type getApiMatchesMatchIdSheetResponseError = (
-  | getApiMatchesMatchIdSheetResponse401
-  | getApiMatchesMatchIdSheetResponse404
-) & {
-  headers: Headers;
-};
-
-export type getApiMatchesMatchIdSheetResponse =
-  | getApiMatchesMatchIdSheetResponseSuccess
-  | getApiMatchesMatchIdSheetResponseError;
-
 export const getGetApiMatchesMatchIdSheetUrl = (matchId: string) => {
   return `/api/matches/${matchId}/sheet`;
 };
@@ -177,8 +129,8 @@ export const getGetApiMatchesMatchIdSheetUrl = (matchId: string) => {
 export const getApiMatchesMatchIdSheet = async (
   matchId: string,
   options?: RequestInit
-): Promise<getApiMatchesMatchIdSheetResponse> => {
-  return wyngFetch<getApiMatchesMatchIdSheetResponse>(getGetApiMatchesMatchIdSheetUrl(matchId), {
+): Promise<MatchSheet> => {
+  return wyngFetch<MatchSheet>(getGetApiMatchesMatchIdSheetUrl(matchId), {
     ...options,
     method: 'GET',
   });

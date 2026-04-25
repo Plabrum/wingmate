@@ -34,8 +34,7 @@ function AddButton() {
 }
 
 export default function PromptsStep({ onFinish }: Props) {
-  const { data: templatesRes } = useGetApiPromptTemplatesOnboardingSuspense();
-  const templates = templatesRes.status === 200 ? templatesRes.data : [];
+  const { data: templates } = useGetApiPromptTemplatesOnboardingSuspense();
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [addedPrompts, setAddedPrompts] = useState<AddedPrompt[]>([]);
   const [addedIds, setAddedIds] = useState<Set<string>>(new Set());
@@ -78,13 +77,10 @@ export default function PromptsStep({ onFinish }: Props) {
                     defaultValues={{ answer: '' }}
                     onSubmit={async ({ answer }) => {
                       const trimmed = answer.trim();
-                      const res = await postApiProfilePrompts({
+                      await postApiProfilePrompts({
                         promptTemplateId: template.id,
                         answer: trimmed,
                       });
-                      if (res.status !== 200) {
-                        throw new Error('Failed to add prompt. Please try again.');
-                      }
                       setAddedPrompts((prev) => [
                         ...prev,
                         { question: template.question, answer: trimmed },

@@ -11,9 +11,7 @@ import { dbRowToMessage, subscribeToMessages } from '@/lib/messages-realtime';
 export function useMessages(matchId: string) {
   const { userId } = useAuth();
 
-  const { data } = useGetApiMatchesMatchIdMessagesSuspense(matchId);
-  if (data.status !== 200) throw new Error('Failed to load messages');
-  const initial = data.data;
+  const { data: initial } = useGetApiMatchesMatchIdMessagesSuspense(matchId);
 
   const [messages, setMessages] = useState<Message[]>(initial);
 

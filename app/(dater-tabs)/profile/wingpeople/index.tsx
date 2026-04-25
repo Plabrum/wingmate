@@ -55,8 +55,7 @@ function WingpeopleContent({ onOpenInvite }: ContentProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { data } = useGetApiWingpeopleSuspense();
-  if (data.status !== 200) throw new Error('Failed to load wingpeople');
-  const { wingpeople, invitations, wingingFor, sentInvitations, weeklyCounts } = data.data;
+  const { wingpeople, invitations, wingingFor, sentInvitations, weeklyCounts } = data;
 
   const acceptMutation = usePostApiWingpeopleIdAccept();
   const declineMutation = usePostApiWingpeopleIdDecline();
@@ -339,12 +338,12 @@ export default function WingpeopleScreen() {
     const result = await inviteMutation
       .mutateAsync({ data: { phoneNumber: e164 } })
       .catch(() => null);
-    if (result == null || result.status !== 200) {
+    if (result == null) {
       toast.error("Couldn't send invite. Try again.");
       return;
     }
 
-    if (result.data.wingerId == null) {
+    if (result.wingerId == null) {
       const isAvailable = await SMS.isAvailableAsync();
       if (isAvailable) {
         const daterName = profile?.chosen_name ?? 'Someone';

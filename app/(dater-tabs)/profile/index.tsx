@@ -15,7 +15,7 @@ import {
 } from '@/hooks/use-profile';
 import type { OwnDatingProfile } from '@/hooks/use-profile';
 import { useGetApiWingpeopleSuspense } from '@/lib/api/generated/contacts/contacts';
-import { pickAndResizePhoto, uploadAvatar } from '@/queries/photos';
+import { pickAndResizePhoto, uploadAvatar } from '@/lib/photos';
 
 import { View, Text, Pressable, SafeAreaView } from '@/lib/tw';
 import { LargeHeader } from '@/components/ui/LargeHeader';
@@ -164,8 +164,7 @@ function ProfileScreenInner() {
   } = useProfileData(userId);
 
   const { data: wingpeopleData } = useGetApiWingpeopleSuspense();
-  if (wingpeopleData.status !== 200) throw new Error('Failed to load wingpeople');
-  const wingpeople = wingpeopleData.data.wingpeople;
+  const wingpeople = wingpeopleData.wingpeople;
 
   const [activeTab, setActiveTab] = useState(0);
 

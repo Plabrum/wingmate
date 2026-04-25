@@ -31,43 +31,12 @@ import { wyngFetch } from '../../http';
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
-export type getApiProfilesMeResponse200 = {
-  data: Profile;
-  status: 200;
-};
-
-export type getApiProfilesMeResponse401 = {
-  data: void;
-  status: 401;
-};
-
-export type getApiProfilesMeResponse404 = {
-  data: void;
-  status: 404;
-};
-
-export type getApiProfilesMeResponseSuccess = getApiProfilesMeResponse200 & {
-  headers: Headers;
-};
-export type getApiProfilesMeResponseError = (
-  | getApiProfilesMeResponse401
-  | getApiProfilesMeResponse404
-) & {
-  headers: Headers;
-};
-
-export type getApiProfilesMeResponse =
-  | getApiProfilesMeResponseSuccess
-  | getApiProfilesMeResponseError;
-
 export const getGetApiProfilesMeUrl = () => {
   return `/api/profiles/me`;
 };
 
-export const getApiProfilesMe = async (
-  options?: RequestInit
-): Promise<getApiProfilesMeResponse> => {
-  return wyngFetch<getApiProfilesMeResponse>(getGetApiProfilesMeUrl(), {
+export const getApiProfilesMe = async (options?: RequestInit): Promise<Profile> => {
+  return wyngFetch<Profile>(getGetApiProfilesMeUrl(), {
     ...options,
     method: 'GET',
   });
@@ -164,35 +133,6 @@ export function useGetApiProfilesMeSuspense<
   return { ...query, queryKey: queryOptions.queryKey };
 }
 
-export type patchApiProfilesMeResponse200 = {
-  data: Profile;
-  status: 200;
-};
-
-export type patchApiProfilesMeResponse401 = {
-  data: void;
-  status: 401;
-};
-
-export type patchApiProfilesMeResponse404 = {
-  data: void;
-  status: 404;
-};
-
-export type patchApiProfilesMeResponseSuccess = patchApiProfilesMeResponse200 & {
-  headers: Headers;
-};
-export type patchApiProfilesMeResponseError = (
-  | patchApiProfilesMeResponse401
-  | patchApiProfilesMeResponse404
-) & {
-  headers: Headers;
-};
-
-export type patchApiProfilesMeResponse =
-  | patchApiProfilesMeResponseSuccess
-  | patchApiProfilesMeResponseError;
-
 export const getPatchApiProfilesMeUrl = () => {
   return `/api/profiles/me`;
 };
@@ -200,8 +140,8 @@ export const getPatchApiProfilesMeUrl = () => {
 export const patchApiProfilesMe = async (
   updateProfileRequest: UpdateProfileRequest,
   options?: RequestInit
-): Promise<patchApiProfilesMeResponse> => {
-  return wyngFetch<patchApiProfilesMeResponse>(getPatchApiProfilesMeUrl(), {
+): Promise<Profile> => {
+  return wyngFetch<Profile>(getPatchApiProfilesMeUrl(), {
     ...options,
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json', ...options?.headers },
@@ -267,35 +207,14 @@ export const usePatchApiProfilesMe = <TError = void, TContext = unknown>(
 > => {
   return useMutation(getPatchApiProfilesMeMutationOptions(options), queryClient);
 };
-export type getApiDatingProfilesMeResponse200 = {
-  data: OwnDatingProfileResponse | null;
-  status: 200;
-};
-
-export type getApiDatingProfilesMeResponse401 = {
-  data: void;
-  status: 401;
-};
-
-export type getApiDatingProfilesMeResponseSuccess = getApiDatingProfilesMeResponse200 & {
-  headers: Headers;
-};
-export type getApiDatingProfilesMeResponseError = getApiDatingProfilesMeResponse401 & {
-  headers: Headers;
-};
-
-export type getApiDatingProfilesMeResponse =
-  | getApiDatingProfilesMeResponseSuccess
-  | getApiDatingProfilesMeResponseError;
-
 export const getGetApiDatingProfilesMeUrl = () => {
   return `/api/dating-profiles/me`;
 };
 
 export const getApiDatingProfilesMe = async (
   options?: RequestInit
-): Promise<getApiDatingProfilesMeResponse> => {
-  return wyngFetch<getApiDatingProfilesMeResponse>(getGetApiDatingProfilesMeUrl(), {
+): Promise<OwnDatingProfileResponse | null> => {
+  return wyngFetch<OwnDatingProfileResponse | null>(getGetApiDatingProfilesMeUrl(), {
     ...options,
     method: 'GET',
   });
@@ -392,35 +311,6 @@ export function useGetApiDatingProfilesMeSuspense<
   return { ...query, queryKey: queryOptions.queryKey };
 }
 
-export type patchApiDatingProfilesMeResponse200 = {
-  data: OwnDatingProfileResponse | null;
-  status: 200;
-};
-
-export type patchApiDatingProfilesMeResponse401 = {
-  data: void;
-  status: 401;
-};
-
-export type patchApiDatingProfilesMeResponse404 = {
-  data: void;
-  status: 404;
-};
-
-export type patchApiDatingProfilesMeResponseSuccess = patchApiDatingProfilesMeResponse200 & {
-  headers: Headers;
-};
-export type patchApiDatingProfilesMeResponseError = (
-  | patchApiDatingProfilesMeResponse401
-  | patchApiDatingProfilesMeResponse404
-) & {
-  headers: Headers;
-};
-
-export type patchApiDatingProfilesMeResponse =
-  | patchApiDatingProfilesMeResponseSuccess
-  | patchApiDatingProfilesMeResponseError;
-
 export const getPatchApiDatingProfilesMeUrl = () => {
   return `/api/dating-profiles/me`;
 };
@@ -428,8 +318,8 @@ export const getPatchApiDatingProfilesMeUrl = () => {
 export const patchApiDatingProfilesMe = async (
   updateDatingProfileRequest: UpdateDatingProfileRequest,
   options?: RequestInit
-): Promise<patchApiDatingProfilesMeResponse> => {
-  return wyngFetch<patchApiDatingProfilesMeResponse>(getPatchApiDatingProfilesMeUrl(), {
+): Promise<OwnDatingProfileResponse | null> => {
+  return wyngFetch<OwnDatingProfileResponse | null>(getPatchApiDatingProfilesMeUrl(), {
     ...options,
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json', ...options?.headers },
@@ -498,41 +388,6 @@ export const usePatchApiDatingProfilesMe = <TError = void, TContext = unknown>(
 > => {
   return useMutation(getPatchApiDatingProfilesMeMutationOptions(options), queryClient);
 };
-export type postApiDatingProfilesResponse200 = {
-  data: CreateDatingProfileResponse;
-  status: 200;
-};
-
-export type postApiDatingProfilesResponse400 = {
-  data: void;
-  status: 400;
-};
-
-export type postApiDatingProfilesResponse401 = {
-  data: void;
-  status: 401;
-};
-
-export type postApiDatingProfilesResponse409 = {
-  data: void;
-  status: 409;
-};
-
-export type postApiDatingProfilesResponseSuccess = postApiDatingProfilesResponse200 & {
-  headers: Headers;
-};
-export type postApiDatingProfilesResponseError = (
-  | postApiDatingProfilesResponse400
-  | postApiDatingProfilesResponse401
-  | postApiDatingProfilesResponse409
-) & {
-  headers: Headers;
-};
-
-export type postApiDatingProfilesResponse =
-  | postApiDatingProfilesResponseSuccess
-  | postApiDatingProfilesResponseError;
-
 export const getPostApiDatingProfilesUrl = () => {
   return `/api/dating-profiles`;
 };
@@ -540,8 +395,8 @@ export const getPostApiDatingProfilesUrl = () => {
 export const postApiDatingProfiles = async (
   createDatingProfileRequest: CreateDatingProfileRequest,
   options?: RequestInit
-): Promise<postApiDatingProfilesResponse> => {
-  return wyngFetch<postApiDatingProfilesResponse>(getPostApiDatingProfilesUrl(), {
+): Promise<CreateDatingProfileResponse> => {
+  return wyngFetch<CreateDatingProfileResponse>(getPostApiDatingProfilesUrl(), {
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...options?.headers },
@@ -610,35 +465,6 @@ export const usePostApiDatingProfiles = <TError = void, TContext = unknown>(
 > => {
   return useMutation(getPostApiDatingProfilesMutationOptions(options), queryClient);
 };
-export type getApiProfilesUserIdResponse200 = {
-  data: PublicProfile;
-  status: 200;
-};
-
-export type getApiProfilesUserIdResponse401 = {
-  data: void;
-  status: 401;
-};
-
-export type getApiProfilesUserIdResponse404 = {
-  data: void;
-  status: 404;
-};
-
-export type getApiProfilesUserIdResponseSuccess = getApiProfilesUserIdResponse200 & {
-  headers: Headers;
-};
-export type getApiProfilesUserIdResponseError = (
-  | getApiProfilesUserIdResponse401
-  | getApiProfilesUserIdResponse404
-) & {
-  headers: Headers;
-};
-
-export type getApiProfilesUserIdResponse =
-  | getApiProfilesUserIdResponseSuccess
-  | getApiProfilesUserIdResponseError;
-
 export const getGetApiProfilesUserIdUrl = (userId: string) => {
   return `/api/profiles/${userId}`;
 };
@@ -646,8 +472,8 @@ export const getGetApiProfilesUserIdUrl = (userId: string) => {
 export const getApiProfilesUserId = async (
   userId: string,
   options?: RequestInit
-): Promise<getApiProfilesUserIdResponse> => {
-  return wyngFetch<getApiProfilesUserIdResponse>(getGetApiProfilesUserIdUrl(userId), {
+): Promise<PublicProfile> => {
+  return wyngFetch<PublicProfile>(getGetApiProfilesUserIdUrl(userId), {
     ...options,
     method: 'GET',
   });

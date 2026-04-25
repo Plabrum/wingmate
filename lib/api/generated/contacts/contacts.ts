@@ -28,35 +28,12 @@ import { wyngFetch } from '../../http';
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
-export type getApiWingpeopleResponse200 = {
-  data: WingpeopleResponse;
-  status: 200;
-};
-
-export type getApiWingpeopleResponse401 = {
-  data: void;
-  status: 401;
-};
-
-export type getApiWingpeopleResponseSuccess = getApiWingpeopleResponse200 & {
-  headers: Headers;
-};
-export type getApiWingpeopleResponseError = getApiWingpeopleResponse401 & {
-  headers: Headers;
-};
-
-export type getApiWingpeopleResponse =
-  | getApiWingpeopleResponseSuccess
-  | getApiWingpeopleResponseError;
-
 export const getGetApiWingpeopleUrl = () => {
   return `/api/wingpeople`;
 };
 
-export const getApiWingpeople = async (
-  options?: RequestInit
-): Promise<getApiWingpeopleResponse> => {
-  return wyngFetch<getApiWingpeopleResponse>(getGetApiWingpeopleUrl(), {
+export const getApiWingpeople = async (options?: RequestInit): Promise<WingpeopleResponse> => {
+  return wyngFetch<WingpeopleResponse>(getGetApiWingpeopleUrl(), {
     ...options,
     method: 'GET',
   });
@@ -153,35 +130,6 @@ export function useGetApiWingpeopleSuspense<
   return { ...query, queryKey: queryOptions.queryKey };
 }
 
-export type postApiWingpeopleInviteResponse200 = {
-  data: InviteWingpersonResponse;
-  status: 200;
-};
-
-export type postApiWingpeopleInviteResponse400 = {
-  data: void;
-  status: 400;
-};
-
-export type postApiWingpeopleInviteResponse401 = {
-  data: void;
-  status: 401;
-};
-
-export type postApiWingpeopleInviteResponseSuccess = postApiWingpeopleInviteResponse200 & {
-  headers: Headers;
-};
-export type postApiWingpeopleInviteResponseError = (
-  | postApiWingpeopleInviteResponse400
-  | postApiWingpeopleInviteResponse401
-) & {
-  headers: Headers;
-};
-
-export type postApiWingpeopleInviteResponse =
-  | postApiWingpeopleInviteResponseSuccess
-  | postApiWingpeopleInviteResponseError;
-
 export const getPostApiWingpeopleInviteUrl = () => {
   return `/api/wingpeople/invite`;
 };
@@ -189,8 +137,8 @@ export const getPostApiWingpeopleInviteUrl = () => {
 export const postApiWingpeopleInvite = async (
   inviteWingpersonRequest: InviteWingpersonRequest,
   options?: RequestInit
-): Promise<postApiWingpeopleInviteResponse> => {
-  return wyngFetch<postApiWingpeopleInviteResponse>(getPostApiWingpeopleInviteUrl(), {
+): Promise<InviteWingpersonResponse> => {
+  return wyngFetch<InviteWingpersonResponse>(getPostApiWingpeopleInviteUrl(), {
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...options?.headers },
@@ -259,35 +207,6 @@ export const usePostApiWingpeopleInvite = <TError = void, TContext = unknown>(
 > => {
   return useMutation(getPostApiWingpeopleInviteMutationOptions(options), queryClient);
 };
-export type postApiWingpeopleIdAcceptResponse200 = {
-  data: ContactsOkResponse;
-  status: 200;
-};
-
-export type postApiWingpeopleIdAcceptResponse401 = {
-  data: void;
-  status: 401;
-};
-
-export type postApiWingpeopleIdAcceptResponse404 = {
-  data: void;
-  status: 404;
-};
-
-export type postApiWingpeopleIdAcceptResponseSuccess = postApiWingpeopleIdAcceptResponse200 & {
-  headers: Headers;
-};
-export type postApiWingpeopleIdAcceptResponseError = (
-  | postApiWingpeopleIdAcceptResponse401
-  | postApiWingpeopleIdAcceptResponse404
-) & {
-  headers: Headers;
-};
-
-export type postApiWingpeopleIdAcceptResponse =
-  | postApiWingpeopleIdAcceptResponseSuccess
-  | postApiWingpeopleIdAcceptResponseError;
-
 export const getPostApiWingpeopleIdAcceptUrl = (id: string) => {
   return `/api/wingpeople/${id}/accept`;
 };
@@ -295,8 +214,8 @@ export const getPostApiWingpeopleIdAcceptUrl = (id: string) => {
 export const postApiWingpeopleIdAccept = async (
   id: string,
   options?: RequestInit
-): Promise<postApiWingpeopleIdAcceptResponse> => {
-  return wyngFetch<postApiWingpeopleIdAcceptResponse>(getPostApiWingpeopleIdAcceptUrl(id), {
+): Promise<ContactsOkResponse> => {
+  return wyngFetch<ContactsOkResponse>(getPostApiWingpeopleIdAcceptUrl(id), {
     ...options,
     method: 'POST',
   });
@@ -363,35 +282,6 @@ export const usePostApiWingpeopleIdAccept = <TError = void, TContext = unknown>(
 > => {
   return useMutation(getPostApiWingpeopleIdAcceptMutationOptions(options), queryClient);
 };
-export type postApiWingpeopleIdDeclineResponse200 = {
-  data: ContactsOkResponse;
-  status: 200;
-};
-
-export type postApiWingpeopleIdDeclineResponse401 = {
-  data: void;
-  status: 401;
-};
-
-export type postApiWingpeopleIdDeclineResponse404 = {
-  data: void;
-  status: 404;
-};
-
-export type postApiWingpeopleIdDeclineResponseSuccess = postApiWingpeopleIdDeclineResponse200 & {
-  headers: Headers;
-};
-export type postApiWingpeopleIdDeclineResponseError = (
-  | postApiWingpeopleIdDeclineResponse401
-  | postApiWingpeopleIdDeclineResponse404
-) & {
-  headers: Headers;
-};
-
-export type postApiWingpeopleIdDeclineResponse =
-  | postApiWingpeopleIdDeclineResponseSuccess
-  | postApiWingpeopleIdDeclineResponseError;
-
 export const getPostApiWingpeopleIdDeclineUrl = (id: string) => {
   return `/api/wingpeople/${id}/decline`;
 };
@@ -399,8 +289,8 @@ export const getPostApiWingpeopleIdDeclineUrl = (id: string) => {
 export const postApiWingpeopleIdDecline = async (
   id: string,
   options?: RequestInit
-): Promise<postApiWingpeopleIdDeclineResponse> => {
-  return wyngFetch<postApiWingpeopleIdDeclineResponse>(getPostApiWingpeopleIdDeclineUrl(id), {
+): Promise<ContactsOkResponse> => {
+  return wyngFetch<ContactsOkResponse>(getPostApiWingpeopleIdDeclineUrl(id), {
     ...options,
     method: 'POST',
   });
@@ -467,35 +357,6 @@ export const usePostApiWingpeopleIdDecline = <TError = void, TContext = unknown>
 > => {
   return useMutation(getPostApiWingpeopleIdDeclineMutationOptions(options), queryClient);
 };
-export type deleteApiWingpeopleIdResponse200 = {
-  data: ContactsOkResponse;
-  status: 200;
-};
-
-export type deleteApiWingpeopleIdResponse401 = {
-  data: void;
-  status: 401;
-};
-
-export type deleteApiWingpeopleIdResponse404 = {
-  data: void;
-  status: 404;
-};
-
-export type deleteApiWingpeopleIdResponseSuccess = deleteApiWingpeopleIdResponse200 & {
-  headers: Headers;
-};
-export type deleteApiWingpeopleIdResponseError = (
-  | deleteApiWingpeopleIdResponse401
-  | deleteApiWingpeopleIdResponse404
-) & {
-  headers: Headers;
-};
-
-export type deleteApiWingpeopleIdResponse =
-  | deleteApiWingpeopleIdResponseSuccess
-  | deleteApiWingpeopleIdResponseError;
-
 export const getDeleteApiWingpeopleIdUrl = (id: string) => {
   return `/api/wingpeople/${id}`;
 };
@@ -503,8 +364,8 @@ export const getDeleteApiWingpeopleIdUrl = (id: string) => {
 export const deleteApiWingpeopleId = async (
   id: string,
   options?: RequestInit
-): Promise<deleteApiWingpeopleIdResponse> => {
-  return wyngFetch<deleteApiWingpeopleIdResponse>(getDeleteApiWingpeopleIdUrl(id), {
+): Promise<ContactsOkResponse> => {
+  return wyngFetch<ContactsOkResponse>(getDeleteApiWingpeopleIdUrl(id), {
     ...options,
     method: 'DELETE',
   });

@@ -1,11 +1,11 @@
 import { useRef, useState } from 'react';
-import { wingProfileToCard, type WingCard } from '@/queries/discover';
+import type { WingProfile } from '@/lib/api/generated/model';
 import { getApiWingPool } from '@/lib/api/generated/wing-pool/wing-pool';
 import { postApiDecisionsSuggestions } from '@/lib/api/generated/decisions/decisions';
 
 const PAGE_SIZE = 20;
 
-export function useWingSwipe(daterId: string, initialPool: WingCard[]) {
+export function useWingSwipe(daterId: string, initialPool: WingProfile[]) {
   const [pool, setPool] = useState(initialPool);
   const [index, setIndex] = useState(0);
 
@@ -15,15 +15,14 @@ export function useWingSwipe(daterId: string, initialPool: WingCard[]) {
   async function loadMore() {
     if (loadingMoreRef.current) return;
     loadingMoreRef.current = true;
-    const res = await getApiWingPool({
+    const data = await getApiWingPool({
       daterId,
       pageSize: PAGE_SIZE,
       pageOffset: offsetRef.current,
     });
-    if (res.status === 200 && res.data.length > 0) {
-      const cards = res.data.map(wingProfileToCard);
-      setPool((prev) => [...prev, ...cards]);
-      offsetRef.current += cards.length;
+    if (data.length > 0) {
+      setPool((prev) => [...prev, ...data]);
+      offsetRef.current += data.length;
     }
     loadingMoreRef.current = false;
   }
@@ -40,7 +39,7 @@ export function useWingSwipe(daterId: string, initialPool: WingCard[]) {
     try {
       await postApiDecisionsSuggestions({
         daterId,
-        recipientId: card.user_id,
+        recipientId: card.userId,
         note,
         decision: null,
       });
@@ -62,7 +61,7 @@ export function useWingSwipe(daterId: string, initialPool: WingCard[]) {
     try {
       await postApiDecisionsSuggestions({
         daterId,
-        recipientId: card.user_id,
+        recipientId: card.userId,
         decision: 'declined',
       });
     } catch {

@@ -13,7 +13,7 @@ import {
   updateBaseProfile,
   invalidateProfile,
 } from '@/hooks/use-profile';
-import { pickAndResizePhoto, uploadAvatar } from '@/queries/photos';
+import { pickAndResizePhoto, uploadAvatar } from '@/lib/photos';
 
 import { View, Text, Pressable, SafeAreaView } from '@/lib/tw';
 import { LargeHeader } from '@/components/ui/LargeHeader';

@@ -1,4 +1,4 @@
-import React, { Suspense, useCallback, useMemo, useState } from 'react';
+import React, { Suspense, useCallback, useState } from 'react';
 import { ActivityIndicator } from 'react-native';
 import { useForm } from 'react-hook-form';
 import { useQueryClient } from '@tanstack/react-query';
@@ -8,7 +8,6 @@ import { View, Text, ScrollView, SafeAreaView, Pressable, Modal, ModalView } fro
 import { useAuth } from '@/context/auth';
 import { useDiscover, type PoolFetcher, type LikeResult } from '@/hooks/use-discover';
 import type { Enums } from '@/types/database';
-import { discoverProfileToCard, type DiscoverCard } from '@/queries/discover';
 import { getApiDiscover, useGetApiDiscoverSuspense } from '@/lib/api/generated/discover/discover';
 import {
   getApiLikesYou,
@@ -16,7 +15,7 @@ import {
   useGetApiLikesYouSuspense,
 } from '@/lib/api/generated/likes-you/likes-you';
 import { useGetApiWingerTabsSuspense } from '@/lib/api/generated/winger-tabs/winger-tabs';
-import type { WingerTab } from '@/lib/api/generated/model';
+import type { DiscoverProfile, WingerTab } from '@/lib/api/generated/model';
 import { updateDatingProfile, useProfileData } from '@/hooks/use-profile';
 import { LargeHeader } from '@/components/ui/LargeHeader';
 import { TextTabBar } from '@/components/ui/TextTabBar';
@@ -92,16 +91,16 @@ function DiscoverPausedScreen({
 
 // ── WingNoteSection ───────────────────────────────────────────────────────────
 
-function WingNoteSection({ card }: { card: DiscoverCard }) {
+function WingNoteSection({ card }: { card: DiscoverProfile }) {
   const [expanded, setExpanded] = useState(false);
-  const initial = card.suggester_name ? card.suggester_name[0].toUpperCase() : '?';
+  const initial = card.suggesterName ? card.suggesterName[0].toUpperCase() : '?';
 
   return (
     <View className="bg-accent-muted rounded-xl p-3 mb-4 gap-[6px]">
       <View className="flex-row items-center gap-2">
         <WingStack items={[{ initials: initial }]} />
         <Text className="text-sm font-semibold text-fg flex-1">
-          {card.suggester_name} thinks you{"'"}d get along
+          {card.suggesterName} thinks you{"'"}d get along
         </Text>
       </View>
       <Text
@@ -109,7 +108,7 @@ function WingNoteSection({ card }: { card: DiscoverCard }) {
         style={{ lineHeight: 20 }}
         numberOfLines={expanded ? undefined : 2}
       >
-        {card.wing_note}
+        {card.wingNote}
       </Text>
       {!expanded && (
         <Pressable onPress={() => setExpanded(true)}>
@@ -122,18 +121,18 @@ function WingNoteSection({ card }: { card: DiscoverCard }) {
 
 // ── CardView ──────────────────────────────────────────────────────────────────
 
-function CardView({ card }: { card: DiscoverCard }) {
+function CardView({ card }: { card: DiscoverProfile }) {
   return (
     <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
       <View className="px-4">
-        <PhotoRect uri={card.first_photo} ratio={1} />
+        <PhotoRect uri={card.firstPhoto} ratio={1} />
       </View>
       <View className="p-4">
         <Text className="text-3xl font-serif font-bold text-fg">
-          {card.chosen_name}, {card.age}
+          {card.chosenName}, {card.age}
         </Text>
         <Text className="text-sm text-fg-muted mt-1 mb-3">{card.city}</Text>
-        {card.wing_note != null && <WingNoteSection card={card} />}
+        {card.wingNote != null && <WingNoteSection card={card} />}
         {card.interests.length > 0 && (
           <View className="flex-row flex-wrap gap-2 mb-4">
             {card.interests.map((interest) => (
@@ -153,20 +152,20 @@ function CardView({ card }: { card: DiscoverCard }) {
 
 // ── MatchOverlay ──────────────────────────────────────────────────────────────
 
-function MatchOverlay({ card, onDismiss }: { card: DiscoverCard; onDismiss: () => void }) {
+function MatchOverlay({ card, onDismiss }: { card: DiscoverProfile; onDismiss: () => void }) {
   return (
     <Modal visible animationType="fade" transparent>
       <ModalView backgroundColor="rgba(0,0,0,0.9)" className="justify-center items-center p-6">
         <View className="w-[80%] mb-8">
           <PhotoRect
-            uri={card.first_photo}
+            uri={card.firstPhoto}
             ratio={4 / 5}
             style={{ borderRadius: 16, overflow: 'hidden' }}
           />
         </View>
         <View className="items-center gap-3 w-full">
           <Text className="text-4xl font-serif font-bold text-white">It{"'"}s a Match!</Text>
-          <Text className="text-xl text-white/85 mb-2">{card.chosen_name}</Text>
+          <Text className="text-xl text-white/85 mb-2">{card.chosenName}</Text>
           <View className="w-full gap-3">
             <PurpleButton label="Send a Message" onPress={onDismiss} />
             <PurpleButton label="Keep Swiping" onPress={onDismiss} outline />
@@ -209,7 +208,7 @@ function EmptyState({ tabIndex, wingerName }: { tabIndex: number; wingerName?: s
 
 type PoolViewProps = {
   userId: string;
-  initialPool: DiscoverCard[];
+  initialPool: DiscoverProfile[];
   fetchPool: PoolFetcher;
   activeTabIndex: number;
   wingerTabs: WingerTab[];
@@ -226,7 +225,7 @@ function PoolView({
 }: PoolViewProps) {
   const queryClient = useQueryClient();
   const { pool, index, like, pass } = useDiscover(fetchPool, userId, initialPool);
-  const [matchCard, setMatchCard] = useState<DiscoverCard | null>(null);
+  const [matchCard, setMatchCard] = useState<DiscoverProfile | null>(null);
   const card = pool[index] ?? null;
 
   async function handleLike() {
@@ -294,25 +293,15 @@ function LikesYouPool({
   wingerTabs: WingerTab[];
   onDecrement: (() => void) | null;
 }) {
-  const { data: response } = useGetApiLikesYouSuspense({
+  const { data: initialPool } = useGetApiLikesYouSuspense({
     pageSize: PAGE_SIZE,
     pageOffset: 0,
   });
-  if (response.status !== 200) {
-    throw new Error(`Unexpected status ${response.status}`);
-  }
-  const responseData = response.data;
-  const initialPool = useMemo(() => responseData.map(discoverProfileToCard), [responseData]);
 
-  const fetchPool = useCallback<PoolFetcher>(async (_uid, pageSize, offset) => {
-    try {
-      const res = await getApiLikesYou({ pageSize, pageOffset: offset });
-      if (res.status !== 200) throw new Error(`Unexpected status ${res.status}`);
-      return { data: res.data.map(discoverProfileToCard), error: null };
-    } catch (e) {
-      return { data: null, error: e instanceof Error ? e : new Error(String(e)) };
-    }
-  }, []);
+  const fetchPool = useCallback<PoolFetcher>(
+    (_uid, pageSize, offset) => getApiLikesYou({ pageSize, pageOffset: offset }),
+    []
+  );
 
   return (
     <PoolView
@@ -346,33 +335,21 @@ function DiscoverFeedPool({
       ? (wingerTabs[activeTabIndex - 2]?.id ?? null)
       : null;
 
-  const { data: response } = useGetApiDiscoverSuspense({
+  const { data: initialPool } = useGetApiDiscoverSuspense({
     filterWingerId: wingerId ?? undefined,
     pageSize: PAGE_SIZE,
     pageOffset: 0,
     wingerOnly: isForYou,
   });
-  if (response.status !== 200) {
-    throw new Error(`Unexpected status ${response.status}`);
-  }
-  const responseData = response.data;
-  const initialPool = useMemo(() => responseData.map(discoverProfileToCard), [responseData]);
 
   const fetchPool = useCallback<PoolFetcher>(
-    async (_uid, pageSize, offset) => {
-      try {
-        const res = await getApiDiscover({
-          filterWingerId: wingerId ?? undefined,
-          pageSize,
-          pageOffset: offset,
-          wingerOnly: isForYou,
-        });
-        if (res.status !== 200) throw new Error(`Unexpected status ${res.status}`);
-        return { data: res.data.map(discoverProfileToCard), error: null };
-      } catch (e) {
-        return { data: null, error: e instanceof Error ? e : new Error(String(e)) };
-      }
-    },
+    (_uid, pageSize, offset) =>
+      getApiDiscover({
+        filterWingerId: wingerId ?? undefined,
+        pageSize,
+        pageOffset: offset,
+        wingerOnly: isForYou,
+      }),
     [wingerId, isForYou]
   );
 
@@ -427,16 +404,9 @@ function DiscoverPool({
 // ── DiscoverContent ───────────────────────────────────────────────────────────
 
 function DiscoverContent({ userId }: { userId: string }) {
-  const { data: wingerTabsResponse } = useGetApiWingerTabsSuspense();
-  if (wingerTabsResponse.status !== 200) {
-    throw new Error(`Unexpected status ${wingerTabsResponse.status}`);
-  }
-  const wingerTabs: WingerTab[] = wingerTabsResponse.data;
+  const { data: wingerTabs } = useGetApiWingerTabsSuspense();
   const { data: likesYouCountResponse } = useGetApiLikesYouCountSuspense();
-  if (likesYouCountResponse.status !== 200) {
-    throw new Error(`Unexpected status ${likesYouCountResponse.status}`);
-  }
-  const initialLikesYouCount = likesYouCountResponse.data.count;
+  const initialLikesYouCount = likesYouCountResponse.count;
   const [activeTabIndex, setActiveTabIndex] = useState(0);
   const [likesYouDecrements, setLikesYouDecrements] = useState(0);
 

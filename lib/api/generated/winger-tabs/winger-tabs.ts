@@ -20,35 +20,12 @@ import { wyngFetch } from '../../http';
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
-export type getApiWingerTabsResponse200 = {
-  data: WingerTabsResponse;
-  status: 200;
-};
-
-export type getApiWingerTabsResponse401 = {
-  data: void;
-  status: 401;
-};
-
-export type getApiWingerTabsResponseSuccess = getApiWingerTabsResponse200 & {
-  headers: Headers;
-};
-export type getApiWingerTabsResponseError = getApiWingerTabsResponse401 & {
-  headers: Headers;
-};
-
-export type getApiWingerTabsResponse =
-  | getApiWingerTabsResponseSuccess
-  | getApiWingerTabsResponseError;
-
 export const getGetApiWingerTabsUrl = () => {
   return `/api/winger-tabs`;
 };
 
-export const getApiWingerTabs = async (
-  options?: RequestInit
-): Promise<getApiWingerTabsResponse> => {
-  return wyngFetch<getApiWingerTabsResponse>(getGetApiWingerTabsUrl(), {
+export const getApiWingerTabs = async (options?: RequestInit): Promise<WingerTabsResponse> => {
+  return wyngFetch<WingerTabsResponse>(getGetApiWingerTabsUrl(), {
     ...options,
     method: 'GET',
   });

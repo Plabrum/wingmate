@@ -1,9 +1,3 @@
-// TRANSITIONAL: shape-bridges for the profiles port. The generated hooks return
-// camelCase from the `api` function; legacy consumers still expect the snake_case
-// row shape from PostgREST. The camel-case sweep (issue #34) deletes these bridges
-// and switches consumers to Orval models directly. Until then this file is the
-// single boundary where camel → snake conversion happens.
-
 import { useSuspenseQueries, type QueryClient } from '@tanstack/react-query';
 import type { Enums } from '@/types/database';
 import {
@@ -231,13 +225,6 @@ function toDaterProfile(pp: PublicProfile): DaterProfile | null {
 
 // ── Suspense hooks ───────────────────────────────────────────────────────────
 
-function unwrap200<T extends { status: number; data: unknown }>(
-  res: T
-): Extract<T, { status: 200 }>['data'] {
-  if (res.status !== 200) throw new Error(`Unexpected status ${res.status}`);
-  return res.data as Extract<T, { status: 200 }>['data'];
-}
-
 export function useProfileData(_userId: string) {
   const queries = useSuspenseQueries({
     queries: [
@@ -255,24 +242,16 @@ export function useProfileData(_userId: string) {
   const profileRes = queries[0];
   const datingRes = queries[1];
 
-  const profilePayload = unwrap200(profileRes.data);
-  const datingPayload = unwrap200(datingRes.data);
-
   const data: ProfileData = {
-    profile: toSnakeProfile(profilePayload),
-    datingProfile: datingPayload ? toSnakeDatingProfile(datingPayload) : null,
+    profile: toSnakeProfile(profileRes.data),
+    datingProfile: datingRes.data ? toSnakeDatingProfile(datingRes.data) : null,
   };
 
   async function refetch() {
     const [p, d] = await Promise.all([profileRes.refetch(), datingRes.refetch()]);
     const next: ProfileData = {
-      profile: p.data ? toSnakeProfile(unwrap200(p.data)) : null,
-      datingProfile: d.data
-        ? (() => {
-            const payload = unwrap200(d.data);
-            return payload ? toSnakeDatingProfile(payload) : null;
-          })()
-        : null,
+      profile: p.data ? toSnakeProfile(p.data) : null,
+      datingProfile: d.data ? toSnakeDatingProfile(d.data) : null,
     };
     return { data: next };
   }
@@ -291,8 +270,7 @@ export function useDaterContext(daterId: string) {
       },
     ],
   });
-  const payload = unwrap200(res.data);
-  return { data: { chosen_name: payload.chosenName } };
+  return { data: { chosen_name: res.data.chosenName } };
 }
 
 export function useDaterProfile(daterId: string) {
@@ -306,8 +284,7 @@ export function useDaterProfile(daterId: string) {
       },
     ],
   });
-  const payload = unwrap200(res.data);
-  return { data: toDaterProfile(payload) };
+  return { data: toDaterProfile(res.data) };
 }
 
 // ── Cache key helpers ────────────────────────────────────────────────────────
@@ -355,10 +332,7 @@ export async function updateBaseProfile(
   fields: UpdateBaseProfileFields
 ): Promise<{ error: Error | null }> {
   try {
-    const res = await patchApiProfilesMe(snakeToCamelProfile(fields));
-    if (res.status !== 200) {
-      return { error: new Error(`Failed to update profile: ${res.status}`) };
-    }
+    await patchApiProfilesMe(snakeToCamelProfile(fields));
     return { error: null };
   } catch (e) {
     return { error: e instanceof Error ? e : new Error(String(e)) };
@@ -398,10 +372,7 @@ export async function createDatingProfile(
       datingStatus: fields.dating_status,
     };
     const res = await postApiDatingProfiles(body);
-    if (res.status !== 200) {
-      return { data: null, error: new Error(`Failed to create dating profile: ${res.status}`) };
-    }
-    return { data: { id: res.data.id }, error: null };
+    return { data: { id: res.id }, error: null };
   } catch (e) {
     return { data: null, error: e instanceof Error ? e : new Error(String(e)) };
   }
@@ -438,10 +409,7 @@ export async function updateDatingProfile(
     if (fields.dating_status !== undefined) body.datingStatus = fields.dating_status;
     if (fields.is_active !== undefined) body.isActive = fields.is_active;
 
-    const res = await patchApiDatingProfilesMe(body);
-    if (res.status !== 200) {
-      return { error: new Error(`Failed to update dating profile: ${res.status}`) };
-    }
+    await patchApiDatingProfilesMe(body);
     return { error: null };
   } catch (e) {
     return { error: e instanceof Error ? e : new Error(String(e)) };
@@ -455,10 +423,7 @@ export async function getOwnDatingProfileSnapshot(): Promise<{
 }> {
   try {
     const res = await getApiDatingProfilesMe();
-    if (res.status !== 200) {
-      return { data: null, error: new Error(`Failed to load dating profile: ${res.status}`) };
-    }
-    return { data: res.data ? toSnakeDatingProfile(res.data) : null, error: null };
+    return { data: res ? toSnakeDatingProfile(res) : null, error: null };
   } catch (e) {
     return { data: null, error: e instanceof Error ? e : new Error(String(e)) };
   }

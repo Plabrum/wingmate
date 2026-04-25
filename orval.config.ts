@@ -15,6 +15,9 @@ export default defineConfig({
           path: './lib/api/http.ts',
           name: 'wyngFetch',
         },
+        fetch: {
+          includeHttpResponseReturnType: false,
+        },
         query: {
           useQuery: false,
           useSuspenseQuery: true,

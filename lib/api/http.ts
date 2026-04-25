@@ -32,7 +32,7 @@ export async function wyngFetch<T>(url: string, options: RequestInit = {}): Prom
     );
   }
 
-  return { data, status: res.status, headers: res.headers } as T;
+  return data as T;
 }
 
 export default wyngFetch;

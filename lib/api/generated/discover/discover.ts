@@ -20,25 +20,6 @@ import { wyngFetch } from '../../http';
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
-export type getApiDiscoverResponse200 = {
-  data: DiscoverResponse;
-  status: 200;
-};
-
-export type getApiDiscoverResponse401 = {
-  data: void;
-  status: 401;
-};
-
-export type getApiDiscoverResponseSuccess = getApiDiscoverResponse200 & {
-  headers: Headers;
-};
-export type getApiDiscoverResponseError = getApiDiscoverResponse401 & {
-  headers: Headers;
-};
-
-export type getApiDiscoverResponse = getApiDiscoverResponseSuccess | getApiDiscoverResponseError;
-
 export const getGetApiDiscoverUrl = (params?: GetApiDiscoverParams) => {
   const normalizedParams = new URLSearchParams();
 
@@ -56,8 +37,8 @@ export const getGetApiDiscoverUrl = (params?: GetApiDiscoverParams) => {
 export const getApiDiscover = async (
   params?: GetApiDiscoverParams,
   options?: RequestInit
-): Promise<getApiDiscoverResponse> => {
-  return wyngFetch<getApiDiscoverResponse>(getGetApiDiscoverUrl(params), {
+): Promise<DiscoverResponse> => {
+  return wyngFetch<DiscoverResponse>(getGetApiDiscoverUrl(params), {
     ...options,
     method: 'GET',
   });

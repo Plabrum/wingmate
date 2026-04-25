@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { KeyboardAvoidingView, Modal, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -11,7 +11,7 @@ import { PhotoRect } from '@/components/ui/PhotoRect';
 import { Pill } from '@/components/ui/Pill';
 import { PurpleButton } from '@/components/ui/PurpleButton';
 import { useDaterContext } from '@/hooks/use-profile';
-import { wingProfileToCard } from '@/queries/discover';
+import type { WingProfile } from '@/lib/api/generated/model';
 import { useGetApiWingPoolSuspense } from '@/lib/api/generated/wing-pool/wing-pool';
 import ScreenSuspense from '@/components/ui/ScreenSuspense';
 import { cardButtonShadow } from '@/lib/styles';
@@ -20,24 +20,13 @@ const PAGE_SIZE = 20;
 
 // ── WingCardView ──────────────────────────────────────────────────────────────
 
-type WingCardViewProps = {
-  card: {
-    chosen_name: string;
-    age: number;
-    city: string;
-    interests: string[];
-    bio: string | null;
-    first_photo: string | null;
-  };
-};
-
-function WingCardView({ card }: WingCardViewProps) {
+function WingCardView({ card }: { card: WingProfile }) {
   return (
     <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-      <PhotoRect uri={card.first_photo} ratio={4 / 5} />
+      <PhotoRect uri={card.firstPhoto} ratio={4 / 5} />
       <View className="p-4">
         <Text className="text-3xl font-serif text-fg font-bold">
-          {card.chosen_name}, {card.age}
+          {card.chosenName}, {card.age}
         </Text>
         <Text className="text-sm text-fg-muted mt-1 mb-3">{card.city}</Text>
         {card.interests.length > 0 && (
@@ -132,16 +121,11 @@ function WingSwipeContent() {
   const { daterId } = useLocalSearchParams<{ daterId: string }>();
 
   const { data: daterContext } = useDaterContext(daterId);
-  const { data: response } = useGetApiWingPoolSuspense({
+  const { data: initialPool } = useGetApiWingPoolSuspense({
     daterId,
     pageSize: PAGE_SIZE,
     pageOffset: 0,
   });
-  if (response.status !== 200) {
-    throw new Error(`Unexpected status ${response.status}`);
-  }
-  const responseData = response.data;
-  const initialPool = useMemo(() => responseData.map(wingProfileToCard), [responseData]);
 
   const { pool, index, suggest, decline } = useWingSwipe(daterId, initialPool);
   const card = pool[index] ?? null;

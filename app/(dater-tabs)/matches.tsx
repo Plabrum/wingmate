@@ -66,8 +66,7 @@ function MatchCard({ match, onPress }: MatchCardProps) {
 function SheetBody({ match }: { match: MatchSummary }) {
   const { other } = match;
   const { data } = useGetApiMatchesMatchIdSheetSuspense(match.matchId);
-  if (data.status !== 200) throw new Error('Failed to load match sheet');
-  const { wingNote, prompts } = data.data;
+  const { wingNote, prompts } = data;
   const [promptStates, setPromptStates] = useState<Record<string, PromptState>>({});
 
   function setPromptField(promptId: string, patch: Partial<PromptState>) {
@@ -87,11 +86,10 @@ function SheetBody({ match }: { match: MatchSummary }) {
 
     setPromptField(promptId, { sending: true, error: null });
     try {
-      const res = await postApiPromptResponses({
+      await postApiPromptResponses({
         profilePromptId: promptId,
         message: state.text.trim(),
       });
-      if (res.status !== 200) throw new Error(`reply failed: ${res.status}`);
       setPromptField(promptId, { sending: false, sent: true });
     } catch {
       setPromptField(promptId, { sending: false, error: 'Failed to send. Try again.' });
@@ -300,9 +298,7 @@ function MatchSheet({ match, visible, onClose }: MatchSheetProps) {
 // ── MatchesList ───────────────────────────────────────────────────────────────
 
 function MatchesList() {
-  const { data, refetch, isRefetching } = useGetApiMatchesSuspense();
-  if (data.status !== 200) throw new Error('Failed to load matches');
-  const matches = data.data;
+  const { data: matches, refetch, isRefetching } = useGetApiMatchesSuspense();
   const [selectedMatch, setSelectedMatch] = useState<MatchSummary | null>(null);
 
   return (

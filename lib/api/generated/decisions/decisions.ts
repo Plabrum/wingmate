@@ -31,35 +31,6 @@ import { wyngFetch } from '../../http';
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
-export type postApiDecisionsResponse200 = {
-  data: DirectDecisionResponse;
-  status: 200;
-};
-
-export type postApiDecisionsResponse400 = {
-  data: void;
-  status: 400;
-};
-
-export type postApiDecisionsResponse401 = {
-  data: void;
-  status: 401;
-};
-
-export type postApiDecisionsResponseSuccess = postApiDecisionsResponse200 & {
-  headers: Headers;
-};
-export type postApiDecisionsResponseError = (
-  | postApiDecisionsResponse400
-  | postApiDecisionsResponse401
-) & {
-  headers: Headers;
-};
-
-export type postApiDecisionsResponse =
-  | postApiDecisionsResponseSuccess
-  | postApiDecisionsResponseError;
-
 export const getPostApiDecisionsUrl = () => {
   return `/api/decisions`;
 };
@@ -67,8 +38,8 @@ export const getPostApiDecisionsUrl = () => {
 export const postApiDecisions = async (
   directDecisionRequest: DirectDecisionRequest,
   options?: RequestInit
-): Promise<postApiDecisionsResponse> => {
-  return wyngFetch<postApiDecisionsResponse>(getPostApiDecisionsUrl(), {
+): Promise<DirectDecisionResponse> => {
+  return wyngFetch<DirectDecisionResponse>(getPostApiDecisionsUrl(), {
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...options?.headers },
@@ -134,36 +105,6 @@ export const usePostApiDecisions = <TError = void, TContext = unknown>(
 > => {
   return useMutation(getPostApiDecisionsMutationOptions(options), queryClient);
 };
-export type postApiDecisionsSuggestionsActResponse200 = {
-  data: ActSuggestionResponse;
-  status: 200;
-};
-
-export type postApiDecisionsSuggestionsActResponse401 = {
-  data: void;
-  status: 401;
-};
-
-export type postApiDecisionsSuggestionsActResponse404 = {
-  data: void;
-  status: 404;
-};
-
-export type postApiDecisionsSuggestionsActResponseSuccess =
-  postApiDecisionsSuggestionsActResponse200 & {
-    headers: Headers;
-  };
-export type postApiDecisionsSuggestionsActResponseError = (
-  | postApiDecisionsSuggestionsActResponse401
-  | postApiDecisionsSuggestionsActResponse404
-) & {
-  headers: Headers;
-};
-
-export type postApiDecisionsSuggestionsActResponse =
-  | postApiDecisionsSuggestionsActResponseSuccess
-  | postApiDecisionsSuggestionsActResponseError;
-
 export const getPostApiDecisionsSuggestionsActUrl = () => {
   return `/api/decisions/suggestions/act`;
 };
@@ -171,8 +112,8 @@ export const getPostApiDecisionsSuggestionsActUrl = () => {
 export const postApiDecisionsSuggestionsAct = async (
   actSuggestionRequest: ActSuggestionRequest,
   options?: RequestInit
-): Promise<postApiDecisionsSuggestionsActResponse> => {
-  return wyngFetch<postApiDecisionsSuggestionsActResponse>(getPostApiDecisionsSuggestionsActUrl(), {
+): Promise<ActSuggestionResponse> => {
+  return wyngFetch<ActSuggestionResponse>(getPostApiDecisionsSuggestionsActUrl(), {
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...options?.headers },
@@ -241,41 +182,6 @@ export const usePostApiDecisionsSuggestionsAct = <TError = void, TContext = unkn
 > => {
   return useMutation(getPostApiDecisionsSuggestionsActMutationOptions(options), queryClient);
 };
-export type postApiDecisionsSuggestionsResponse200 = {
-  data: SuggestResponse;
-  status: 200;
-};
-
-export type postApiDecisionsSuggestionsResponse400 = {
-  data: void;
-  status: 400;
-};
-
-export type postApiDecisionsSuggestionsResponse401 = {
-  data: void;
-  status: 401;
-};
-
-export type postApiDecisionsSuggestionsResponse403 = {
-  data: void;
-  status: 403;
-};
-
-export type postApiDecisionsSuggestionsResponseSuccess = postApiDecisionsSuggestionsResponse200 & {
-  headers: Headers;
-};
-export type postApiDecisionsSuggestionsResponseError = (
-  | postApiDecisionsSuggestionsResponse400
-  | postApiDecisionsSuggestionsResponse401
-  | postApiDecisionsSuggestionsResponse403
-) & {
-  headers: Headers;
-};
-
-export type postApiDecisionsSuggestionsResponse =
-  | postApiDecisionsSuggestionsResponseSuccess
-  | postApiDecisionsSuggestionsResponseError;
-
 export const getPostApiDecisionsSuggestionsUrl = () => {
   return `/api/decisions/suggestions`;
 };
@@ -283,8 +189,8 @@ export const getPostApiDecisionsSuggestionsUrl = () => {
 export const postApiDecisionsSuggestions = async (
   suggestRequest: SuggestRequest,
   options?: RequestInit
-): Promise<postApiDecisionsSuggestionsResponse> => {
-  return wyngFetch<postApiDecisionsSuggestionsResponse>(getPostApiDecisionsSuggestionsUrl(), {
+): Promise<SuggestResponse> => {
+  return wyngFetch<SuggestResponse>(getPostApiDecisionsSuggestionsUrl(), {
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...options?.headers },
@@ -353,43 +259,17 @@ export const usePostApiDecisionsSuggestions = <TError = void, TContext = unknown
 > => {
   return useMutation(getPostApiDecisionsSuggestionsMutationOptions(options), queryClient);
 };
-export type getApiDecisionsPendingSuggestionsResponse200 = {
-  data: PendingSuggestionsResponse;
-  status: 200;
-};
-
-export type getApiDecisionsPendingSuggestionsResponse401 = {
-  data: void;
-  status: 401;
-};
-
-export type getApiDecisionsPendingSuggestionsResponseSuccess =
-  getApiDecisionsPendingSuggestionsResponse200 & {
-    headers: Headers;
-  };
-export type getApiDecisionsPendingSuggestionsResponseError =
-  getApiDecisionsPendingSuggestionsResponse401 & {
-    headers: Headers;
-  };
-
-export type getApiDecisionsPendingSuggestionsResponse =
-  | getApiDecisionsPendingSuggestionsResponseSuccess
-  | getApiDecisionsPendingSuggestionsResponseError;
-
 export const getGetApiDecisionsPendingSuggestionsUrl = () => {
   return `/api/decisions/pending-suggestions`;
 };
 
 export const getApiDecisionsPendingSuggestions = async (
   options?: RequestInit
-): Promise<getApiDecisionsPendingSuggestionsResponse> => {
-  return wyngFetch<getApiDecisionsPendingSuggestionsResponse>(
-    getGetApiDecisionsPendingSuggestionsUrl(),
-    {
-      ...options,
-      method: 'GET',
-    }
-  );
+): Promise<PendingSuggestionsResponse> => {
+  return wyngFetch<PendingSuggestionsResponse>(getGetApiDecisionsPendingSuggestionsUrl(), {
+    ...options,
+    method: 'GET',
+  });
 };
 
 export const getGetApiDecisionsPendingSuggestionsQueryKey = () => {

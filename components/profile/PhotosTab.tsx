@@ -5,7 +5,7 @@ import type { UseFormReturn } from 'react-hook-form';
 
 import { colors } from '@/constants/theme';
 import type { OwnDatingProfile } from '@/hooks/use-profile';
-import { getPhotoUrl, pickAndResizePhoto, removePhotoStorage, uploadPhoto } from '@/queries/photos';
+import { getPhotoUrl, pickAndResizePhoto, removePhotoStorage, uploadPhoto } from '@/lib/photos';
 import {
   patchApiPhotosIdReorder,
   postApiPhotos,

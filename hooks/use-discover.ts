@@ -1,13 +1,5 @@
-// TRANSITIONAL: uses legacy `DiscoverCard` (snake_case) and `PoolFetcher`'s
-// `{ data, error }` shape to stay compatible with the pre-migration screens. When the
-// discover + likes-you endpoints are fully ported and `DiscoverCard` is replaced by the
-// Orval-generated `DiscoverProfile` (camelCase), flip `PoolFetcher` to return
-// `DiscoverProfile[]` and throw on error — the callsite try/catch in discover.tsx goes
-// away and this hook becomes a thin swipe-state machine around the generated hook.
-
 import { useRef, useState } from 'react';
-import { type DiscoverCard } from '@/queries/discover';
-import type { DirectDecisionRequestDecision } from '@/lib/api/generated/model';
+import type { DirectDecisionRequestDecision, DiscoverProfile } from '@/lib/api/generated/model';
 import {
   postApiDecisions,
   postApiDecisionsSuggestionsAct,
@@ -21,12 +13,12 @@ export type PoolFetcher = (
   userId: string,
   pageSize: number,
   offset: number
-) => Promise<{ data: DiscoverCard[] | null; error: Error | null }>;
+) => Promise<DiscoverProfile[]>;
 
 export function useDiscover(
   fetchPool: PoolFetcher,
   userId: string | null,
-  initialPool: DiscoverCard[]
+  initialPool: DiscoverProfile[]
 ) {
   const [pool, setPool] = useState(initialPool);
   const [index, setIndex] = useState(0);
@@ -38,8 +30,8 @@ export function useDiscover(
   async function loadMore() {
     if (!userId || loadingMoreRef.current) return;
     loadingMoreRef.current = true;
-    const { data } = await fetchPool(userId, PAGE_SIZE, offsetRef.current);
-    if (data && data.length > 0) {
+    const data = await fetchPool(userId, PAGE_SIZE, offsetRef.current);
+    if (data.length > 0) {
       setPool((prev) => [...prev, ...data]);
       offsetRef.current += data.length;
     }
@@ -47,21 +39,19 @@ export function useDiscover(
   }
 
   async function decide(
-    card: DiscoverCard,
+    card: DiscoverProfile,
     decision: DirectDecisionRequestDecision
   ): Promise<{ matched: boolean } | { error: true }> {
     try {
-      if (card.suggested_by) {
+      if (card.suggestedBy) {
         const res = await postApiDecisionsSuggestionsAct({
-          recipientId: card.user_id,
+          recipientId: card.userId,
           decision,
         });
-        if (res.status !== 200) return { error: true };
-        return { matched: res.data.match != null };
+        return { matched: res.match != null };
       }
-      const res = await postApiDecisions({ recipientId: card.user_id, decision });
-      if (res.status !== 200) return { error: true };
-      return { matched: res.data.match != null };
+      const res = await postApiDecisions({ recipientId: card.userId, decision });
+      return { matched: res.match != null };
     } catch {
       return { error: true };
     }

@@ -20,33 +20,6 @@ import { wyngFetch } from '../../http';
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
-export type getApiWingPoolResponse200 = {
-  data: WingPoolResponse;
-  status: 200;
-};
-
-export type getApiWingPoolResponse401 = {
-  data: void;
-  status: 401;
-};
-
-export type getApiWingPoolResponse403 = {
-  data: void;
-  status: 403;
-};
-
-export type getApiWingPoolResponseSuccess = getApiWingPoolResponse200 & {
-  headers: Headers;
-};
-export type getApiWingPoolResponseError = (
-  | getApiWingPoolResponse401
-  | getApiWingPoolResponse403
-) & {
-  headers: Headers;
-};
-
-export type getApiWingPoolResponse = getApiWingPoolResponseSuccess | getApiWingPoolResponseError;
-
 export const getGetApiWingPoolUrl = (params: GetApiWingPoolParams) => {
   const normalizedParams = new URLSearchParams();
 
@@ -64,8 +37,8 @@ export const getGetApiWingPoolUrl = (params: GetApiWingPoolParams) => {
 export const getApiWingPool = async (
   params: GetApiWingPoolParams,
   options?: RequestInit
-): Promise<getApiWingPoolResponse> => {
-  return wyngFetch<getApiWingPoolResponse>(getGetApiWingPoolUrl(params), {
+): Promise<WingPoolResponse> => {
+  return wyngFetch<WingPoolResponse>(getGetApiWingPoolUrl(params), {
     ...options,
     method: 'GET',
   });

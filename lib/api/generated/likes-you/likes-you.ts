@@ -20,25 +20,6 @@ import { wyngFetch } from '../../http';
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
-export type getApiLikesYouResponse200 = {
-  data: LikesYouResponse;
-  status: 200;
-};
-
-export type getApiLikesYouResponse401 = {
-  data: void;
-  status: 401;
-};
-
-export type getApiLikesYouResponseSuccess = getApiLikesYouResponse200 & {
-  headers: Headers;
-};
-export type getApiLikesYouResponseError = getApiLikesYouResponse401 & {
-  headers: Headers;
-};
-
-export type getApiLikesYouResponse = getApiLikesYouResponseSuccess | getApiLikesYouResponseError;
-
 export const getGetApiLikesYouUrl = (params?: GetApiLikesYouParams) => {
   const normalizedParams = new URLSearchParams();
 
@@ -56,8 +37,8 @@ export const getGetApiLikesYouUrl = (params?: GetApiLikesYouParams) => {
 export const getApiLikesYou = async (
   params?: GetApiLikesYouParams,
   options?: RequestInit
-): Promise<getApiLikesYouResponse> => {
-  return wyngFetch<getApiLikesYouResponse>(getGetApiLikesYouUrl(params), {
+): Promise<LikesYouResponse> => {
+  return wyngFetch<LikesYouResponse>(getGetApiLikesYouUrl(params), {
     ...options,
     method: 'GET',
   });
@@ -161,35 +142,14 @@ export function useGetApiLikesYouSuspense<
   return { ...query, queryKey: queryOptions.queryKey };
 }
 
-export type getApiLikesYouCountResponse200 = {
-  data: LikesYouCountResponse;
-  status: 200;
-};
-
-export type getApiLikesYouCountResponse401 = {
-  data: void;
-  status: 401;
-};
-
-export type getApiLikesYouCountResponseSuccess = getApiLikesYouCountResponse200 & {
-  headers: Headers;
-};
-export type getApiLikesYouCountResponseError = getApiLikesYouCountResponse401 & {
-  headers: Headers;
-};
-
-export type getApiLikesYouCountResponse =
-  | getApiLikesYouCountResponseSuccess
-  | getApiLikesYouCountResponseError;
-
 export const getGetApiLikesYouCountUrl = () => {
   return `/api/likes-you/count`;
 };
 
 export const getApiLikesYouCount = async (
   options?: RequestInit
-): Promise<getApiLikesYouCountResponse> => {
-  return wyngFetch<getApiLikesYouCountResponse>(getGetApiLikesYouCountUrl(), {
+): Promise<LikesYouCountResponse> => {
+  return wyngFetch<LikesYouCountResponse>(getGetApiLikesYouCountUrl(), {
     ...options,
     method: 'GET',
   });

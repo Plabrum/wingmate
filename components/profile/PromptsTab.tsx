@@ -132,8 +132,7 @@ export function PromptsTab({ form, onRefresh }: Props) {
       )
     );
     try {
-      const res = await postApiPromptResponsesIdApprove(responseId);
-      if (res.status !== 200) throw new Error(`approve failed: ${res.status}`);
+      await postApiPromptResponsesIdApprove(responseId);
     } catch {
       form.setValue('prompts', prev);
       toast.error('Could not approve comment.');
@@ -149,8 +148,7 @@ export function PromptsTab({ form, onRefresh }: Props) {
       )
     );
     try {
-      const res = await deleteApiPromptResponsesId(responseId);
-      if (res.status !== 200) throw new Error(`reject failed: ${res.status}`);
+      await deleteApiPromptResponsesId(responseId);
     } catch {
       form.setValue('prompts', prev);
       toast.error('Could not reject comment.');
@@ -164,8 +162,7 @@ export function PromptsTab({ form, onRefresh }: Props) {
       prompts.filter((p) => p.id !== promptId)
     );
     try {
-      const res = await deleteApiProfilePromptsId(promptId);
-      if (res.status !== 200) throw new Error(`delete failed: ${res.status}`);
+      await deleteApiProfilePromptsId(promptId);
     } catch {
       form.setValue('prompts', prev);
       toast.error('Could not remove prompt.');

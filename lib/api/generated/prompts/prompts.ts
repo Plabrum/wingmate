@@ -31,35 +31,14 @@ import { wyngFetch } from '../../http';
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
-export type getApiPromptTemplatesResponse200 = {
-  data: PromptTemplatesResponse;
-  status: 200;
-};
-
-export type getApiPromptTemplatesResponse401 = {
-  data: void;
-  status: 401;
-};
-
-export type getApiPromptTemplatesResponseSuccess = getApiPromptTemplatesResponse200 & {
-  headers: Headers;
-};
-export type getApiPromptTemplatesResponseError = getApiPromptTemplatesResponse401 & {
-  headers: Headers;
-};
-
-export type getApiPromptTemplatesResponse =
-  | getApiPromptTemplatesResponseSuccess
-  | getApiPromptTemplatesResponseError;
-
 export const getGetApiPromptTemplatesUrl = () => {
   return `/api/prompt-templates`;
 };
 
 export const getApiPromptTemplates = async (
   options?: RequestInit
-): Promise<getApiPromptTemplatesResponse> => {
-  return wyngFetch<getApiPromptTemplatesResponse>(getGetApiPromptTemplatesUrl(), {
+): Promise<PromptTemplatesResponse> => {
+  return wyngFetch<PromptTemplatesResponse>(getGetApiPromptTemplatesUrl(), {
     ...options,
     method: 'GET',
   });
@@ -156,43 +135,17 @@ export function useGetApiPromptTemplatesSuspense<
   return { ...query, queryKey: queryOptions.queryKey };
 }
 
-export type getApiPromptTemplatesOnboardingResponse200 = {
-  data: PromptTemplatesResponse;
-  status: 200;
-};
-
-export type getApiPromptTemplatesOnboardingResponse401 = {
-  data: void;
-  status: 401;
-};
-
-export type getApiPromptTemplatesOnboardingResponseSuccess =
-  getApiPromptTemplatesOnboardingResponse200 & {
-    headers: Headers;
-  };
-export type getApiPromptTemplatesOnboardingResponseError =
-  getApiPromptTemplatesOnboardingResponse401 & {
-    headers: Headers;
-  };
-
-export type getApiPromptTemplatesOnboardingResponse =
-  | getApiPromptTemplatesOnboardingResponseSuccess
-  | getApiPromptTemplatesOnboardingResponseError;
-
 export const getGetApiPromptTemplatesOnboardingUrl = () => {
   return `/api/prompt-templates/onboarding`;
 };
 
 export const getApiPromptTemplatesOnboarding = async (
   options?: RequestInit
-): Promise<getApiPromptTemplatesOnboardingResponse> => {
-  return wyngFetch<getApiPromptTemplatesOnboardingResponse>(
-    getGetApiPromptTemplatesOnboardingUrl(),
-    {
-      ...options,
-      method: 'GET',
-    }
-  );
+): Promise<PromptTemplatesResponse> => {
+  return wyngFetch<PromptTemplatesResponse>(getGetApiPromptTemplatesOnboardingUrl(), {
+    ...options,
+    method: 'GET',
+  });
 };
 
 export const getGetApiPromptTemplatesOnboardingQueryKey = () => {
@@ -307,35 +260,14 @@ export function useGetApiPromptTemplatesOnboardingSuspense<
   return { ...query, queryKey: queryOptions.queryKey };
 }
 
-export type getApiProfilePromptsMeResponse200 = {
-  data: ProfilePromptsResponse;
-  status: 200;
-};
-
-export type getApiProfilePromptsMeResponse401 = {
-  data: void;
-  status: 401;
-};
-
-export type getApiProfilePromptsMeResponseSuccess = getApiProfilePromptsMeResponse200 & {
-  headers: Headers;
-};
-export type getApiProfilePromptsMeResponseError = getApiProfilePromptsMeResponse401 & {
-  headers: Headers;
-};
-
-export type getApiProfilePromptsMeResponse =
-  | getApiProfilePromptsMeResponseSuccess
-  | getApiProfilePromptsMeResponseError;
-
 export const getGetApiProfilePromptsMeUrl = () => {
   return `/api/profile-prompts/me`;
 };
 
 export const getApiProfilePromptsMe = async (
   options?: RequestInit
-): Promise<getApiProfilePromptsMeResponse> => {
-  return wyngFetch<getApiProfilePromptsMeResponse>(getGetApiProfilePromptsMeUrl(), {
+): Promise<ProfilePromptsResponse> => {
+  return wyngFetch<ProfilePromptsResponse>(getGetApiProfilePromptsMeUrl(), {
     ...options,
     method: 'GET',
   });
@@ -432,41 +364,6 @@ export function useGetApiProfilePromptsMeSuspense<
   return { ...query, queryKey: queryOptions.queryKey };
 }
 
-export type postApiProfilePromptsResponse200 = {
-  data: ProfilePrompt;
-  status: 200;
-};
-
-export type postApiProfilePromptsResponse400 = {
-  data: void;
-  status: 400;
-};
-
-export type postApiProfilePromptsResponse401 = {
-  data: void;
-  status: 401;
-};
-
-export type postApiProfilePromptsResponse404 = {
-  data: void;
-  status: 404;
-};
-
-export type postApiProfilePromptsResponseSuccess = postApiProfilePromptsResponse200 & {
-  headers: Headers;
-};
-export type postApiProfilePromptsResponseError = (
-  | postApiProfilePromptsResponse400
-  | postApiProfilePromptsResponse401
-  | postApiProfilePromptsResponse404
-) & {
-  headers: Headers;
-};
-
-export type postApiProfilePromptsResponse =
-  | postApiProfilePromptsResponseSuccess
-  | postApiProfilePromptsResponseError;
-
 export const getPostApiProfilePromptsUrl = () => {
   return `/api/profile-prompts`;
 };
@@ -474,8 +371,8 @@ export const getPostApiProfilePromptsUrl = () => {
 export const postApiProfilePrompts = async (
   createProfilePromptRequest: CreateProfilePromptRequest,
   options?: RequestInit
-): Promise<postApiProfilePromptsResponse> => {
-  return wyngFetch<postApiProfilePromptsResponse>(getPostApiProfilePromptsUrl(), {
+): Promise<ProfilePrompt> => {
+  return wyngFetch<ProfilePrompt>(getPostApiProfilePromptsUrl(), {
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...options?.headers },
@@ -544,35 +441,6 @@ export const usePostApiProfilePrompts = <TError = void, TContext = unknown>(
 > => {
   return useMutation(getPostApiProfilePromptsMutationOptions(options), queryClient);
 };
-export type deleteApiProfilePromptsIdResponse200 = {
-  data: PromptsOkResponse;
-  status: 200;
-};
-
-export type deleteApiProfilePromptsIdResponse401 = {
-  data: void;
-  status: 401;
-};
-
-export type deleteApiProfilePromptsIdResponse404 = {
-  data: void;
-  status: 404;
-};
-
-export type deleteApiProfilePromptsIdResponseSuccess = deleteApiProfilePromptsIdResponse200 & {
-  headers: Headers;
-};
-export type deleteApiProfilePromptsIdResponseError = (
-  | deleteApiProfilePromptsIdResponse401
-  | deleteApiProfilePromptsIdResponse404
-) & {
-  headers: Headers;
-};
-
-export type deleteApiProfilePromptsIdResponse =
-  | deleteApiProfilePromptsIdResponseSuccess
-  | deleteApiProfilePromptsIdResponseError;
-
 export const getDeleteApiProfilePromptsIdUrl = (id: string) => {
   return `/api/profile-prompts/${id}`;
 };
@@ -580,8 +448,8 @@ export const getDeleteApiProfilePromptsIdUrl = (id: string) => {
 export const deleteApiProfilePromptsId = async (
   id: string,
   options?: RequestInit
-): Promise<deleteApiProfilePromptsIdResponse> => {
-  return wyngFetch<deleteApiProfilePromptsIdResponse>(getDeleteApiProfilePromptsIdUrl(id), {
+): Promise<PromptsOkResponse> => {
+  return wyngFetch<PromptsOkResponse>(getDeleteApiProfilePromptsIdUrl(id), {
     ...options,
     method: 'DELETE',
   });
@@ -648,47 +516,6 @@ export const useDeleteApiProfilePromptsId = <TError = void, TContext = unknown>(
 > => {
   return useMutation(getDeleteApiProfilePromptsIdMutationOptions(options), queryClient);
 };
-export type postApiPromptResponsesResponse200 = {
-  data: PromptResponse;
-  status: 200;
-};
-
-export type postApiPromptResponsesResponse400 = {
-  data: void;
-  status: 400;
-};
-
-export type postApiPromptResponsesResponse401 = {
-  data: void;
-  status: 401;
-};
-
-export type postApiPromptResponsesResponse403 = {
-  data: void;
-  status: 403;
-};
-
-export type postApiPromptResponsesResponse404 = {
-  data: void;
-  status: 404;
-};
-
-export type postApiPromptResponsesResponseSuccess = postApiPromptResponsesResponse200 & {
-  headers: Headers;
-};
-export type postApiPromptResponsesResponseError = (
-  | postApiPromptResponsesResponse400
-  | postApiPromptResponsesResponse401
-  | postApiPromptResponsesResponse403
-  | postApiPromptResponsesResponse404
-) & {
-  headers: Headers;
-};
-
-export type postApiPromptResponsesResponse =
-  | postApiPromptResponsesResponseSuccess
-  | postApiPromptResponsesResponseError;
-
 export const getPostApiPromptResponsesUrl = () => {
   return `/api/prompt-responses`;
 };
@@ -696,8 +523,8 @@ export const getPostApiPromptResponsesUrl = () => {
 export const postApiPromptResponses = async (
   createPromptResponseRequest: CreatePromptResponseRequest,
   options?: RequestInit
-): Promise<postApiPromptResponsesResponse> => {
-  return wyngFetch<postApiPromptResponsesResponse>(getPostApiPromptResponsesUrl(), {
+): Promise<PromptResponse> => {
+  return wyngFetch<PromptResponse>(getPostApiPromptResponsesUrl(), {
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...options?.headers },
@@ -766,36 +593,6 @@ export const usePostApiPromptResponses = <TError = void, TContext = unknown>(
 > => {
   return useMutation(getPostApiPromptResponsesMutationOptions(options), queryClient);
 };
-export type postApiPromptResponsesIdApproveResponse200 = {
-  data: PromptResponse;
-  status: 200;
-};
-
-export type postApiPromptResponsesIdApproveResponse401 = {
-  data: void;
-  status: 401;
-};
-
-export type postApiPromptResponsesIdApproveResponse404 = {
-  data: void;
-  status: 404;
-};
-
-export type postApiPromptResponsesIdApproveResponseSuccess =
-  postApiPromptResponsesIdApproveResponse200 & {
-    headers: Headers;
-  };
-export type postApiPromptResponsesIdApproveResponseError = (
-  | postApiPromptResponsesIdApproveResponse401
-  | postApiPromptResponsesIdApproveResponse404
-) & {
-  headers: Headers;
-};
-
-export type postApiPromptResponsesIdApproveResponse =
-  | postApiPromptResponsesIdApproveResponseSuccess
-  | postApiPromptResponsesIdApproveResponseError;
-
 export const getPostApiPromptResponsesIdApproveUrl = (id: string) => {
   return `/api/prompt-responses/${id}/approve`;
 };
@@ -803,14 +600,11 @@ export const getPostApiPromptResponsesIdApproveUrl = (id: string) => {
 export const postApiPromptResponsesIdApprove = async (
   id: string,
   options?: RequestInit
-): Promise<postApiPromptResponsesIdApproveResponse> => {
-  return wyngFetch<postApiPromptResponsesIdApproveResponse>(
-    getPostApiPromptResponsesIdApproveUrl(id),
-    {
-      ...options,
-      method: 'POST',
-    }
-  );
+): Promise<PromptResponse> => {
+  return wyngFetch<PromptResponse>(getPostApiPromptResponsesIdApproveUrl(id), {
+    ...options,
+    method: 'POST',
+  });
 };
 
 export const getPostApiPromptResponsesIdApproveMutationOptions = <
@@ -874,35 +668,6 @@ export const usePostApiPromptResponsesIdApprove = <TError = void, TContext = unk
 > => {
   return useMutation(getPostApiPromptResponsesIdApproveMutationOptions(options), queryClient);
 };
-export type deleteApiPromptResponsesIdResponse200 = {
-  data: PromptsOkResponse;
-  status: 200;
-};
-
-export type deleteApiPromptResponsesIdResponse401 = {
-  data: void;
-  status: 401;
-};
-
-export type deleteApiPromptResponsesIdResponse404 = {
-  data: void;
-  status: 404;
-};
-
-export type deleteApiPromptResponsesIdResponseSuccess = deleteApiPromptResponsesIdResponse200 & {
-  headers: Headers;
-};
-export type deleteApiPromptResponsesIdResponseError = (
-  | deleteApiPromptResponsesIdResponse401
-  | deleteApiPromptResponsesIdResponse404
-) & {
-  headers: Headers;
-};
-
-export type deleteApiPromptResponsesIdResponse =
-  | deleteApiPromptResponsesIdResponseSuccess
-  | deleteApiPromptResponsesIdResponseError;
-
 export const getDeleteApiPromptResponsesIdUrl = (id: string) => {
   return `/api/prompt-responses/${id}`;
 };
@@ -910,8 +675,8 @@ export const getDeleteApiPromptResponsesIdUrl = (id: string) => {
 export const deleteApiPromptResponsesId = async (
   id: string,
   options?: RequestInit
-): Promise<deleteApiPromptResponsesIdResponse> => {
-  return wyngFetch<deleteApiPromptResponsesIdResponse>(getDeleteApiPromptResponsesIdUrl(id), {
+): Promise<PromptsOkResponse> => {
+  return wyngFetch<PromptsOkResponse>(getDeleteApiPromptResponsesIdUrl(id), {
     ...options,
     method: 'DELETE',
   });

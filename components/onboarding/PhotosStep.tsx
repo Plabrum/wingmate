@@ -3,7 +3,7 @@ import { Alert, ActivityIndicator, Dimensions } from 'react-native';
 import { View, Text, SafeAreaView, Pressable } from '@/lib/tw';
 import { Image } from 'expo-image';
 import { createDatingProfile, getOwnDatingProfileSnapshot } from '@/hooks/use-profile';
-import { getPhotoUrl, pickAndResizePhoto, removePhotoStorage, uploadPhoto } from '@/queries/photos';
+import { getPhotoUrl, pickAndResizePhoto, removePhotoStorage, uploadPhoto } from '@/lib/photos';
 import { postApiPhotos, postApiPhotosIdReject } from '@/lib/api/generated/photos/photos';
 import { colors } from '@/constants/theme';
 import { toast } from 'sonner-native';

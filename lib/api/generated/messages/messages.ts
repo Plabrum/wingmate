@@ -30,36 +30,6 @@ import { wyngFetch } from '../../http';
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
-export type getApiMatchesMatchIdMessagesResponse200 = {
-  data: MessagesResponse;
-  status: 200;
-};
-
-export type getApiMatchesMatchIdMessagesResponse401 = {
-  data: void;
-  status: 401;
-};
-
-export type getApiMatchesMatchIdMessagesResponse404 = {
-  data: void;
-  status: 404;
-};
-
-export type getApiMatchesMatchIdMessagesResponseSuccess =
-  getApiMatchesMatchIdMessagesResponse200 & {
-    headers: Headers;
-  };
-export type getApiMatchesMatchIdMessagesResponseError = (
-  | getApiMatchesMatchIdMessagesResponse401
-  | getApiMatchesMatchIdMessagesResponse404
-) & {
-  headers: Headers;
-};
-
-export type getApiMatchesMatchIdMessagesResponse =
-  | getApiMatchesMatchIdMessagesResponseSuccess
-  | getApiMatchesMatchIdMessagesResponseError;
-
 export const getGetApiMatchesMatchIdMessagesUrl = (
   matchId: string,
   params?: GetApiMatchesMatchIdMessagesParams
@@ -83,14 +53,11 @@ export const getApiMatchesMatchIdMessages = async (
   matchId: string,
   params?: GetApiMatchesMatchIdMessagesParams,
   options?: RequestInit
-): Promise<getApiMatchesMatchIdMessagesResponse> => {
-  return wyngFetch<getApiMatchesMatchIdMessagesResponse>(
-    getGetApiMatchesMatchIdMessagesUrl(matchId, params),
-    {
-      ...options,
-      method: 'GET',
-    }
-  );
+): Promise<MessagesResponse> => {
+  return wyngFetch<MessagesResponse>(getGetApiMatchesMatchIdMessagesUrl(matchId, params), {
+    ...options,
+    method: 'GET',
+  });
 };
 
 export const getGetApiMatchesMatchIdMessagesQueryKey = (
@@ -225,42 +192,6 @@ export function useGetApiMatchesMatchIdMessagesSuspense<
   return { ...query, queryKey: queryOptions.queryKey };
 }
 
-export type postApiMatchesMatchIdMessagesResponse200 = {
-  data: Message;
-  status: 200;
-};
-
-export type postApiMatchesMatchIdMessagesResponse400 = {
-  data: void;
-  status: 400;
-};
-
-export type postApiMatchesMatchIdMessagesResponse401 = {
-  data: void;
-  status: 401;
-};
-
-export type postApiMatchesMatchIdMessagesResponse404 = {
-  data: void;
-  status: 404;
-};
-
-export type postApiMatchesMatchIdMessagesResponseSuccess =
-  postApiMatchesMatchIdMessagesResponse200 & {
-    headers: Headers;
-  };
-export type postApiMatchesMatchIdMessagesResponseError = (
-  | postApiMatchesMatchIdMessagesResponse400
-  | postApiMatchesMatchIdMessagesResponse401
-  | postApiMatchesMatchIdMessagesResponse404
-) & {
-  headers: Headers;
-};
-
-export type postApiMatchesMatchIdMessagesResponse =
-  | postApiMatchesMatchIdMessagesResponseSuccess
-  | postApiMatchesMatchIdMessagesResponseError;
-
 export const getPostApiMatchesMatchIdMessagesUrl = (matchId: string) => {
   return `/api/matches/${matchId}/messages`;
 };
@@ -269,16 +200,13 @@ export const postApiMatchesMatchIdMessages = async (
   matchId: string,
   sendMessageRequest: SendMessageRequest,
   options?: RequestInit
-): Promise<postApiMatchesMatchIdMessagesResponse> => {
-  return wyngFetch<postApiMatchesMatchIdMessagesResponse>(
-    getPostApiMatchesMatchIdMessagesUrl(matchId),
-    {
-      ...options,
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...options?.headers },
-      body: JSON.stringify(sendMessageRequest),
-    }
-  );
+): Promise<Message> => {
+  return wyngFetch<Message>(getPostApiMatchesMatchIdMessagesUrl(matchId), {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(sendMessageRequest),
+  });
 };
 
 export const getPostApiMatchesMatchIdMessagesMutationOptions = <
@@ -342,36 +270,6 @@ export const usePostApiMatchesMatchIdMessages = <TError = void, TContext = unkno
 > => {
   return useMutation(getPostApiMatchesMatchIdMessagesMutationOptions(options), queryClient);
 };
-export type postApiMatchesMatchIdMessagesReadResponse200 = {
-  data: MarkMessagesReadResponse;
-  status: 200;
-};
-
-export type postApiMatchesMatchIdMessagesReadResponse401 = {
-  data: void;
-  status: 401;
-};
-
-export type postApiMatchesMatchIdMessagesReadResponse404 = {
-  data: void;
-  status: 404;
-};
-
-export type postApiMatchesMatchIdMessagesReadResponseSuccess =
-  postApiMatchesMatchIdMessagesReadResponse200 & {
-    headers: Headers;
-  };
-export type postApiMatchesMatchIdMessagesReadResponseError = (
-  | postApiMatchesMatchIdMessagesReadResponse401
-  | postApiMatchesMatchIdMessagesReadResponse404
-) & {
-  headers: Headers;
-};
-
-export type postApiMatchesMatchIdMessagesReadResponse =
-  | postApiMatchesMatchIdMessagesReadResponseSuccess
-  | postApiMatchesMatchIdMessagesReadResponseError;
-
 export const getPostApiMatchesMatchIdMessagesReadUrl = (matchId: string) => {
   return `/api/matches/${matchId}/messages/read`;
 };
@@ -379,14 +277,11 @@ export const getPostApiMatchesMatchIdMessagesReadUrl = (matchId: string) => {
 export const postApiMatchesMatchIdMessagesRead = async (
   matchId: string,
   options?: RequestInit
-): Promise<postApiMatchesMatchIdMessagesReadResponse> => {
-  return wyngFetch<postApiMatchesMatchIdMessagesReadResponse>(
-    getPostApiMatchesMatchIdMessagesReadUrl(matchId),
-    {
-      ...options,
-      method: 'POST',
-    }
-  );
+): Promise<MarkMessagesReadResponse> => {
+  return wyngFetch<MarkMessagesReadResponse>(getPostApiMatchesMatchIdMessagesReadUrl(matchId), {
+    ...options,
+    method: 'POST',
+  });
 };
 
 export const getPostApiMatchesMatchIdMessagesReadMutationOptions = <
@@ -450,35 +345,14 @@ export const usePostApiMatchesMatchIdMessagesRead = <TError = void, TContext = u
 > => {
   return useMutation(getPostApiMatchesMatchIdMessagesReadMutationOptions(options), queryClient);
 };
-export type getApiConversationsResponse200 = {
-  data: ConversationsResponse;
-  status: 200;
-};
-
-export type getApiConversationsResponse401 = {
-  data: void;
-  status: 401;
-};
-
-export type getApiConversationsResponseSuccess = getApiConversationsResponse200 & {
-  headers: Headers;
-};
-export type getApiConversationsResponseError = getApiConversationsResponse401 & {
-  headers: Headers;
-};
-
-export type getApiConversationsResponse =
-  | getApiConversationsResponseSuccess
-  | getApiConversationsResponseError;
-
 export const getGetApiConversationsUrl = () => {
   return `/api/conversations`;
 };
 
 export const getApiConversations = async (
   options?: RequestInit
-): Promise<getApiConversationsResponse> => {
-  return wyngFetch<getApiConversationsResponse>(getGetApiConversationsUrl(), {
+): Promise<ConversationsResponse> => {
+  return wyngFetch<ConversationsResponse>(getGetApiConversationsUrl(), {
     ...options,
     method: 'GET',
   });

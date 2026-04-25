@@ -29,31 +29,12 @@ import { wyngFetch } from '../../http';
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
-export type getApiPhotosMeResponse200 = {
-  data: OwnPhotosResponse;
-  status: 200;
-};
-
-export type getApiPhotosMeResponse401 = {
-  data: void;
-  status: 401;
-};
-
-export type getApiPhotosMeResponseSuccess = getApiPhotosMeResponse200 & {
-  headers: Headers;
-};
-export type getApiPhotosMeResponseError = getApiPhotosMeResponse401 & {
-  headers: Headers;
-};
-
-export type getApiPhotosMeResponse = getApiPhotosMeResponseSuccess | getApiPhotosMeResponseError;
-
 export const getGetApiPhotosMeUrl = () => {
   return `/api/photos/me`;
 };
 
-export const getApiPhotosMe = async (options?: RequestInit): Promise<getApiPhotosMeResponse> => {
-  return wyngFetch<getApiPhotosMeResponse>(getGetApiPhotosMeUrl(), {
+export const getApiPhotosMe = async (options?: RequestInit): Promise<OwnPhotosResponse> => {
+  return wyngFetch<OwnPhotosResponse>(getGetApiPhotosMeUrl(), {
     ...options,
     method: 'GET',
   });
@@ -150,45 +131,6 @@ export function useGetApiPhotosMeSuspense<
   return { ...query, queryKey: queryOptions.queryKey };
 }
 
-export type postApiPhotosResponse200 = {
-  data: Photo;
-  status: 200;
-};
-
-export type postApiPhotosResponse400 = {
-  data: void;
-  status: 400;
-};
-
-export type postApiPhotosResponse401 = {
-  data: void;
-  status: 401;
-};
-
-export type postApiPhotosResponse403 = {
-  data: void;
-  status: 403;
-};
-
-export type postApiPhotosResponse404 = {
-  data: void;
-  status: 404;
-};
-
-export type postApiPhotosResponseSuccess = postApiPhotosResponse200 & {
-  headers: Headers;
-};
-export type postApiPhotosResponseError = (
-  | postApiPhotosResponse400
-  | postApiPhotosResponse401
-  | postApiPhotosResponse403
-  | postApiPhotosResponse404
-) & {
-  headers: Headers;
-};
-
-export type postApiPhotosResponse = postApiPhotosResponseSuccess | postApiPhotosResponseError;
-
 export const getPostApiPhotosUrl = () => {
   return `/api/photos`;
 };
@@ -196,8 +138,8 @@ export const getPostApiPhotosUrl = () => {
 export const postApiPhotos = async (
   createPhotoRequest: CreatePhotoRequest,
   options?: RequestInit
-): Promise<postApiPhotosResponse> => {
-  return wyngFetch<postApiPhotosResponse>(getPostApiPhotosUrl(), {
+): Promise<Photo> => {
+  return wyngFetch<Photo>(getPostApiPhotosUrl(), {
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...options?.headers },
@@ -261,44 +203,12 @@ export const usePostApiPhotos = <TError = void, TContext = unknown>(
 > => {
   return useMutation(getPostApiPhotosMutationOptions(options), queryClient);
 };
-export type postApiPhotosIdApproveResponse200 = {
-  data: Photo;
-  status: 200;
-};
-
-export type postApiPhotosIdApproveResponse401 = {
-  data: void;
-  status: 401;
-};
-
-export type postApiPhotosIdApproveResponse404 = {
-  data: void;
-  status: 404;
-};
-
-export type postApiPhotosIdApproveResponseSuccess = postApiPhotosIdApproveResponse200 & {
-  headers: Headers;
-};
-export type postApiPhotosIdApproveResponseError = (
-  | postApiPhotosIdApproveResponse401
-  | postApiPhotosIdApproveResponse404
-) & {
-  headers: Headers;
-};
-
-export type postApiPhotosIdApproveResponse =
-  | postApiPhotosIdApproveResponseSuccess
-  | postApiPhotosIdApproveResponseError;
-
 export const getPostApiPhotosIdApproveUrl = (id: string) => {
   return `/api/photos/${id}/approve`;
 };
 
-export const postApiPhotosIdApprove = async (
-  id: string,
-  options?: RequestInit
-): Promise<postApiPhotosIdApproveResponse> => {
-  return wyngFetch<postApiPhotosIdApproveResponse>(getPostApiPhotosIdApproveUrl(id), {
+export const postApiPhotosIdApprove = async (id: string, options?: RequestInit): Promise<Photo> => {
+  return wyngFetch<Photo>(getPostApiPhotosIdApproveUrl(id), {
     ...options,
     method: 'POST',
   });
@@ -365,35 +275,6 @@ export const usePostApiPhotosIdApprove = <TError = void, TContext = unknown>(
 > => {
   return useMutation(getPostApiPhotosIdApproveMutationOptions(options), queryClient);
 };
-export type postApiPhotosIdRejectResponse200 = {
-  data: PhotosOkResponse;
-  status: 200;
-};
-
-export type postApiPhotosIdRejectResponse401 = {
-  data: void;
-  status: 401;
-};
-
-export type postApiPhotosIdRejectResponse404 = {
-  data: void;
-  status: 404;
-};
-
-export type postApiPhotosIdRejectResponseSuccess = postApiPhotosIdRejectResponse200 & {
-  headers: Headers;
-};
-export type postApiPhotosIdRejectResponseError = (
-  | postApiPhotosIdRejectResponse401
-  | postApiPhotosIdRejectResponse404
-) & {
-  headers: Headers;
-};
-
-export type postApiPhotosIdRejectResponse =
-  | postApiPhotosIdRejectResponseSuccess
-  | postApiPhotosIdRejectResponseError;
-
 export const getPostApiPhotosIdRejectUrl = (id: string) => {
   return `/api/photos/${id}/reject`;
 };
@@ -401,8 +282,8 @@ export const getPostApiPhotosIdRejectUrl = (id: string) => {
 export const postApiPhotosIdReject = async (
   id: string,
   options?: RequestInit
-): Promise<postApiPhotosIdRejectResponse> => {
-  return wyngFetch<postApiPhotosIdRejectResponse>(getPostApiPhotosIdRejectUrl(id), {
+): Promise<PhotosOkResponse> => {
+  return wyngFetch<PhotosOkResponse>(getPostApiPhotosIdRejectUrl(id), {
     ...options,
     method: 'POST',
   });
@@ -469,35 +350,6 @@ export const usePostApiPhotosIdReject = <TError = void, TContext = unknown>(
 > => {
   return useMutation(getPostApiPhotosIdRejectMutationOptions(options), queryClient);
 };
-export type patchApiPhotosIdReorderResponse200 = {
-  data: Photo;
-  status: 200;
-};
-
-export type patchApiPhotosIdReorderResponse401 = {
-  data: void;
-  status: 401;
-};
-
-export type patchApiPhotosIdReorderResponse404 = {
-  data: void;
-  status: 404;
-};
-
-export type patchApiPhotosIdReorderResponseSuccess = patchApiPhotosIdReorderResponse200 & {
-  headers: Headers;
-};
-export type patchApiPhotosIdReorderResponseError = (
-  | patchApiPhotosIdReorderResponse401
-  | patchApiPhotosIdReorderResponse404
-) & {
-  headers: Headers;
-};
-
-export type patchApiPhotosIdReorderResponse =
-  | patchApiPhotosIdReorderResponseSuccess
-  | patchApiPhotosIdReorderResponseError;
-
 export const getPatchApiPhotosIdReorderUrl = (id: string) => {
   return `/api/photos/${id}/reorder`;
 };
@@ -506,8 +358,8 @@ export const patchApiPhotosIdReorder = async (
   id: string,
   reorderPhotoRequest: ReorderPhotoRequest,
   options?: RequestInit
-): Promise<patchApiPhotosIdReorderResponse> => {
-  return wyngFetch<patchApiPhotosIdReorderResponse>(getPatchApiPhotosIdReorderUrl(id), {
+): Promise<Photo> => {
+  return wyngFetch<Photo>(getPatchApiPhotosIdReorderUrl(id), {
     ...options,
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json', ...options?.headers },
