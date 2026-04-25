@@ -5,7 +5,6 @@
 
 export * from './contacts';
 export * from './discover';
-export * from './matches';
 export * from './messages';
 export * from './photos';
 export * from './prompts';

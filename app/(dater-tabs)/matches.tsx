@@ -7,13 +7,10 @@ import { View, Text, Pressable, ScrollView, TextInput, SafeAreaView } from '@/li
 import { cn } from '@/lib/cn';
 import ScreenSuspense from '@/components/ui/ScreenSuspense';
 import {
-  useMatchesData,
-  useMatchSheetData,
-  getOtherProfile,
-  getFirstPhoto,
-  hasMessages,
-  type MatchRow,
-} from '@/queries/matches';
+  useGetApiMatchesMatchIdSheetSuspense,
+  useGetApiMatchesSuspense,
+} from '@/lib/api/generated/matches/matches';
+import type { MatchSummary } from '@/lib/api/generated/model';
 import { addPromptResponse } from '@/queries/prompts';
 import { getInitials } from '@/components/profile/profile-helpers';
 import { LargeHeader } from '@/components/ui/LargeHeader';
@@ -22,16 +19,6 @@ import { Pill } from '@/components/ui/Pill';
 import { PurpleButton } from '@/components/ui/PurpleButton';
 import { WingStack } from '@/components/ui/WingStack';
 import { colors } from '@/constants/theme';
-
-// ── Age helper ────────────────────────────────────────────────────────────────
-
-function computeAge(dob: string): number {
-  const birth = new Date(dob);
-  const today = new Date();
-  let age = today.getFullYear() - birth.getFullYear();
-  if (today < new Date(today.getFullYear(), birth.getMonth(), birth.getDate())) age--;
-  return age;
-}
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -46,30 +33,25 @@ type PromptState = {
 // ── MatchCard (grid cell) ─────────────────────────────────────────────────────
 
 type MatchCardProps = {
-  match: MatchRow;
-  currentUserId: string;
+  match: MatchSummary;
   onPress: () => void;
 };
 
-function MatchCard({ match, currentUserId, onPress }: MatchCardProps) {
-  const other = getOtherProfile(match, currentUserId);
-  const photoUrl = getFirstPhoto(other);
-  const isNew = !hasMessages(match);
-
-  const dob = (other as { date_of_birth?: string | null }).date_of_birth;
-  const age = dob ? computeAge(dob) : null;
+function MatchCard({ match, onPress }: MatchCardProps) {
+  const { other, hasMessages } = match;
+  const isNew = !hasMessages;
 
   return (
     <Pressable className="rounded-xl overflow-hidden bg-surface" onPress={onPress}>
-      <PhotoRect uri={photoUrl} ratio={4 / 3} style={{ width: '100%' }} />
+      <PhotoRect uri={other.firstPhoto} ratio={4 / 3} style={{ width: '100%' }} />
       {/* Name + age overlay */}
       <View
         className="absolute bottom-0 left-0 right-0 px-2 py-[6px]"
         style={{ backgroundColor: 'rgba(0,0,0,0.35)' }}
       >
         <Text className="text-white text-sm font-semibold" numberOfLines={1}>
-          {other.chosen_name ?? 'Someone'}
-          {age != null ? `, ${age}` : ''}
+          {other.chosenName ?? 'Someone'}
+          {other.age != null ? `, ${other.age}` : ''}
         </Text>
       </View>
       {/* New match indicator */}
@@ -82,11 +64,11 @@ function MatchCard({ match, currentUserId, onPress }: MatchCardProps) {
 
 // ── SheetBody (lazy wing note + prompts) ──────────────────────────────────────
 
-function SheetBody({ match, currentUserId }: { match: MatchRow; currentUserId: string }) {
-  const other = getOtherProfile(match, currentUserId);
-  const {
-    data: { wingNote, prompts },
-  } = useMatchSheetData(currentUserId, other.id);
+function SheetBody({ match, currentUserId }: { match: MatchSummary; currentUserId: string }) {
+  const { other } = match;
+  const { data } = useGetApiMatchesMatchIdSheetSuspense(match.matchId);
+  if (data.status !== 200) throw new Error('Failed to load match sheet');
+  const { wingNote, prompts } = data.data;
   const [promptStates, setPromptStates] = useState<Record<string, PromptState>>({});
 
   function setPromptField(promptId: string, patch: Partial<PromptState>) {
@@ -116,12 +98,12 @@ function SheetBody({ match, currentUserId }: { match: MatchRow; currentUserId: s
   return (
     <>
       {/* Wing note */}
-      {wingNote?.note != null && (
+      {wingNote != null && (
         <View className="mx-5 mt-4 bg-accent-muted rounded-xl p-[14px]">
           <View className="flex-row items-center gap-2 mb-[6px]">
-            <WingStack items={[{ initials: getInitials(wingNote.winger?.chosen_name) }]} />
+            <WingStack items={[{ initials: getInitials(wingNote.winger?.chosenName) }]} />
             <Text className="text-sm font-semibold text-accent">
-              {wingNote.winger?.chosen_name ?? 'Your wing'} introduced you
+              {wingNote.winger?.chosenName ?? 'Your wing'} introduced you
             </Text>
           </View>
           <Text className="text-sm leading-[20px] text-fg">{wingNote.note}</Text>
@@ -153,7 +135,7 @@ function SheetBody({ match, currentUserId }: { match: MatchRow; currentUserId: s
 
                 {ps.sent ? (
                   <Text className="mt-[10px] text-sm text-green-500 font-medium">
-                    Comment sent — {other.chosen_name ?? 'They'} will see it.
+                    Comment sent — {other.chosenName ?? 'They'} will see it.
                   </Text>
                 ) : ps.open ? (
                   <View className="mt-[10px] gap-2">
@@ -204,7 +186,7 @@ function SheetBody({ match, currentUserId }: { match: MatchRow; currentUserId: s
 // ── MatchSheet ────────────────────────────────────────────────────────────────
 
 type MatchSheetProps = {
-  match: MatchRow | null;
+  match: MatchSummary | null;
   currentUserId: string;
   visible: boolean;
   onClose: () => void;
@@ -213,17 +195,9 @@ type MatchSheetProps = {
 function MatchSheet({ match, currentUserId, visible, onClose }: MatchSheetProps) {
   if (!match) return null;
 
-  const other = getOtherProfile(match, currentUserId);
-  const photoUrl = getFirstPhoto(other);
-  const dob = (other as { date_of_birth?: string | null }).date_of_birth;
-  const age = dob ? computeAge(dob) : null;
-  const dp = Array.isArray(other.dating_profiles)
-    ? other.dating_profiles[0]
-    : other.dating_profiles;
-  const city = dp?.city ?? null;
-  const bio = dp?.bio ?? null;
-  const interests: string[] = Array.isArray(dp?.interests) ? (dp.interests as string[]) : [];
-  const matchHasMessages = hasMessages(match);
+  const { other } = match;
+  const interests: string[] = other.interests ?? [];
+  const matchHasMessages = match.hasMessages;
 
   return (
     <Modal
@@ -255,24 +229,30 @@ function MatchSheet({ match, currentUserId, visible, onClose }: MatchSheetProps)
           <View className="self-center w-9 h-1 rounded-[2px] bg-separator mt-3 mb-2" />
 
           {/* Photo */}
-          <PhotoRect uri={photoUrl} ratio={4 / 3} style={{ width: '100%', borderRadius: 0 }} />
+          <PhotoRect
+            uri={other.firstPhoto}
+            ratio={4 / 3}
+            style={{ width: '100%', borderRadius: 0 }}
+          />
 
           {/* Name + Age + City */}
           <View className="px-5 pt-4 pb-2">
             <Text className="text-2xl font-bold text-fg font-serif">
-              {other.chosen_name ?? 'Someone'}
-              {age != null ? `, ${age}` : ''}
+              {other.chosenName ?? 'Someone'}
+              {other.age != null ? `, ${other.age}` : ''}
             </Text>
-            {city != null && <Text className="text-sm text-fg-muted mt-0.5">{city}</Text>}
+            {other.city != null && (
+              <Text className="text-sm text-fg-muted mt-0.5">{other.city}</Text>
+            )}
           </View>
 
           {/* Bio */}
-          {bio != null && bio.length > 0 && (
+          {other.bio != null && other.bio.length > 0 && (
             <View className="px-5 pt-4">
               <Text className="text-xs font-bold tracking-[0.8px] text-fg-subtle uppercase mb-2">
                 About
               </Text>
-              <Text className="text-sm leading-[22px] text-fg">{bio}</Text>
+              <Text className="text-sm leading-[22px] text-fg">{other.bio}</Text>
             </View>
           )}
 
@@ -305,7 +285,7 @@ function MatchSheet({ match, currentUserId, visible, onClose }: MatchSheetProps)
               label={matchHasMessages ? 'Open Conversation' : 'Start Conversation'}
               onPress={() => {
                 onClose();
-                router.push(`/(dater-tabs)/messages/${match.id}` as never);
+                router.push(`/(dater-tabs)/messages/${match.matchId}` as never);
               }}
             />
           </View>
@@ -318,14 +298,16 @@ function MatchSheet({ match, currentUserId, visible, onClose }: MatchSheetProps)
 // ── MatchesList ───────────────────────────────────────────────────────────────
 
 function MatchesList({ userId }: { userId: string }) {
-  const { data: matches, refetch, isRefetching } = useMatchesData(userId);
-  const [selectedMatch, setSelectedMatch] = useState<MatchRow | null>(null);
+  const { data, refetch, isRefetching } = useGetApiMatchesSuspense();
+  if (data.status !== 200) throw new Error('Failed to load matches');
+  const matches = data.data;
+  const [selectedMatch, setSelectedMatch] = useState<MatchSummary | null>(null);
 
   return (
     <SafeAreaView className="flex-1 bg-page">
       <FlatList
         data={matches}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item.matchId}
         numColumns={2}
         columnWrapperStyle={{ gap: 12 }}
         contentContainerStyle={{ padding: 16, gap: 12 }}
@@ -341,7 +323,7 @@ function MatchesList({ userId }: { userId: string }) {
         }
         renderItem={({ item }) => (
           <View className="flex-1">
-            <MatchCard match={item} currentUserId={userId} onPress={() => setSelectedMatch(item)} />
+            <MatchCard match={item} onPress={() => setSelectedMatch(item)} />
           </View>
         )}
       />

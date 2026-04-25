@@ -1123,6 +1123,177 @@
           }
         },
         "required": ["id", "chosenName", "avatarUrl", "datingProfile"]
+      },
+      "MatchSummaryOther": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "chosenName": {
+            "type": "string",
+            "nullable": true
+          },
+          "dateOfBirth": {
+            "type": "string",
+            "nullable": true
+          },
+          "age": {
+            "type": "integer",
+            "nullable": true
+          },
+          "city": {
+            "type": "string",
+            "nullable": true,
+            "enum": ["Boston", "New York"]
+          },
+          "bio": {
+            "type": "string",
+            "nullable": true
+          },
+          "interests": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "Travel",
+                "Fitness",
+                "Cooking",
+                "Music",
+                "Art",
+                "Movies",
+                "Books",
+                "Gaming",
+                "Outdoors",
+                "Sports",
+                "Technology",
+                "Fashion",
+                "Food",
+                "Photography",
+                "Dance",
+                "Volunteering"
+              ]
+            }
+          },
+          "firstPhoto": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "chosenName",
+          "dateOfBirth",
+          "age",
+          "city",
+          "bio",
+          "interests",
+          "firstPhoto"
+        ]
+      },
+      "MatchSummary": {
+        "type": "object",
+        "properties": {
+          "matchId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "hasMessages": {
+            "type": "boolean"
+          },
+          "other": {
+            "$ref": "#/components/schemas/MatchSummaryOther"
+          }
+        },
+        "required": ["matchId", "createdAt", "hasMessages", "other"]
+      },
+      "MatchesResponse": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/MatchSummary"
+        }
+      },
+      "MatchSheetWinger": {
+        "type": "object",
+        "nullable": true,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "chosenName": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": ["id", "chosenName"]
+      },
+      "MatchSheetWingNote": {
+        "type": "object",
+        "nullable": true,
+        "properties": {
+          "note": {
+            "type": "string"
+          },
+          "suggestedBy": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "winger": {
+            "$ref": "#/components/schemas/MatchSheetWinger"
+          }
+        },
+        "required": ["note", "suggestedBy", "winger"]
+      },
+      "MatchSheetPromptTemplate": {
+        "type": "object",
+        "nullable": true,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "question": {
+            "type": "string"
+          }
+        },
+        "required": ["id", "question"]
+      },
+      "MatchSheetPrompt": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "answer": {
+            "type": "string"
+          },
+          "template": {
+            "$ref": "#/components/schemas/MatchSheetPromptTemplate"
+          }
+        },
+        "required": ["id", "answer", "template"]
+      },
+      "MatchSheet": {
+        "type": "object",
+        "properties": {
+          "wingNote": {
+            "$ref": "#/components/schemas/MatchSheetWingNote"
+          },
+          "prompts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MatchSheetPrompt"
+            }
+          }
+        },
+        "required": ["wingNote", "prompts"]
       }
     },
     "parameters": {}
@@ -1699,6 +1870,70 @@
           },
           "404": {
             "description": "Profile not found"
+          }
+        }
+      }
+    },
+    "/api/matches": {
+      "get": {
+        "tags": ["matches"],
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Matches for the viewer (other profile pre-selected)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MatchesResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated"
+          }
+        }
+      }
+    },
+    "/api/matches/{matchId}/sheet": {
+      "get": {
+        "tags": ["matches"],
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "matchId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Wing note + prompts for the other person in the match",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MatchSheet"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "404": {
+            "description": "Match not found or viewer is not party to it"
           }
         }
       }

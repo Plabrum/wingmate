@@ -6,6 +6,7 @@ import { errorHandler } from './middleware/error.ts';
 import { mountDecisions } from './domains/decisions/route.ts';
 import { mountDiscover } from './domains/discover/route.ts';
 import { mountLikesYou } from './domains/likes-you/route.ts';
+import { mountMatches } from './domains/matches/route.ts';
 import { mountProfiles } from './domains/profiles/route.ts';
 import { mountWingerTabs } from './domains/winger-tabs/route.ts';
 import { mountWingPool } from './domains/wing-pool/route.ts';
@@ -67,6 +68,12 @@ export function createApp() {
   app.use('/dating-profiles/me', authMiddleware);
   app.use('/dating-profiles/me', transactionMiddleware);
   mountProfiles(app);
+
+  app.use('/matches', authMiddleware);
+  app.use('/matches', transactionMiddleware);
+  app.use('/matches/:matchId/sheet', authMiddleware);
+  app.use('/matches/:matchId/sheet', transactionMiddleware);
+  mountMatches(app);
 
   app.onError(errorHandler);
 
