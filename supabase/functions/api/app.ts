@@ -7,6 +7,7 @@ import { mountDecisions } from './domains/decisions/route.ts';
 import { mountDiscover } from './domains/discover/route.ts';
 import { mountLikesYou } from './domains/likes-you/route.ts';
 import { mountMatches } from './domains/matches/route.ts';
+import { mountMessages } from './domains/messages/route.ts';
 import { mountProfiles } from './domains/profiles/route.ts';
 import { mountWingerTabs } from './domains/winger-tabs/route.ts';
 import { mountWingPool } from './domains/wing-pool/route.ts';
@@ -74,6 +75,14 @@ export function createApp() {
   app.use('/matches/:matchId/sheet', authMiddleware);
   app.use('/matches/:matchId/sheet', transactionMiddleware);
   mountMatches(app);
+
+  app.use('/conversations', authMiddleware);
+  app.use('/conversations', transactionMiddleware);
+  app.use('/matches/:matchId/messages', authMiddleware);
+  app.use('/matches/:matchId/messages', transactionMiddleware);
+  app.use('/matches/:matchId/messages/read', authMiddleware);
+  app.use('/matches/:matchId/messages/read', transactionMiddleware);
+  mountMessages(app);
 
   app.onError(errorHandler);
 

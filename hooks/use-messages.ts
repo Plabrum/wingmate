@@ -1,103 +1,92 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/context/auth';
 import {
-  getMessages,
-  markMessagesRead,
-  sendMessage,
-  subscribeToMessages,
-  type MessageWithSender,
-} from '@/queries/messages';
+  useGetApiMatchesMatchIdMessagesSuspense,
+  usePostApiMatchesMatchIdMessages,
+  usePostApiMatchesMatchIdMessagesRead,
+} from '@/lib/api/generated/messages/messages';
+import type { Message } from '@/lib/api/generated/model';
+import { dbRowToMessage, subscribeToMessages } from '@/lib/messages-realtime';
 
 export function useMessages(matchId: string) {
   const { userId } = useAuth();
 
-  const [messages, setMessages] = useState<MessageWithSender[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data } = useGetApiMatchesMatchIdMessagesSuspense(matchId);
+  if (data.status !== 200) throw new Error('Failed to load messages');
+  const initial = data.data;
 
-  // Track optimistic IDs so we can replace them when the real row arrives
+  const [messages, setMessages] = useState<Message[]>(initial);
+
   const optimisticIds = useRef<Set<string>>(new Set());
 
-  const load = useCallback(async () => {
-    if (!matchId) return;
-    setLoading(true);
-    setError(null);
-    try {
-      const { data, error: err } = await getMessages(matchId);
-      if (err) throw err;
-      setMessages(data ?? []);
-      await markMessagesRead(matchId, userId);
-    } catch {
-      setError("Couldn't load messages.");
-    } finally {
-      setLoading(false);
-    }
-  }, [matchId, userId]);
+  const sendMutation = usePostApiMatchesMatchIdMessages();
+  const markReadMutation = usePostApiMatchesMatchIdMessagesRead();
 
+  // Acceptable exception: mount-only side-effect kicking off a fire-and-forget
+  // mark-read mutation when the chat opens. The matchId is stable for the
+  // component lifetime.
   useEffect(() => {
-    load();
-  }, [load]);
+    markReadMutation.mutate({ matchId });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [matchId]);
 
-  // Acceptable exception: mount-only guard for a genuine external event.
-  // matchId (URL param) and userId (session) are both stable for this
-  // component's lifetime. The subscription is torn down on unmount.
+  // Acceptable exception: mount-only guard for a genuine external event
+  // (Supabase realtime). Tears down on unmount.
   useEffect(() => {
     if (!matchId) return;
 
     const channel = subscribeToMessages(matchId, (payload) => {
-      const incoming = payload.new as MessageWithSender;
+      const incoming = dbRowToMessage(payload.new as Parameters<typeof dbRowToMessage>[0]);
 
       setMessages((prev) => {
-        // If this is the echo of an optimistic message, replace it
-        if (incoming.sender_id === userId && optimisticIds.current.size > 0) {
+        if (incoming.senderId === userId && optimisticIds.current.size > 0) {
           const firstOptimistic = [...optimisticIds.current][0];
           optimisticIds.current.delete(firstOptimistic);
           return prev.map((m) => (m.id === firstOptimistic ? incoming : m));
         }
-        // Avoid duplicates (e.g. if initial load raced with subscription)
         if (prev.some((m) => m.id === incoming.id)) return prev;
         return [...prev, incoming];
       });
 
-      // Mark as read if the other person sent it
-      if (incoming.sender_id !== userId) {
-        markMessagesRead(matchId, userId);
+      if (incoming.senderId !== userId) {
+        markReadMutation.mutate({ matchId });
       }
     });
 
     return () => {
       channel.unsubscribe();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [matchId, userId]);
 
-  const send = useCallback(
-    async (body: string) => {
-      if (!body.trim()) return;
+  async function send(body: string) {
+    const trimmed = body.trim();
+    if (!trimmed) return;
 
-      const tempId = `temp-${Date.now()}`;
-      optimisticIds.current.add(tempId);
+    const tempId = `temp-${Date.now()}`;
+    optimisticIds.current.add(tempId);
 
-      const optimistic: MessageWithSender = {
-        id: tempId,
-        match_id: matchId,
-        sender_id: userId,
-        body: body.trim(),
-        is_read: false,
-        created_at: new Date().toISOString(),
-        sender: { id: userId, chosen_name: null },
-      };
+    const optimistic: Message = {
+      id: tempId,
+      matchId,
+      senderId: userId,
+      body: trimmed,
+      isRead: false,
+      createdAt: new Date().toISOString(),
+      sender: { id: userId, chosenName: null },
+    };
 
-      setMessages((prev) => [...prev, optimistic]);
+    setMessages((prev) => [...prev, optimistic]);
 
-      const { error: err } = await sendMessage(matchId, userId, body.trim());
-      if (err) {
-        // Roll back the optimistic bubble
-        optimisticIds.current.delete(tempId);
-        setMessages((prev) => prev.filter((m) => m.id !== tempId));
-      }
-    },
-    [matchId, userId]
-  );
+    const result = await sendMutation
+      .mutateAsync({ matchId, data: { body: trimmed } })
+      .catch(() => null);
 
-  return { messages, loading, error, send, reload: load };
+    if (result == null) {
+      optimisticIds.current.delete(tempId);
+      setMessages((prev) => prev.filter((m) => m.id !== tempId));
+    }
+  }
+
+  return { messages, send };
 }

@@ -1,11 +1,5 @@
 import React, { useRef, useState } from 'react';
-import {
-  ActivityIndicator,
-  FlatList,
-  KeyboardAvoidingView,
-  Platform,
-  StyleSheet,
-} from 'react-native';
+import { FlatList, KeyboardAvoidingView, Platform, StyleSheet } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Controller, useForm } from 'react-hook-form';
 
@@ -15,6 +9,7 @@ import { usePresence } from '@/hooks/use-presence';
 import { getInitials } from '@/components/profile/profile-helpers';
 import { NavHeader } from '@/components/ui/NavHeader';
 import { IconSymbol } from '@/components/ui/icon-symbol';
+import ScreenSuspense from '@/components/ui/ScreenSuspense';
 import { colors } from '@/constants/theme';
 import { View, Text, TextInput, Pressable, SafeAreaView } from '@/lib/tw';
 import { cn } from '@/lib/cn';
@@ -63,19 +58,16 @@ function MessageBubble({ body, isMine, createdAt, isOptimistic }: MessageBubbleP
   );
 }
 
-// ── Screen ────────────────────────────────────────────────────────────────────
+// ── ChatBody ──────────────────────────────────────────────────────────────────
 
-export default function ChatScreen() {
-  const { matchId, otherName, otherUserId } = useLocalSearchParams<{
-    matchId: string;
-    otherName?: string;
-    otherUserId?: string;
-  }>();
-  const { userId } = useAuth();
+type ChatBodyProps = {
+  matchId: string;
+  userId: string;
+  otherName: string | undefined;
+};
 
-  const { messages, loading, error, send, reload } = useMessages(matchId);
-  const isOnline = usePresence(otherUserId ?? null, userId);
-
+function ChatBody({ matchId, userId, otherName }: ChatBodyProps) {
+  const { messages, send } = useMessages(matchId);
   const listRef = useRef<FlatList>(null);
 
   const {
@@ -99,6 +91,90 @@ export default function ChatScreen() {
     setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 100);
   });
 
+  return (
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={0}
+    >
+      <FlatList
+        ref={listRef}
+        data={messages}
+        keyExtractor={(item) => item.id}
+        contentContainerStyle={{
+          flexGrow: 1,
+          paddingVertical: 12,
+          paddingHorizontal: 12,
+          gap: 4,
+        }}
+        onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: false })}
+        ListEmptyComponent={
+          <View className="flex-1 items-center justify-center p-10">
+            <Text className="text-sm text-fg-muted text-center">
+              Say hello to {otherName ?? 'your match'}!
+            </Text>
+          </View>
+        }
+        renderItem={({ item }) => (
+          <MessageBubble
+            body={item.body}
+            isMine={item.senderId === userId}
+            createdAt={item.createdAt}
+            isOptimistic={item.id.startsWith('temp-')}
+          />
+        )}
+      />
+
+      <View
+        className="flex-row items-end px-3 py-2 pb-4 bg-white gap-2"
+        style={{ borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.divider }}
+      >
+        <Controller
+          control={control}
+          name="message"
+          render={({ field: { value, onChange } }) => (
+            <TextInput
+              className="flex-1 bg-surface rounded-2xl px-4 py-[9px] text-sm text-fg"
+              style={{ maxHeight: 120, lineHeight: 20 }}
+              value={value}
+              onChangeText={onChange}
+              placeholder="Message…"
+              placeholderTextColor={colors.inkGhost}
+              multiline
+              maxLength={1000}
+              returnKeyType="send"
+              blurOnSubmit={false}
+              onSubmitEditing={onSubmit}
+            />
+          )}
+        />
+        <Pressable
+          className={cn(
+            'w-9 h-9 rounded-[18px] bg-accent items-center justify-center',
+            (!messageValue.trim() || isSubmitting) && 'opacity-40'
+          )}
+          onPress={onSubmit}
+          disabled={!messageValue.trim() || isSubmitting}
+          hitSlop={8}
+        >
+          <IconSymbol name="arrow.up" size={18} color={colors.white} />
+        </Pressable>
+      </View>
+    </KeyboardAvoidingView>
+  );
+}
+
+// ── Screen ────────────────────────────────────────────────────────────────────
+
+export default function ChatScreen() {
+  const { matchId, otherName, otherUserId } = useLocalSearchParams<{
+    matchId: string;
+    otherName?: string;
+    otherUserId?: string;
+  }>();
+  const { userId } = useAuth();
+  const isOnline = usePresence(otherUserId ?? null, userId);
+
   const headerTitle = otherName ?? 'Chat';
   const initials = getInitials(otherName ?? null);
 
@@ -117,95 +193,9 @@ export default function ChatScreen() {
           </View>
         }
       />
-
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={0}
-      >
-        {/* Message list */}
-        {loading ? (
-          <View className="flex-1 items-center justify-center p-8 gap-3">
-            <ActivityIndicator color={colors.purple} size="large" />
-          </View>
-        ) : error != null ? (
-          <View className="flex-1 items-center justify-center p-8 gap-3">
-            <Text className="text-sm text-fg-muted text-center">{error}</Text>
-            <Pressable className="py-2 px-4" onPress={reload}>
-              <Text className="text-sm font-semibold text-accent">Try again</Text>
-            </Pressable>
-          </View>
-        ) : (
-          <FlatList
-            ref={listRef}
-            data={messages}
-            keyExtractor={(item) => item.id}
-            contentContainerStyle={{
-              flexGrow: 1,
-              paddingVertical: 12,
-              paddingHorizontal: 12,
-              gap: 4,
-            }}
-            onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: false })}
-            ListEmptyComponent={
-              <View className="flex-1 items-center justify-center p-10">
-                <Text className="text-sm text-fg-muted text-center">
-                  Say hello to {otherName ?? 'your match'}!
-                </Text>
-              </View>
-            }
-            renderItem={({ item }) => (
-              <MessageBubble
-                body={item.body}
-                isMine={item.sender_id === userId}
-                createdAt={item.created_at}
-                isOptimistic={item.id.startsWith('temp-')}
-              />
-            )}
-          />
-        )}
-
-        {/* Input bar */}
-        <View
-          className="flex-row items-end px-3 py-2 pb-4 bg-white gap-2"
-          style={{ borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.divider }}
-        >
-          <Controller
-            control={control}
-            name="message"
-            render={({ field: { value, onChange } }) => (
-              <TextInput
-                className="flex-1 bg-surface rounded-2xl px-4 py-[9px] text-sm text-fg"
-                style={{ maxHeight: 120, lineHeight: 20 }}
-                value={value}
-                onChangeText={onChange}
-                placeholder="Message…"
-                placeholderTextColor={colors.inkGhost}
-                multiline
-                maxLength={1000}
-                returnKeyType="send"
-                blurOnSubmit={false}
-                onSubmitEditing={onSubmit}
-              />
-            )}
-          />
-          <Pressable
-            className={cn(
-              'w-9 h-9 rounded-[18px] bg-accent items-center justify-center',
-              (!messageValue.trim() || isSubmitting) && 'opacity-40'
-            )}
-            onPress={onSubmit}
-            disabled={!messageValue.trim() || isSubmitting}
-            hitSlop={8}
-          >
-            {isSubmitting ? (
-              <ActivityIndicator color={colors.white} size="small" />
-            ) : (
-              <IconSymbol name="arrow.up" size={18} color={colors.white} />
-            )}
-          </Pressable>
-        </View>
-      </KeyboardAvoidingView>
+      <ScreenSuspense>
+        <ChatBody matchId={matchId} userId={userId} otherName={otherName} />
+      </ScreenSuspense>
     </SafeAreaView>
   );
 }

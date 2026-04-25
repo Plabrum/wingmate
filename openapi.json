@@ -1294,6 +1294,142 @@
           }
         },
         "required": ["wingNote", "prompts"]
+      },
+      "MessageSender": {
+        "type": "object",
+        "nullable": true,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "chosenName": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": ["id", "chosenName"]
+      },
+      "Message": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "matchId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "senderId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "body": {
+            "type": "string"
+          },
+          "isRead": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "sender": {
+            "$ref": "#/components/schemas/MessageSender"
+          }
+        },
+        "required": ["id", "matchId", "senderId", "body", "isRead", "createdAt", "sender"]
+      },
+      "MessagesResponse": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/Message"
+        }
+      },
+      "SendMessageRequest": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": ["body"]
+      },
+      "MarkMessagesReadResponse": {
+        "type": "object",
+        "properties": {
+          "updated": {
+            "type": "integer"
+          }
+        },
+        "required": ["updated"]
+      },
+      "ConversationOther": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "chosenName": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": ["id", "chosenName"]
+      },
+      "ConversationLastMessage": {
+        "type": "object",
+        "nullable": true,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "body": {
+            "type": "string"
+          },
+          "senderId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "isRead": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "type": "string"
+          }
+        },
+        "required": ["id", "body", "senderId", "isRead", "createdAt"]
+      },
+      "Conversation": {
+        "type": "object",
+        "properties": {
+          "matchId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "other": {
+            "$ref": "#/components/schemas/ConversationOther"
+          },
+          "lastMessage": {
+            "$ref": "#/components/schemas/ConversationLastMessage"
+          },
+          "unreadCount": {
+            "type": "integer"
+          }
+        },
+        "required": ["matchId", "createdAt", "other", "lastMessage", "unreadCount"]
+      },
+      "ConversationsResponse": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/Conversation"
+        }
       }
     },
     "parameters": {}
@@ -1934,6 +2070,179 @@
           },
           "404": {
             "description": "Match not found or viewer is not party to it"
+          }
+        }
+      }
+    },
+    "/api/matches/{matchId}/messages": {
+      "get": {
+        "tags": ["messages"],
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "matchId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200
+            },
+            "required": false,
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "nullable": true,
+              "minimum": 0
+            },
+            "required": false,
+            "name": "offset",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Messages for the match in chronological order",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessagesResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "404": {
+            "description": "Match not found or viewer is not party to it"
+          }
+        }
+      },
+      "post": {
+        "tags": ["messages"],
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "matchId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendMessageRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Message inserted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "404": {
+            "description": "Match not found or viewer is not party to it"
+          }
+        }
+      }
+    },
+    "/api/matches/{matchId}/messages/read": {
+      "post": {
+        "tags": ["messages"],
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "matchId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Inbound messages marked read for the viewer",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MarkMessagesReadResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "404": {
+            "description": "Match not found or viewer is not party to it"
+          }
+        }
+      }
+    },
+    "/api/conversations": {
+      "get": {
+        "tags": ["messages"],
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Conversations for the viewer with last message + unread count",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversationsResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated"
           }
         }
       }

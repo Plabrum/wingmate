@@ -3,7 +3,8 @@ import { SectionList, StyleSheet } from 'react-native';
 import { router } from 'expo-router';
 
 import { useAuth } from '@/context/auth';
-import { useConversationsData, type ConversationRow } from '@/queries/messages';
+import { useGetApiConversationsSuspense } from '@/lib/api/generated/messages/messages';
+import type { Conversation } from '@/lib/api/generated/model';
 import { getInitials } from '@/components/profile/profile-helpers';
 import { FaceAvatar } from '@/components/ui/FaceAvatar';
 import { LargeHeader } from '@/components/ui/LargeHeader';
@@ -13,21 +14,6 @@ import { useMessagesListPresence } from '@/hooks/use-messages-list-presence';
 import { View, Text, Pressable, SafeAreaView } from '@/lib/tw';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-
-function getOtherParticipant(convo: ConversationRow, userId: string) {
-  const a = Array.isArray(convo.user_a) ? convo.user_a[0] : convo.user_a;
-  const b = Array.isArray(convo.user_b) ? convo.user_b[0] : convo.user_b;
-  return a?.id === userId ? b : a;
-}
-
-function getLastMessage(convo: ConversationRow) {
-  const msgs = Array.isArray(convo.messages) ? convo.messages : [];
-  return msgs[0] ?? null;
-}
-
-function hasMessages(convo: ConversationRow): boolean {
-  return getLastMessage(convo) != null;
-}
 
 function relativeTime(isoString: string): string {
   const diff = Date.now() - new Date(isoString).getTime();
@@ -44,18 +30,17 @@ function relativeTime(isoString: string): string {
 // ── ConvoRow ──────────────────────────────────────────────────────────────────
 
 type ConvoRowProps = {
-  convo: ConversationRow;
+  convo: Conversation;
   userId: string;
   onlineIds: Set<string>;
   onPress: () => void;
 };
 
 function ConvoRow({ convo, userId, onlineIds, onPress }: ConvoRowProps) {
-  const other = getOtherParticipant(convo, userId);
-  const lastMsg = getLastMessage(convo);
-  const isUnread = lastMsg != null && lastMsg.sender_id !== userId && !lastMsg.is_read;
-  const initials = getInitials(other?.chosen_name);
-  const isOnline = other?.id != null && onlineIds.has(other.id);
+  const { other, lastMessage } = convo;
+  const isUnread = lastMessage != null && lastMessage.senderId !== userId && !lastMessage.isRead;
+  const initials = getInitials(other.chosenName);
+  const isOnline = onlineIds.has(other.id);
 
   return (
     <Pressable className="flex-row items-center px-4 py-3 bg-white" onPress={onPress}>
@@ -74,19 +59,19 @@ function ConvoRow({ convo, userId, onlineIds, onPress }: ConvoRowProps) {
             className={`flex-1 text-sm text-fg mr-2 ${isUnread ? 'font-bold' : 'font-medium'}`}
             numberOfLines={1}
           >
-            {other?.chosen_name ?? 'Someone'}
+            {other.chosenName ?? 'Someone'}
           </Text>
-          {lastMsg != null && (
-            <Text className="text-xs text-fg-ghost">{relativeTime(lastMsg.created_at)}</Text>
+          {lastMessage != null && (
+            <Text className="text-xs text-fg-ghost">{relativeTime(lastMessage.createdAt)}</Text>
           )}
         </View>
-        {lastMsg != null ? (
+        {lastMessage != null ? (
           <Text
             className={`text-sm ${isUnread ? 'text-fg font-medium' : 'text-fg-muted'}`}
             numberOfLines={1}
           >
-            {lastMsg.sender_id === userId ? 'You: ' : ''}
-            {lastMsg.body}
+            {lastMessage.senderId === userId ? 'You: ' : ''}
+            {lastMessage.body}
           </Text>
         ) : (
           <Text className="text-sm text-fg-ghost italic">New match — say hello!</Text>
@@ -114,7 +99,7 @@ function SkeletonRow() {
 
 type Section = {
   title: string;
-  data: ConversationRow[];
+  data: Conversation[];
 };
 
 type ContentProps = {
@@ -123,11 +108,13 @@ type ContentProps = {
 };
 
 function MessagesContent({ userId, onlineIds }: ContentProps) {
-  const { data: convos, refetch, isRefetching } = useConversationsData(userId);
+  const { data, refetch, isRefetching } = useGetApiConversationsSuspense();
+  if (data.status !== 200) throw new Error('Failed to load conversations');
+  const convos = data.data;
 
   const sections: Section[] = useMemo(() => {
-    const active = convos.filter(hasMessages);
-    const starters = convos.filter((c) => !hasMessages(c));
+    const active = convos.filter((c) => c.lastMessage != null);
+    const starters = convos.filter((c) => c.lastMessage == null);
     const result: Section[] = [];
     if (active.length > 0) result.push({ title: 'Conversations', data: active });
     if (starters.length > 0) result.push({ title: 'New Matches', data: starters });
@@ -137,7 +124,7 @@ function MessagesContent({ userId, onlineIds }: ContentProps) {
   return (
     <SectionList
       sections={sections}
-      keyExtractor={(item) => item.id}
+      keyExtractor={(item) => item.matchId}
       onRefresh={refetch}
       refreshing={isRefetching}
       ListHeaderComponent={<LargeHeader title="Messages" />}
@@ -161,13 +148,12 @@ function MessagesContent({ userId, onlineIds }: ContentProps) {
           userId={userId}
           onlineIds={onlineIds}
           onPress={() => {
-            const other = getOtherParticipant(item, userId);
             router.push({
               pathname: '/(dater-tabs)/messages/[matchId]',
               params: {
-                matchId: item.id,
-                otherName: other?.chosen_name ?? '',
-                otherUserId: other?.id ?? '',
+                matchId: item.matchId,
+                otherName: item.other.chosenName ?? '',
+                otherUserId: item.other.id,
               },
             } as never);
           }}
