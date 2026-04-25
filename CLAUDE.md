@@ -331,9 +331,18 @@ EXPO_PUBLIC_SUPABASE_ANON_KEY=...
 # api edge function (read by `npm run api:serve`)
 DATABASE_URL=postgresql://postgres:postgres@host.docker.internal:54322/postgres
 JWT_SECRET=super-secret-jwt-token-with-at-least-32-characters-long
+JWT_KEYS=<JSON array — copy from auth container, see below>
 ```
 
 `host.docker.internal` is required because the edge runtime runs inside a Docker container — `127.0.0.1` would refer to the container, not the host's Postgres. `JWT_SECRET` for local dev matches the Supabase CLI's default; in prod, set it to the project's real JWT secret.
+
+`JWT_KEYS` is required when running against a Supabase CLI ≥ 2.74 stack (and any prod project using ES256 / asymmetric JWTs). The auth container exposes the JWKS as `GOTRUE_JWT_KEYS`; pull it into `.env.local` with:
+
+```
+docker exec supabase_auth_wingmate env | grep '^GOTRUE_JWT_KEYS=' | cut -d= -f2-
+```
+
+When `JWT_KEYS` is set, `middleware/auth.ts` verifies via the JWKS; otherwise it falls back to HS256 with `JWT_SECRET`.
 
 ### Running locally
 
@@ -399,7 +408,7 @@ Single Hono app that owns every client-facing HTTP endpoint. Structure:
 
 - `app.ts` — `createApp()`: registers middleware, routes, OpenAPI doc, Swagger UI. Exported so `scripts/emit-spec.ts` can construct the app without booting a server.
 - `index.ts` — `Deno.serve(createApp().fetch)`. This is the Supabase runtime entrypoint.
-- `middleware/auth.ts` — verifies JWTs with `jose` (secret from `JWT_SECRET`). Sets `c.var.userId`. Applied to protected routes only; `/api/openapi.json` and `/api/doc` are public.
+- `middleware/auth.ts` — verifies JWTs with `jose`. Uses `JWT_KEYS` (a JSON array of JWKs, ES256) when set; falls back to `JWT_SECRET` (HS256) otherwise. Sets `c.var.userId`. Applied to protected routes only; `/api/openapi.json` and `/api/doc` are public.
 - `middleware/transaction.ts` — opens a Drizzle transaction per request and exposes it via `c.var.db`. Commits on normal return, rolls back on any thrown error. Applied to protected routes only.
 - `middleware/error.ts` — maps `HTTPException`, `ZodError`, and unknown errors to JSON responses.
 - `types.ts` — `AppEnv` = the combined `AuthVars & DbVars` Hono env used by every route and `mount<Feature>(app)`.
@@ -432,7 +441,8 @@ The module-level `db` in `db/client.ts` is used only by the transaction middlewa
 **Required secrets** (Supabase dashboard → Edge Functions → Secrets). The `SUPABASE_` prefix is reserved by the CLI, so these use short names:
 
 - `DATABASE_URL` — Supavisor transaction-mode pooler URL in prod. Locally: `postgresql://postgres:postgres@host.docker.internal:54322/postgres` (the function runs in a Docker container, so `127.0.0.1` would refer to the container itself).
-- `JWT_SECRET` — HMAC secret from Supabase auth settings. Locally matches the CLI default (`super-secret-jwt-token-with-at-least-32-characters-long`).
+- `JWT_KEYS` — JSON array of JWKs (ES256). Set this when the project issues asymmetric JWTs (Supabase CLI ≥ 2.74, and projects on the new asymmetric scheme). Locally, copy from the auth container: `docker exec supabase_auth_wingmate env | grep '^GOTRUE_JWT_KEYS=' | cut -d= -f2-`.
+- `JWT_SECRET` — HMAC secret (HS256) from Supabase auth settings. Used as fallback when `JWT_KEYS` is not set. Locally matches the CLI default (`super-secret-jwt-token-with-at-least-32-characters-long`).
 
 Drizzle introspect (`npm run db:drizzle`) runs from the host via the Node driver, so it uses `127.0.0.1:54322` via `drizzle.config.ts`.
 
