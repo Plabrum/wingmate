@@ -5,6 +5,12 @@
  * OpenAPI spec version: 1.0.0
  */
 
+export * from './actSuggestionRequest';
+export * from './actSuggestionRequestDecision';
+export * from './actSuggestionResponse';
+export * from './directDecisionRequest';
+export * from './directDecisionRequestDecision';
+export * from './directDecisionResponse';
 export * from './discoverProfile';
 export * from './discoverProfileCity';
 export * from './discoverProfileDatingStatus';
@@ -21,6 +27,12 @@ export * from './likesYouProfileDatingStatus';
 export * from './likesYouProfileGender';
 export * from './likesYouProfileInterestsItem';
 export * from './likesYouResponse';
+export * from './match';
+export * from './pendingSuggestion';
+export * from './pendingSuggestionsResponse';
+export * from './suggestRequest';
+export * from './suggestRequestDecision';
+export * from './suggestResponse';
 export * from './wingerTab';
 export * from './wingerTabsResponse';
 export * from './wingPoolResponse';

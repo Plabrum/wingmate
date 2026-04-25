@@ -4,7 +4,6 @@
 // Each file shrinks as its underlying RPCs port; the directory should eventually be empty.
 
 export * from './contacts';
-export * from './decisions';
 export * from './discover';
 export * from './matches';
 export * from './messages';

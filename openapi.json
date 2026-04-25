@@ -319,6 +319,146 @@
         "items": {
           "$ref": "#/components/schemas/WingProfile"
         }
+      },
+      "Match": {
+        "type": "object",
+        "nullable": true,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "userAId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "userBId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "createdAt": {
+            "type": "string"
+          }
+        },
+        "required": ["id", "userAId", "userBId", "createdAt"]
+      },
+      "DirectDecisionResponse": {
+        "type": "object",
+        "properties": {
+          "created": {
+            "type": "boolean"
+          },
+          "match": {
+            "$ref": "#/components/schemas/Match"
+          }
+        },
+        "required": ["created", "match"]
+      },
+      "DirectDecisionRequest": {
+        "type": "object",
+        "properties": {
+          "recipientId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "decision": {
+            "type": "string",
+            "enum": ["approved", "declined"]
+          }
+        },
+        "required": ["recipientId", "decision"]
+      },
+      "ActSuggestionResponse": {
+        "type": "object",
+        "properties": {
+          "match": {
+            "$ref": "#/components/schemas/Match"
+          }
+        },
+        "required": ["match"]
+      },
+      "ActSuggestionRequest": {
+        "type": "object",
+        "properties": {
+          "recipientId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "decision": {
+            "type": "string",
+            "enum": ["approved", "declined"]
+          }
+        },
+        "required": ["recipientId", "decision"]
+      },
+      "SuggestResponse": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "enum": [true]
+          }
+        },
+        "required": ["ok"]
+      },
+      "SuggestRequest": {
+        "type": "object",
+        "properties": {
+          "daterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "recipientId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "note": {
+            "type": "string",
+            "nullable": true
+          },
+          "decision": {
+            "type": "string",
+            "nullable": true,
+            "enum": ["declined"]
+          }
+        },
+        "required": ["daterId", "recipientId", "decision"]
+      },
+      "PendingSuggestion": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "recipientId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "note": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "wingerId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "wingerName": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": ["id", "recipientId", "note", "createdAt", "wingerId", "wingerName"]
+      },
+      "PendingSuggestionsResponse": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/PendingSuggestion"
+        }
       }
     },
     "parameters": {}
@@ -548,6 +688,148 @@
           },
           "403": {
             "description": "Caller is not an active wingperson for this dater"
+          }
+        }
+      }
+    },
+    "/api/decisions": {
+      "post": {
+        "tags": ["decisions"],
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DirectDecisionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Decision recorded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DirectDecisionResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Unauthenticated"
+          }
+        }
+      }
+    },
+    "/api/decisions/suggestions/act": {
+      "post": {
+        "tags": ["decisions"],
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActSuggestionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Suggestion acted on",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActSuggestionResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "404": {
+            "description": "No pending suggestion to act on"
+          }
+        }
+      }
+    },
+    "/api/decisions/suggestions": {
+      "post": {
+        "tags": ["decisions"],
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SuggestRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Suggestion created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuggestResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "403": {
+            "description": "Caller is not an active wingperson for this dater"
+          }
+        }
+      }
+    },
+    "/api/decisions/pending-suggestions": {
+      "get": {
+        "tags": ["decisions"],
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Pending suggestions awaiting the viewer",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PendingSuggestionsResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated"
           }
         }
       }

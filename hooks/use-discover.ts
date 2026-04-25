@@ -7,12 +7,11 @@
 
 import { useRef, useState } from 'react';
 import { type DiscoverCard } from '@/queries/discover';
-import type { Enums } from '@/types/database';
+import type { DirectDecisionRequestDecision } from '@/lib/api/generated/model';
 import {
-  recordDecision,
-  actOnSuggestion as actOnSuggestionQuery,
-  checkMutualMatch,
-} from '@/queries/decisions';
+  postApiDecisions,
+  postApiDecisionsSuggestionsAct,
+} from '@/lib/api/generated/decisions/decisions';
 
 const PAGE_SIZE = 20;
 
@@ -47,6 +46,27 @@ export function useDiscover(
     loadingMoreRef.current = false;
   }
 
+  async function decide(
+    card: DiscoverCard,
+    decision: DirectDecisionRequestDecision
+  ): Promise<{ matched: boolean } | { error: true }> {
+    try {
+      if (card.suggested_by) {
+        const res = await postApiDecisionsSuggestionsAct({
+          recipientId: card.user_id,
+          decision,
+        });
+        if (res.status !== 200) return { error: true };
+        return { matched: res.data.match != null };
+      }
+      const res = await postApiDecisions({ recipientId: card.user_id, decision });
+      if (res.status !== 200) return { error: true };
+      return { matched: res.data.match != null };
+    } catch {
+      return { error: true };
+    }
+  }
+
   async function like(): Promise<LikeResult> {
     if (!userId || swipingRef.current) return 'error';
     const card = pool[index];
@@ -58,25 +78,15 @@ export function useDiscover(
     setIndex(newIndex);
     if (newIndex >= pool.length - 3) loadMore();
 
-    let error: unknown;
-    if (card.suggested_by) {
-      const result = await actOnSuggestionQuery(userId, card.user_id, 'approved');
-      error = result.error;
-    } else {
-      const result = await recordDecision(userId, card.user_id, 'approved');
-      error = result.error;
-    }
+    const result = await decide(card, 'approved');
+    swipingRef.current = false;
 
-    if (error) {
+    if ('error' in result) {
       // Roll back on failure
       setIndex((prev) => prev - 1);
-      swipingRef.current = false;
       return 'error';
     }
-
-    const { data: matchData } = await checkMutualMatch(userId, card.user_id);
-    swipingRef.current = false;
-    return matchData ? 'match' : 'liked';
+    return result.matched ? 'match' : 'liked';
   }
 
   async function pass(): Promise<void> {
@@ -90,15 +100,11 @@ export function useDiscover(
     setIndex(newIndex);
     if (newIndex >= pool.length - 3) loadMore();
 
-    if (card.suggested_by) {
-      await actOnSuggestionQuery(userId, card.user_id, 'declined');
-    } else {
-      await recordDecision(userId, card.user_id, 'declined');
-    }
+    await decide(card, 'declined');
     swipingRef.current = false;
   }
 
-  async function actOnSuggestion(decision: Enums<'decision_type'>) {
+  async function actOnSuggestion(decision: DirectDecisionRequestDecision) {
     if (decision === 'approved') return like();
     return pass();
   }

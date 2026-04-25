@@ -4,7 +4,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 
 import { colors } from '@/constants/theme';
-import { useAuth } from '@/context/auth';
 import { useWingSwipe } from '@/hooks/use-wing-swipe';
 import { View, Text, Pressable, ScrollView, TextInput, SafeAreaView } from '@/lib/tw';
 import { NavHeader } from '@/components/ui/NavHeader';
@@ -130,7 +129,6 @@ function EmptyState({ daterName }: { daterName: string }) {
 
 function WingSwipeContent() {
   const router = useRouter();
-  const { userId: wingerId } = useAuth();
   const { daterId } = useLocalSearchParams<{ daterId: string }>();
 
   const { data: daterContext } = useDaterContext(daterId);
@@ -145,7 +143,7 @@ function WingSwipeContent() {
   const responseData = response.data;
   const initialPool = useMemo(() => responseData.map(wingProfileToCard), [responseData]);
 
-  const { pool, index, suggest, decline } = useWingSwipe(wingerId, daterId, initialPool);
+  const { pool, index, suggest, decline } = useWingSwipe(daterId, initialPool);
   const card = pool[index] ?? null;
 
   const daterName = daterContext?.chosen_name ?? '';

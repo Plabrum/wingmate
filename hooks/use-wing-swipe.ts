@@ -1,11 +1,11 @@
 import { useRef, useState } from 'react';
 import { wingProfileToCard, type WingCard } from '@/queries/discover';
-import { wingSuggestApprove, wingSuggestDecline } from '@/queries/decisions';
 import { getApiWingPool } from '@/lib/api/generated/wing-pool/wing-pool';
+import { postApiDecisionsSuggestions } from '@/lib/api/generated/decisions/decisions';
 
 const PAGE_SIZE = 20;
 
-export function useWingSwipe(wingerId: string, daterId: string, initialPool: WingCard[]) {
+export function useWingSwipe(daterId: string, initialPool: WingCard[]) {
   const [pool, setPool] = useState(initialPool);
   const [index, setIndex] = useState(0);
 
@@ -37,8 +37,14 @@ export function useWingSwipe(wingerId: string, daterId: string, initialPool: Win
     setIndex(newIndex);
     if (newIndex >= pool.length - 3) loadMore();
 
-    const { error } = await wingSuggestApprove(daterId, card.user_id, wingerId, note);
-    if (error) {
+    try {
+      await postApiDecisionsSuggestions({
+        daterId,
+        recipientId: card.user_id,
+        note,
+        decision: null,
+      });
+    } catch {
       // Roll back on failure
       setIndex((prev) => prev - 1);
     }
@@ -53,7 +59,15 @@ export function useWingSwipe(wingerId: string, daterId: string, initialPool: Win
     setIndex(newIndex);
     if (newIndex >= pool.length - 3) loadMore();
 
-    await wingSuggestDecline(daterId, card.user_id, wingerId);
+    try {
+      await postApiDecisionsSuggestions({
+        daterId,
+        recipientId: card.user_id,
+        decision: 'declined',
+      });
+    } catch {
+      // Match legacy behavior: declines are fire-and-forget, no rollback.
+    }
   }
 
   return { pool, index, suggest, decline };

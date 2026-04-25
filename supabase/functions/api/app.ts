@@ -3,6 +3,7 @@ import { swaggerUI } from '@hono/swagger-ui';
 import { authMiddleware } from './middleware/auth.ts';
 import { transactionMiddleware } from './middleware/transaction.ts';
 import { errorHandler } from './middleware/error.ts';
+import { mountDecisions } from './domains/decisions/route.ts';
 import { mountDiscover } from './domains/discover/route.ts';
 import { mountLikesYou } from './domains/likes-you/route.ts';
 import { mountWingerTabs } from './domains/winger-tabs/route.ts';
@@ -45,6 +46,16 @@ export function createApp() {
   app.use('/wing-pool', authMiddleware);
   app.use('/wing-pool', transactionMiddleware);
   mountWingPool(app);
+
+  app.use('/decisions', authMiddleware);
+  app.use('/decisions', transactionMiddleware);
+  app.use('/decisions/suggestions', authMiddleware);
+  app.use('/decisions/suggestions', transactionMiddleware);
+  app.use('/decisions/suggestions/act', authMiddleware);
+  app.use('/decisions/suggestions/act', transactionMiddleware);
+  app.use('/decisions/pending-suggestions', authMiddleware);
+  app.use('/decisions/pending-suggestions', transactionMiddleware);
+  mountDecisions(app);
 
   app.onError(errorHandler);
 
