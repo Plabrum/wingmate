@@ -1,4 +1,4 @@
-import React, { Suspense, useCallback, useState } from 'react';
+import React, { Suspense, useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator } from 'react-native';
 import { useForm } from 'react-hook-form';
 import { useQueryClient } from '@tanstack/react-query';
@@ -8,14 +8,13 @@ import { View, Text, ScrollView, SafeAreaView, Pressable, Modal, ModalView } fro
 import { useAuth } from '@/context/auth';
 import { useDiscover, type PoolFetcher, type LikeResult } from '@/hooks/use-discover';
 import type { Enums } from '@/types/database';
+import { discoverProfileToCard, type DiscoverCard } from '@/queries/discover';
+import { getApiDiscover, useGetApiDiscoverSuspense } from '@/lib/api/generated/discover/discover';
 import {
-  discoverProfileToCard,
-  getLikesYouPool,
-  useLikesYouCount,
-  useInitialPool,
-  type DiscoverCard,
-} from '@/queries/discover';
-import { getApiDiscover } from '@/lib/api/generated/discover/discover';
+  getApiLikesYou,
+  useGetApiLikesYouCountSuspense,
+  useGetApiLikesYouSuspense,
+} from '@/lib/api/generated/likes-you/likes-you';
 import { useGetApiWingerTabsSuspense } from '@/lib/api/generated/winger-tabs/winger-tabs';
 import type { WingerTab } from '@/lib/api/generated/model';
 import { updateDatingProfile, useProfileData } from '@/queries/profiles';
@@ -204,53 +203,27 @@ function EmptyState({ tabIndex, wingerName }: { tabIndex: number; wingerName?: s
   );
 }
 
-// ── DiscoverPool ──────────────────────────────────────────────────────────────
-// Keyed by activeTabIndex — remounts (and re-suspends) on every tab switch.
+// ── PoolView ──────────────────────────────────────────────────────────────────
+// Shared swipe surface. Receives an already-fetched initial pool and a paginating
+// fetcher; the per-tab wrappers below choose which generated suspense hook supplies them.
 
-type DiscoverPoolProps = {
+type PoolViewProps = {
   userId: string;
+  initialPool: DiscoverCard[];
+  fetchPool: PoolFetcher;
   activeTabIndex: number;
   wingerTabs: WingerTab[];
-  tabs: string[];
   onDecrement: (() => void) | null;
 };
 
-function DiscoverPool({
+function PoolView({
   userId,
+  initialPool,
+  fetchPool,
   activeTabIndex,
   wingerTabs,
-  tabs,
   onDecrement,
-}: DiscoverPoolProps) {
-  const isForYou = activeTabIndex === 1;
-  const isAll = activeTabIndex === tabs.length - 1;
-  const wingerId =
-    !isAll && !isForYou && activeTabIndex >= 2
-      ? (wingerTabs[activeTabIndex - 2]?.id ?? null)
-      : null;
-
-  const fetchPool = useCallback<PoolFetcher>(
-    async (uid, pageSize, offset) => {
-      if (activeTabIndex === 0) return getLikesYouPool(uid, pageSize, offset);
-      try {
-        const res = await getApiDiscover({
-          filterWingerId: wingerId ?? undefined,
-          pageSize,
-          pageOffset: offset,
-          wingerOnly: isForYou,
-        });
-        if (res.status !== 200) throw new Error(`Unexpected status ${res.status}`);
-        return { data: res.data.map(discoverProfileToCard), error: null };
-      } catch (e) {
-        return { data: null, error: e instanceof Error ? e : new Error(String(e)) };
-      }
-    },
-    [activeTabIndex, wingerId, isForYou]
-  );
-
-  const mode = activeTabIndex === 0 ? 'likesYou' : 'discover';
-  const { data: initialPool } = useInitialPool(userId, mode, wingerId, PAGE_SIZE, isForYou);
-
+}: PoolViewProps) {
   const queryClient = useQueryClient();
   const { pool, index, like, pass } = useDiscover(fetchPool, userId, initialPool);
   const [matchCard, setMatchCard] = useState<DiscoverCard | null>(null);
@@ -306,6 +279,151 @@ function DiscoverPool({
   );
 }
 
+// ── LikesYouPool / DiscoverFeedPool ───────────────────────────────────────────
+// Each calls exactly one generated suspense hook so React's hook order is stable.
+// DiscoverPool dispatches between them based on the active tab.
+
+function LikesYouPool({
+  userId,
+  activeTabIndex,
+  wingerTabs,
+  onDecrement,
+}: {
+  userId: string;
+  activeTabIndex: number;
+  wingerTabs: WingerTab[];
+  onDecrement: (() => void) | null;
+}) {
+  const { data: response } = useGetApiLikesYouSuspense({
+    pageSize: PAGE_SIZE,
+    pageOffset: 0,
+  });
+  if (response.status !== 200) {
+    throw new Error(`Unexpected status ${response.status}`);
+  }
+  const responseData = response.data;
+  const initialPool = useMemo(() => responseData.map(discoverProfileToCard), [responseData]);
+
+  const fetchPool = useCallback<PoolFetcher>(async (_uid, pageSize, offset) => {
+    try {
+      const res = await getApiLikesYou({ pageSize, pageOffset: offset });
+      if (res.status !== 200) throw new Error(`Unexpected status ${res.status}`);
+      return { data: res.data.map(discoverProfileToCard), error: null };
+    } catch (e) {
+      return { data: null, error: e instanceof Error ? e : new Error(String(e)) };
+    }
+  }, []);
+
+  return (
+    <PoolView
+      userId={userId}
+      initialPool={initialPool}
+      fetchPool={fetchPool}
+      activeTabIndex={activeTabIndex}
+      wingerTabs={wingerTabs}
+      onDecrement={onDecrement}
+    />
+  );
+}
+
+function DiscoverFeedPool({
+  userId,
+  activeTabIndex,
+  wingerTabs,
+  tabs,
+  onDecrement,
+}: {
+  userId: string;
+  activeTabIndex: number;
+  wingerTabs: WingerTab[];
+  tabs: string[];
+  onDecrement: (() => void) | null;
+}) {
+  const isForYou = activeTabIndex === 1;
+  const isAll = activeTabIndex === tabs.length - 1;
+  const wingerId =
+    !isAll && !isForYou && activeTabIndex >= 2
+      ? (wingerTabs[activeTabIndex - 2]?.id ?? null)
+      : null;
+
+  const { data: response } = useGetApiDiscoverSuspense({
+    filterWingerId: wingerId ?? undefined,
+    pageSize: PAGE_SIZE,
+    pageOffset: 0,
+    wingerOnly: isForYou,
+  });
+  if (response.status !== 200) {
+    throw new Error(`Unexpected status ${response.status}`);
+  }
+  const responseData = response.data;
+  const initialPool = useMemo(() => responseData.map(discoverProfileToCard), [responseData]);
+
+  const fetchPool = useCallback<PoolFetcher>(
+    async (_uid, pageSize, offset) => {
+      try {
+        const res = await getApiDiscover({
+          filterWingerId: wingerId ?? undefined,
+          pageSize,
+          pageOffset: offset,
+          wingerOnly: isForYou,
+        });
+        if (res.status !== 200) throw new Error(`Unexpected status ${res.status}`);
+        return { data: res.data.map(discoverProfileToCard), error: null };
+      } catch (e) {
+        return { data: null, error: e instanceof Error ? e : new Error(String(e)) };
+      }
+    },
+    [wingerId, isForYou]
+  );
+
+  return (
+    <PoolView
+      userId={userId}
+      initialPool={initialPool}
+      fetchPool={fetchPool}
+      activeTabIndex={activeTabIndex}
+      wingerTabs={wingerTabs}
+      onDecrement={onDecrement}
+    />
+  );
+}
+
+type DiscoverPoolProps = {
+  userId: string;
+  activeTabIndex: number;
+  wingerTabs: WingerTab[];
+  tabs: string[];
+  onDecrement: (() => void) | null;
+};
+
+function DiscoverPool({
+  userId,
+  activeTabIndex,
+  wingerTabs,
+  tabs,
+  onDecrement,
+}: DiscoverPoolProps) {
+  if (activeTabIndex === 0) {
+    return (
+      <LikesYouPool
+        userId={userId}
+        activeTabIndex={activeTabIndex}
+        wingerTabs={wingerTabs}
+        onDecrement={onDecrement}
+      />
+    );
+  }
+  return (
+    <DiscoverFeedPool
+      userId={userId}
+      activeTabIndex={activeTabIndex}
+      wingerTabs={wingerTabs}
+      tabs={tabs}
+      onDecrement={onDecrement}
+    />
+  );
+}
+
 // ── DiscoverContent ───────────────────────────────────────────────────────────
 
 function DiscoverContent({ userId }: { userId: string }) {
@@ -314,7 +432,11 @@ function DiscoverContent({ userId }: { userId: string }) {
     throw new Error(`Unexpected status ${wingerTabsResponse.status}`);
   }
   const wingerTabs: WingerTab[] = wingerTabsResponse.data;
-  const { data: initialLikesYouCount } = useLikesYouCount(userId);
+  const { data: likesYouCountResponse } = useGetApiLikesYouCountSuspense();
+  if (likesYouCountResponse.status !== 200) {
+    throw new Error(`Unexpected status ${likesYouCountResponse.status}`);
+  }
+  const initialLikesYouCount = likesYouCountResponse.data.count;
   const [activeTabIndex, setActiveTabIndex] = useState(0);
   const [likesYouDecrements, setLikesYouDecrements] = useState(0);
 

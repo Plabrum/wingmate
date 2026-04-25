@@ -1,19 +1,17 @@
 // TRANSITIONAL: this file is being drained. The long-term end state is zero wrapper
 // functions here — screens import generated hooks from `@/lib/api/generated/` directly.
 // What remains below is the pre-migration surface:
-//   • Discover pool: PORTED — `getApiDiscover` is called at the callsite; only the
-//     `discoverProfileToCard` shape-bridge and `useInitialPool` wrapper for the likes-you
-//     branch still live here. Both die when `DiscoverCard` is replaced by `DiscoverProfile`
-//     (camelCase) and when likes-you is ported.
-//   • Wing pool, likes-you pool: NOT YET PORTED — still on `supabase.rpc`.
-//     Port each to `supabase/functions/api/domains/<name>/` and delete the corresponding
-//     wrappers + hooks from this file as they move.
+//   • Discover pool + Likes You: PORTED — generated hooks are called at the callsite;
+//     only the `discoverProfileToCard` shape-bridge still lives here. Dies when
+//     `DiscoverCard` is replaced by `DiscoverProfile` (camelCase) at the callsites.
+//   • Wing pool: NOT YET PORTED — still on `supabase.rpc`. Port to
+//     `supabase/functions/api/domains/wing-pool/` and delete its wrapper + hook from
+//     this file once it moves.
 // Do not add new helpers here. New endpoints go on the `api` function.
 
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import type { Enums } from '@/types/database';
-import { getApiDiscover } from '@/lib/api/generated/discover/discover';
 import type { DiscoverProfile } from '@/lib/api/generated/model';
 
 // Shape returned by the get_discover_pool and get_wing_pool RPCs.
@@ -82,70 +80,6 @@ export async function getWingPool(
     page_offset: pageOffset,
   });
   return { data: data as WingCard[] | null, error };
-}
-
-// ── Likes You pool (dater's "Likes You" tab) ──────────────────────────────────
-
-export async function getLikesYouPool(
-  viewerId: string,
-  pageSize = 20,
-  pageOffset = 0
-): Promise<{ data: DiscoverCard[] | null; error: Error | null }> {
-  const { data, error } = await supabase.rpc('get_likes_you_pool', {
-    viewer_id: viewerId,
-    page_size: pageSize,
-    page_offset: pageOffset,
-  });
-  return { data: data as DiscoverCard[] | null, error };
-}
-
-export async function getLikesYouCount(
-  viewerId: string
-): Promise<{ data: number | null; error: Error | null }> {
-  const { data, error } = await supabase.rpc('get_likes_you_count', {
-    viewer_id: viewerId,
-  });
-  return { data: data as number | null, error };
-}
-
-export function useLikesYouCount(userId: string) {
-  return useSuspenseQuery({
-    queryKey: ['likes-you-count', userId],
-    queryFn: async () => {
-      const { data, error } = await getLikesYouCount(userId);
-      if (error) throw error;
-      return data ?? 0;
-    },
-    staleTime: 60_000,
-  });
-}
-
-export function useInitialPool(
-  userId: string,
-  mode: 'likesYou' | 'discover',
-  wingerId: string | null,
-  pageSize: number,
-  wingerOnly = false
-) {
-  return useSuspenseQuery({
-    queryKey: ['pool', userId, mode, wingerId, wingerOnly],
-    queryFn: async () => {
-      if (mode === 'likesYou') {
-        const { data, error } = await getLikesYouPool(userId, pageSize, 0);
-        if (error) throw error;
-        return data ?? [];
-      }
-      const res = await getApiDiscover({
-        filterWingerId: wingerId ?? undefined,
-        pageSize,
-        pageOffset: 0,
-        wingerOnly,
-      });
-      if (res.status !== 200) throw new Error(`Unexpected status ${res.status}`);
-      return res.data.map(discoverProfileToCard);
-    },
-    staleTime: 0,
-  });
 }
 
 export function useWingPool(wingerId: string, daterId: string, pageSize: number) {

@@ -4,6 +4,7 @@ import { authMiddleware } from './middleware/auth.ts';
 import { transactionMiddleware } from './middleware/transaction.ts';
 import { errorHandler } from './middleware/error.ts';
 import { mountDiscover } from './domains/discover/route.ts';
+import { mountLikesYou } from './domains/likes-you/route.ts';
 import { mountWingerTabs } from './domains/winger-tabs/route.ts';
 import type { AppEnv } from './types.ts';
 
@@ -29,6 +30,12 @@ export function createApp() {
   app.use('/discover', authMiddleware);
   app.use('/discover', transactionMiddleware);
   mountDiscover(app);
+
+  app.use('/likes-you', authMiddleware);
+  app.use('/likes-you', transactionMiddleware);
+  app.use('/likes-you/count', authMiddleware);
+  app.use('/likes-you/count', transactionMiddleware);
+  mountLikesYou(app);
 
   app.use('/winger-tabs', authMiddleware);
   app.use('/winger-tabs', transactionMiddleware);
