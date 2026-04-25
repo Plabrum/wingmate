@@ -53,3 +53,6 @@ app-example
 
 # drizzle-kit introspect artifacts (we only commit schema.ts + relations.ts)
 .drizzle/
+
+# agent prompts (scratch / per-milestone notes)
+.agent-prompts/
