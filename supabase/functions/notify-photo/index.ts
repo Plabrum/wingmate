@@ -24,9 +24,26 @@ async function sendPush(token: string, title: string, body: string) {
   }
 }
 
+function pushEnabled(): boolean {
+  const override = Deno.env.get('PUSH_ENABLED');
+  if (override === 'true') return true;
+  if (override === 'false') return false;
+  const url = Deno.env.get('SUPABASE_URL') ?? '';
+  try {
+    return /\.supabase\.(co|in)$/i.test(new URL(url).host);
+  } catch {
+    return false;
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
   if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405);
+
+  if (!pushEnabled()) {
+    console.log('[notify-photo] push disabled in this environment, skipping');
+    return json({ ok: true, skipped: 'push-disabled' }, 200);
+  }
 
   let payload: WebhookPayload;
   try {
