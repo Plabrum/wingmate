@@ -274,7 +274,7 @@ function WingpeopleContent({ onOpenInvite }: ContentProps) {
               <Pressable
                 className="px-[14px] py-2 rounded-full bg-accent-muted"
                 onPress={() =>
-                  router.push(`/(winger)/wingpeople/dater-profile?daterId=${wf.dater?.id}` as any)
+                  router.push(`/(tabs)/wingpeople/dater-profile?daterId=${wf.dater?.id}` as any)
                 }
               >
                 <Text className="text-sm font-semibold text-accent">Add to profile</Text>
@@ -282,7 +282,7 @@ function WingpeopleContent({ onOpenInvite }: ContentProps) {
               <Pressable
                 className="px-[14px] py-2 rounded-full bg-accent-muted"
                 onPress={() =>
-                  router.push(`/(winger)/wingpeople/wingswipe?daterId=${wf.dater?.id}` as any)
+                  router.push(`/(tabs)/wingpeople/wingswipe?daterId=${wf.dater?.id}` as any)
                 }
               >
                 <Text className="text-sm font-semibold text-accent">Swipe for {firstName}</Text>

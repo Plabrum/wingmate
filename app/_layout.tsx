@@ -21,7 +21,7 @@ import ScreenSuspense from '@/components/ui/ScreenSuspense';
 SplashScreen.preventAutoHideAsync();
 
 export const unstable_settings = {
-  anchor: '(dater-tabs)',
+  anchor: '(tabs)',
 };
 
 function AuthenticatedNavigator({ userId }: { userId: string }) {
@@ -29,37 +29,24 @@ function AuthenticatedNavigator({ userId }: { userId: string }) {
     data: { profile, datingProfile },
   } = useProfileData(userId);
 
-  type UserState = 'needs-onboarding' | 'winger' | 'dater';
-  const state: UserState =
-    !profile?.chosen_name || (!datingProfile && profile.role !== 'winger')
-      ? 'needs-onboarding'
-      : profile.role === 'winger' || datingProfile?.dating_status === 'winging'
-        ? 'winger'
-        : 'dater';
+  const needsOnboarding = !profile?.chosen_name || (!datingProfile && profile.role !== 'winger');
+  const isWinger = profile?.role === 'winger' || datingProfile?.dating_status === 'winging';
 
-  let dest: string;
-  switch (state) {
-    case 'needs-onboarding':
-      dest = '/(onboarding)';
-      break;
-    case 'winger':
-      dest = '/(winger)';
-      break;
-    case 'dater':
-      dest = '/(dater-tabs)/discover';
-      break;
-  }
+  const dest = needsOnboarding
+    ? '/(onboarding)'
+    : isWinger
+      ? '/(tabs)/profile'
+      : '/(tabs)/discover';
 
   // Mount-only: check for a pending deep-link invite (external async state)
   useEffect(() => {
     AsyncStorage.getItem('pending_invite').then((val) => {
       if (!val) return;
       AsyncStorage.removeItem('pending_invite');
-      const wingpeoplePath =
-        dest === '/(winger)' ? '/(winger)/wingpeople/' : '/(dater-tabs)/profile/wingpeople/';
+      const wingpeoplePath = isWinger ? '/(tabs)/wingpeople/' : '/(tabs)/profile/wingpeople/';
       router.replace(wingpeoplePath as any);
     });
-  }, [userId, dest]);
+  }, [userId, isWinger]);
 
   // Mount-only: register push token (external device event)
   useEffect(() => {
@@ -91,8 +78,7 @@ export default function RootLayout() {
         <AuthProvider>
           <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
             <Stack>
-              <Stack.Screen name="(dater-tabs)" options={{ headerShown: false }} />
-              <Stack.Screen name="(winger)" options={{ headerShown: false }} />
+              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
               <Stack.Screen name="(auth)" options={{ headerShown: false }} />
               <Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
               <Stack.Screen name="invite" options={{ headerShown: false }} />

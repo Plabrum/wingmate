@@ -147,7 +147,7 @@ function MessagesContent({ userId, onlineIds }: ContentProps) {
           onlineIds={onlineIds}
           onPress={() => {
             router.push({
-              pathname: '/(dater-tabs)/messages/[matchId]',
+              pathname: '/(tabs)/messages/[matchId]',
               params: {
                 matchId: item.matchId,
                 otherName: item.other.chosenName ?? '',

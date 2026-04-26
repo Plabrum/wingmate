@@ -143,7 +143,7 @@ function WingerView({
       <View className="mt-8 w-full">
         <PurpleButton
           label="Wingpeople & Invitations"
-          onPress={() => router.push('/(dater-tabs)/profile/wingpeople' as any)}
+          onPress={() => router.push('/(tabs)/wingpeople' as any)}
           outline
         />
       </View>
@@ -260,7 +260,7 @@ function ProfileScreenInner() {
         />
         <Pressable
           className="flex-1 flex-row items-center gap-[10px]"
-          onPress={() => router.push('/(dater-tabs)/profile/wingpeople' as any)}
+          onPress={() => router.push('/(tabs)/profile/wingpeople' as any)}
         >
           {wingItems.length > 0 ? (
             <>

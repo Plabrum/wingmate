@@ -167,7 +167,7 @@ export function AboutMeTab({ form, data, userId }: Props) {
       <View className="mt-7">
         <PurpleButton
           label="Edit Profile"
-          onPress={() => router.push('/(dater-tabs)/profile/edit' as any)}
+          onPress={() => router.push('/(tabs)/profile/edit' as any)}
           outline
         />
       </View>

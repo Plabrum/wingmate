@@ -285,7 +285,7 @@ function MatchSheet({ match, visible, onClose }: MatchSheetProps) {
               label={matchHasMessages ? 'Open Conversation' : 'Start Conversation'}
               onPress={() => {
                 onClose();
-                router.push(`/(dater-tabs)/messages/${match.matchId}` as never);
+                router.push(`/(tabs)/messages/${match.matchId}` as never);
               }}
             />
           </View>
