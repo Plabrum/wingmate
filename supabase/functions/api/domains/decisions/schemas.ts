@@ -1,7 +1,7 @@
 import { z } from '@hono/zod-openapi';
 import { decisionType } from '../../db/schema.ts';
 
-const decisionTypeValues = decisionType.enumValues as [string, ...string[]];
+const decisionTypeValues = decisionType.enumValues;
 
 export const Match = z
   .object({

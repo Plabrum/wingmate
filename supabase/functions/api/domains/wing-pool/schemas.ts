@@ -1,10 +1,10 @@
 import { z } from '@hono/zod-openapi';
 import { city, datingStatus, gender, interest } from '../../db/schema.ts';
 
-const genderValues = gender.enumValues as [string, ...string[]];
-const cityValues = city.enumValues as [string, ...string[]];
-const datingStatusValues = datingStatus.enumValues as [string, ...string[]];
-const interestValues = interest.enumValues as [string, ...string[]];
+const genderValues = gender.enumValues;
+const cityValues = city.enumValues;
+const datingStatusValues = datingStatus.enumValues;
+const interestValues = interest.enumValues;
 
 export const WingPoolQuery = z.object({
   daterId: z.string().uuid(),

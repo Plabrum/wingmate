@@ -15,7 +15,8 @@
   },
   "lint": {
     "rules": { "tags": ["recommended"] },
-    "include": ["./**/*.ts"]
+    "include": ["./**/*.ts"],
+    "exclude": ["./db/schema.ts"]
   },
   "fmt": {
     "useTabs": false,

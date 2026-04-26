@@ -1,8 +1,8 @@
 import { z } from '@hono/zod-openapi';
 import { city, interest } from '../../db/schema.ts';
 
-const cityValues = city.enumValues as [string, ...string[]];
-const interestValues = interest.enumValues as [string, ...string[]];
+const cityValues = city.enumValues;
+const interestValues = interest.enumValues;
 
 export const MatchSummaryOther = z
   .object({

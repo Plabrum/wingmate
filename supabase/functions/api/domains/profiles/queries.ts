@@ -251,17 +251,10 @@ export async function fetchOwnDatingProfile(
   return { base, photos, prompts, responses };
 }
 
-export type CreateDatingProfileFields = {
-  city: string;
-  bio?: string | null;
-  ageFrom: number;
-  ageTo?: number | null;
-  interestedGender: string[];
-  religion: string;
-  religiousPreference?: string | null;
-  interests: string[];
-  datingStatus?: string;
-};
+export type CreateDatingProfileFields = Omit<
+  typeof datingProfiles.$inferInsert,
+  'id' | 'userId' | 'isActive' | 'createdAt' | 'updatedAt'
+>;
 
 export async function insertDatingProfile(
   db: DBOrTx,
@@ -286,18 +279,9 @@ export async function insertDatingProfile(
   return row;
 }
 
-export type UpdateDatingProfileFields = {
-  bio?: string | null;
-  city?: string;
-  ageFrom?: number;
-  ageTo?: number | null;
-  interestedGender?: string[];
-  religion?: string;
-  religiousPreference?: string | null;
-  interests?: string[];
-  datingStatus?: string;
-  isActive?: boolean;
-};
+export type UpdateDatingProfileFields = Partial<
+  Omit<typeof datingProfiles.$inferInsert, 'id' | 'userId' | 'createdAt' | 'updatedAt'>
+>;
 
 export async function updateOwnDatingProfile(
   db: DBOrTx,

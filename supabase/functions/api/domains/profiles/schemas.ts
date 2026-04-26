@@ -1,12 +1,12 @@
 import { z } from '@hono/zod-openapi';
 import { city, datingStatus, gender, interest, religion, userRole } from '../../db/schema.ts';
 
-const cityValues = city.enumValues as [string, ...string[]];
-const datingStatusValues = datingStatus.enumValues as [string, ...string[]];
-const genderValues = gender.enumValues as [string, ...string[]];
-const interestValues = interest.enumValues as [string, ...string[]];
-const religionValues = religion.enumValues as [string, ...string[]];
-const userRoleValues = userRole.enumValues as [string, ...string[]];
+const cityValues = city.enumValues;
+const datingStatusValues = datingStatus.enumValues;
+const genderValues = gender.enumValues;
+const interestValues = interest.enumValues;
+const religionValues = religion.enumValues;
+const userRoleValues = userRole.enumValues;
 
 // ── Base profile ─────────────────────────────────────────────────────────────
 

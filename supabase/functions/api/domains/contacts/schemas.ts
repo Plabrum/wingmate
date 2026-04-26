@@ -1,8 +1,8 @@
 import { z } from '@hono/zod-openapi';
 import { gender, interest } from '../../db/schema.ts';
 
-const genderValues = gender.enumValues as [string, ...string[]];
-const interestValues = interest.enumValues as [string, ...string[]];
+const genderValues = gender.enumValues;
+const interestValues = interest.enumValues;
 
 export const WingerSummary = z
   .object({
