@@ -191,7 +191,7 @@ export function mountPhotos(app: OpenAPIHono<AppEnv>) {
 
     const { deleted, storageUrl } = await deleteOwnedPhoto(db, id, userId);
     if (!deleted) throw new HTTPException(404, { message: 'Photo not found' });
-    if (storageUrl) await removeProfilePhoto(storageUrl);
+    if (storageUrl) await removeProfilePhoto(c.get('token'), storageUrl);
     return c.json({ ok: true } as const, 200);
   });
 
@@ -202,7 +202,7 @@ export function mountPhotos(app: OpenAPIHono<AppEnv>) {
 
     const { deleted, storageUrl } = await deleteOwnedPhoto(db, id, userId);
     if (!deleted) throw new HTTPException(404, { message: 'Photo not found' });
-    if (storageUrl) await removeProfilePhoto(storageUrl);
+    if (storageUrl) await removeProfilePhoto(c.get('token'), storageUrl);
     return c.json({ ok: true } as const, 200);
   });
 

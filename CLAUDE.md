@@ -105,7 +105,7 @@ wingmate/
 │       │   ├── lib/
 │       │   │   ├── config.ts   # env singleton — reads Deno.env once at boot, fails fast on missing vars
 │       │   │   ├── push.ts     # sendPush / getPushToken (no-op outside hosted Supabase)
-│       │   │   └── storage.ts  # service-role storage admin client (profile-photos bucket cleanup)
+│       │   │   └── storage.ts  # per-request user-JWT supabase-js client (profile-photos bucket cleanup)
 │       │   └── scripts/
 │       │       └── emit-spec.ts # Writes openapi.json; run via `npm run api:spec`
 │       │
@@ -225,7 +225,7 @@ If unsure, just `npm run codegen` — it's idempotent. The only manual step in t
 - Never edit `types/database.ts` or `supabase/functions/api/db/schema.ts` by hand. Regenerate.
 - Never run `drizzle-kit generate` or `drizzle-kit push`. Schema writes happen via SQL migrations in `supabase/migrations/` only.
 - Generated artifacts (`types/database.ts`, `supabase/functions/api/db/schema.ts`, `openapi.json`, `lib/api/generated/**`) belong in the same commit as the source change that produced them. Don't leave them dirty in the working tree.
-- Service-role auth model on the `api` path: every Drizzle query in a handler must constrain to `c.var.userId` via WHERE / JOIN. This is the only authorization layer — there is no RLS on this path.
+- RLS is the authorization floor on the `api` path. The function connects as `authenticator` and each request transaction runs as `authenticated` with `request.jwt.claims` set, so existing `auth.uid()` policies on `public.*` and `storage.objects` are evaluated on every query. Handler-side `where(eq(...))` clauses still document what each endpoint wants and let the planner pick indexes — but a missing WHERE is now a correctness/perf bug, not a security incident.
 
 ---
 
@@ -369,8 +369,11 @@ EXPO_PUBLIC_SUPABASE_URL=...
 EXPO_PUBLIC_SUPABASE_ANON_KEY=...
 
 # api edge function (read by `npm run api:serve`)
-DATABASE_URL=postgresql://postgres:postgres@host.docker.internal:54322/postgres
+DATABASE_URL=postgresql://authenticator:postgres@host.docker.internal:54322/postgres
+SUPABASE_ANON_KEY=...   # same value as EXPO_PUBLIC_SUPABASE_ANON_KEY; used by lib/storage.ts
 ```
+
+`DATABASE_URL` connects as `authenticator` (not `postgres`), and the transaction middleware switches the role to `authenticated` with the caller's JWT claims — so RLS evaluates `auth.uid()` correctly. The local `authenticator` password is the same as the local `postgres` password (Supabase CLI sets all roles to `postgres`); confirm with `supabase status` if a fresh stack diverges.
 
 `host.docker.internal` is required because the edge runtime runs inside a Docker container — `127.0.0.1` would refer to the container, not the host's Postgres. JWT verification is handled by Kong in prod and skipped locally (`--no-verify-jwt`), so no signing-key env vars are needed here.
 
@@ -433,8 +436,8 @@ Single Hono app that owns every client-facing HTTP endpoint. Structure:
 
 - `app.ts` — `createApp()`: registers middleware, routes, OpenAPI doc, Swagger UI. Exported so `scripts/emit-spec.ts` can construct the app without booting a server.
 - `index.ts` — `Deno.serve(createApp().fetch)`. This is the Supabase runtime entrypoint.
-- `middleware/auth.ts` — decodes the JWT to read `sub` and sets `c.var.userId`. Signature/expiry/audience verification is performed by Kong (the platform gateway) in prod; locally we trust the dev stack and run with `--no-verify-jwt`. Applied to protected routes only; `/api/openapi.json` and `/api/doc` are mounted unconditionally — locally they're reachable, in prod Kong rejects them with 401 because they have no JWT.
-- `middleware/transaction.ts` — opens a Drizzle transaction per request and exposes it via `c.var.db`. Commits on normal return, rolls back on any thrown error. Applied to protected routes only.
+- `middleware/auth.ts` — decodes the JWT and sets `c.var.userId` (`sub`), `c.var.token` (raw bearer), and `c.var.claims` (full payload). Signature/expiry/audience verification is performed by Kong (the platform gateway) in prod; locally we trust the dev stack and run with `--no-verify-jwt`. Applied to protected routes only; `/api/openapi.json` and `/api/doc` are mounted unconditionally — locally they're reachable, in prod Kong rejects them with 401 because they have no JWT.
+- `middleware/transaction.ts` — opens a Drizzle transaction per request, runs `set_config('role', 'authenticated', true)` + `set_config('request.jwt.claims', <claims>, true)` so RLS sees the caller, and exposes the tx via `c.var.db`. Commits on normal return, rolls back on any thrown error. Applied to protected routes only.
 - `middleware/error.ts` — maps `HTTPException`, `ZodError`, and unknown errors to JSON responses.
 - `types.ts` — `AppEnv` = the combined `AuthVars & DbVars` Hono env used by every route and `mount<Feature>(app)`.
 - `db/client.ts` — Drizzle client over `postgres.js` using `DATABASE_URL` (Supavisor transaction-mode pooler in prod). `max: 1`, `prepare: false`. Initialized at module scope so warm isolates reuse the pool. Exports `DB`, `Tx`, `DBOrTx` types; the module-level `db` should only be imported by `middleware/transaction.ts`.
@@ -459,14 +462,14 @@ Single Hono app that owns every client-facing HTTP endpoint. Structure:
 
 The module-level `db` in `db/client.ts` is used only by the transaction middleware — never import it in handlers or queries. The `/openapi.json` and `/doc` routes intentionally skip the transaction middleware so doc hits don't consume the isolate's single pool slot.
 
-**Authorization model.** No RLS on this path — the function uses the service role implicitly (connects as `postgres`). Every Drizzle query inside a handler MUST constrain results to `c.var.userId` via a WHERE or JOIN. This is enforced by code review, not the DB.
+**Authorization model.** RLS is the authorization boundary. The api connects as the `authenticator` role and the request transaction runs as `authenticated` with `request.jwt.claims` set, so every existing `auth.uid()`-based policy on `public.*` and `storage.objects` is the security floor. Handler-side `where(eq(...))` clauses remain — they document what data each endpoint wants and let the planner pick indexes — but a missing WHERE is a correctness/perf bug, not a security incident. There is no service-role escape hatch in `domains/`; the storage delete in `lib/storage.ts` uses the user's JWT.
 
 **Deploy.** CI (`.github/workflows/supabase-migrations.yml`) deploys `api` without `--no-verify-jwt`, so Kong verifies every request before it reaches our code. `/openapi.json` and `/doc` therefore 401 in prod (no JWT) — that's intentional, the spec is committed in the repo and Swagger UI is a local-dev tool.
 
 **Required secrets** (Supabase dashboard → Edge Functions → Secrets). The `SUPABASE_` prefix is reserved by the CLI, so this uses a short name:
 
-- `DATABASE_URL` — Supavisor transaction-mode pooler URL in prod. Locally: `postgresql://postgres:postgres@host.docker.internal:54322/postgres` (the function runs in a Docker container, so `127.0.0.1` would refer to the container itself).
-- `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_REGION` — auto-injected by the Supabase runtime. `SUPABASE_REGION` is only set on hosted Supabase; `api/lib/config.ts` uses its presence as the sole `isProd` signal, and `api/lib/push.ts` no-ops Expo delivery (logs `[push:local]` instead) when it's absent. No operator-set push flags.
+- `DATABASE_URL` — Supavisor transaction-mode pooler URL in prod, connecting as the `authenticator` role. Locally: `postgresql://authenticator:postgres@host.docker.internal:54322/postgres` (the function runs in a Docker container, so `127.0.0.1` would refer to the container itself). The transaction middleware bridges to `authenticated` per request via `set_config('role', ...)` + `set_config('request.jwt.claims', ...)`.
+- `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_REGION` — auto-injected by the Supabase runtime. `SUPABASE_ANON_KEY` is used by `lib/storage.ts` to build a per-request supabase-js client carrying the caller's JWT, so storage RLS sees `auth.uid()`. `SUPABASE_REGION` is only set on hosted Supabase; `api/lib/config.ts` uses its presence as the sole `isProd` signal, and `api/lib/push.ts` no-ops Expo delivery (logs `[push:local]` instead) when it's absent. No operator-set push flags.
 
 Drizzle introspect (`npm run db:drizzle`) runs from the host via the Node driver, so it uses `127.0.0.1:54322` via `drizzle.config.ts`.
 

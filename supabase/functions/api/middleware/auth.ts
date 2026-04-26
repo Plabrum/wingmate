@@ -3,13 +3,17 @@ import { createMiddleware } from 'hono/factory';
 // Kong (Supabase API gateway) verifies the JWT signature, expiry, and audience
 // before any request reaches this function in prod. Locally we run with
 // --no-verify-jwt and trust the dev stack. So this middleware just extracts
-// `sub` from the already-trusted token.
+// claims from the already-trusted token and stashes them for the transaction
+// middleware (which sets `request.jwt.claims` for RLS) and the storage helper
+// (which builds a per-request user-JWT supabase-js client).
 
 export type AuthVars = {
   userId: string;
+  token: string;
+  claims: Record<string, unknown>;
 };
 
-function decodeJwtPayload(token: string): { sub?: string } {
+function decodeJwtPayload(token: string): Record<string, unknown> {
   const segment = token.split('.')[1] ?? '';
   const padded = segment + '='.repeat((4 - (segment.length % 4)) % 4);
   const base64 = padded.replace(/-/g, '+').replace(/_/g, '/');
@@ -31,16 +35,19 @@ export const authMiddleware = createMiddleware<{ Variables: AuthVars }>(async (c
     return c.json({ error: 'Missing authorization header' }, 401);
   }
 
-  let sub: string | undefined;
+  let claims: Record<string, unknown>;
   try {
-    sub = decodeJwtPayload(token).sub;
+    claims = decodeJwtPayload(token);
   } catch {
     return c.json({ error: 'Invalid token' }, 401);
   }
+  const sub = typeof claims.sub === 'string' ? claims.sub : undefined;
   if (!sub) {
     return c.json({ error: 'Invalid token: missing sub' }, 401);
   }
 
   c.set('userId', sub);
+  c.set('token', token);
+  c.set('claims', claims);
   await next();
 });

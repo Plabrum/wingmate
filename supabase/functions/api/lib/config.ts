@@ -9,6 +9,6 @@ function required(key: string): string {
 export const config = {
   databaseUrl: required('DATABASE_URL'),
   supabaseUrl: required('SUPABASE_URL'),
-  serviceRoleKey: required('SUPABASE_SERVICE_ROLE_KEY'),
+  supabaseAnonKey: required('SUPABASE_ANON_KEY'),
   isProd: !!Deno.env.get('SUPABASE_REGION'),
 } as const;

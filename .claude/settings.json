@@ -1,11 +1,10 @@
 {
+  "enabledMcpjsonServers": ["XcodeBuildMCP"],
   "enabledPlugins": {
     "expo-app-design@expo-plugins": true,
     "upgrading-expo@expo-plugins": true,
     "postgres-best-practices@supabase-agent-skills": true,
     "expo-deployment@expo-plugins": true,
-    "frontend-design@claude-plugins-official": true,
-    "superpowers@claude-plugins-official": true
-  },
-  "enabledMcpjsonServers": ["XcodeBuildMCP"]
+    "frontend-design@claude-plugins-official": true
+  }
 }
