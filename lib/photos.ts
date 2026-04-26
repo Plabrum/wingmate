@@ -67,25 +67,6 @@ export async function uploadAvatar(
   return { url, error: profileError ?? null };
 }
 
-// ── Storage upload ────────────────────────────────────────────────────────────
-
-/**
- * Upload a local image URI to the profile-photos bucket.
- * Uses fetch() → arrayBuffer() per the official Supabase Expo docs.
- * Note: fetch().blob() is broken on iOS new architecture; arrayBuffer() works.
- */
-export async function uploadPhoto(userId: string, uri: string, filename: string) {
-  const path = `${userId}/${filename}`;
-
-  const arrayBuffer = await fetch(uri).then((res) => res.arrayBuffer());
-
-  const { error } = await supabase.storage.from('profile-photos').upload(path, arrayBuffer, {
-    contentType: 'image/jpeg',
-    upsert: false,
-  });
-  return { path, error };
-}
-
 /**
  * Get a public URL for a photo. Used to display photos in the UI.
  * The bucket is public so no signed URL is needed.

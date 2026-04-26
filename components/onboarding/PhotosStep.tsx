@@ -3,8 +3,9 @@ import { Alert, ActivityIndicator, Dimensions } from 'react-native';
 import { View, Text, SafeAreaView, Pressable } from '@/lib/tw';
 import { Image } from 'expo-image';
 import { createDatingProfile, getOwnDatingProfileSnapshot } from '@/hooks/use-profile';
-import { getPhotoUrl, pickAndResizePhoto, removePhotoStorage, uploadPhoto } from '@/lib/photos';
-import { postApiPhotos, postApiPhotosIdReject } from '@/lib/api/generated/photos/photos';
+import { useUploadProfilePhoto } from '@/hooks/use-upload-profile-photo';
+import { getPhotoUrl, pickAndResizePhoto, removePhotoStorage } from '@/lib/photos';
+import { postApiPhotosIdReject } from '@/lib/api/generated/photos/photos';
 import { colors } from '@/constants/theme';
 import { toast } from 'sonner-native';
 import { cn } from '@/lib/cn';
@@ -28,7 +29,7 @@ type Props = {
 export default function PhotosStep({ userId, dpId: initialDpId, onDpCreated, onNext }: Props) {
   const [localDpId, setLocalDpId] = useState(initialDpId);
   const [photos, setPhotos] = useState<LocalPhoto[]>([]);
-  const [uploading, setUploading] = useState(false);
+  const { upload, isPending: uploading } = useUploadProfilePhoto();
   // Only true when app was killed mid-flow and we need to (re)create the dating profile
   const [initializing, setInitializing] = useState(!initialDpId);
 
@@ -75,23 +76,8 @@ export default function PhotosStep({ userId, dpId: initialDpId, onDpCreated, onN
     const uri = await pickAndResizePhoto();
     if (!uri) return;
 
-    setUploading(true);
-    try {
-      const { path, error: uploadError } = await uploadPhoto(userId, uri, `${Date.now()}.jpg`);
-      if (uploadError) throw uploadError;
-
-      await postApiPhotos({
-        datingProfileId: localDpId,
-        storageUrl: path,
-        displayOrder: photos.length,
-      });
-
-      await refreshPhotos();
-    } catch {
-      toast.error('Failed to upload photo. Please try again.');
-    } finally {
-      setUploading(false);
-    }
+    const ok = await upload(localDpId, uri, `${Date.now()}.jpg`, photos.length);
+    if (ok) await refreshPhotos();
   }
 
   async function handleDeletePhoto(photo: LocalPhoto) {

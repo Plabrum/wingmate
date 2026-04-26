@@ -17,7 +17,7 @@ import { useAuth } from '@/context/auth';
 import { useDaterProfile, daterProfileQueryKey } from '@/hooks/use-profile';
 import { getPhotoUrl, pickAndResizePhoto } from '@/lib/photos';
 import { postApiPromptResponses } from '@/lib/api/generated/prompts/prompts';
-import { useSuggestPhoto } from '@/hooks/use-suggest-photo';
+import { useUploadProfilePhoto } from '@/hooks/use-upload-profile-photo';
 
 import { View, Text, Pressable, ScrollView, SafeAreaView, TextInput } from '@/lib/tw';
 import { NavHeader } from '@/components/ui/NavHeader';
@@ -103,7 +103,7 @@ function DaterProfileContent() {
   const queryClient = useQueryClient();
 
   const { data: daterProfile } = useDaterProfile(daterId);
-  const { suggest, isPending: uploading } = useSuggestPhoto();
+  const { upload, isPending: uploading } = useUploadProfilePhoto();
   const [respondingToPrompt, setRespondingToPrompt] = useState<{
     id: string;
     question: string;
@@ -123,7 +123,7 @@ function DaterProfileContent() {
 
     const filename = `${Date.now()}.jpg`;
     const nextOrder = approvedPhotos.length + myPendingPhotos.length;
-    const ok = await suggest(daterProfile!.id, uri, filename, nextOrder);
+    const ok = await upload(daterProfile!.id, uri, filename, nextOrder);
     if (!ok) return;
     queryClient.invalidateQueries({ queryKey: daterProfileQueryKey(daterId) });
     toast.success(`Photo suggested — ${firstName} will review it.`);

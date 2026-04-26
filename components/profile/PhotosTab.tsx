@@ -1,14 +1,13 @@
 import { Alert, ActivityIndicator, Dimensions } from 'react-native';
-import { useState } from 'react';
 import { toast } from 'sonner-native';
 import type { UseFormReturn } from 'react-hook-form';
 
 import { colors } from '@/constants/theme';
 import type { OwnDatingProfile } from '@/hooks/use-profile';
-import { getPhotoUrl, pickAndResizePhoto, removePhotoStorage, uploadPhoto } from '@/lib/photos';
+import { useUploadProfilePhoto } from '@/hooks/use-upload-profile-photo';
+import { getPhotoUrl, pickAndResizePhoto, removePhotoStorage } from '@/lib/photos';
 import {
   patchApiPhotosIdReorder,
-  postApiPhotos,
   postApiPhotosIdApprove,
   postApiPhotosIdReject,
 } from '@/lib/api/generated/photos/photos';
@@ -22,12 +21,11 @@ const PHOTO_COL = (Dimensions.get('window').width - 20 * 2 - 8) / 2;
 interface Props {
   form: UseFormReturn<OwnDatingProfile>;
   data: OwnDatingProfile;
-  userId: string;
   onRefresh: () => Promise<void>;
 }
 
-export function PhotosTab({ form, data, userId, onRefresh }: Props) {
-  const [uploading, setUploading] = useState(false);
+export function PhotosTab({ form, data, onRefresh }: Props) {
+  const { upload, isPending: uploading } = useUploadProfilePhoto();
 
   const photos = form.watch('photos');
   const selfPhotos = photos.filter((p) => p.suggester_id === null && p.approved_at !== null);
@@ -111,23 +109,8 @@ export function PhotosTab({ form, data, userId, onRefresh }: Props) {
   const handleAddPhoto = async () => {
     const uri = await pickAndResizePhoto();
     if (!uri) return;
-
-    setUploading(true);
-    try {
-      const filename = `${Date.now()}.jpg`;
-      const { path, error: upErr } = await uploadPhoto(userId, uri, filename);
-      if (upErr) throw upErr;
-      await postApiPhotos({
-        datingProfileId: data.id,
-        storageUrl: path,
-        displayOrder: selfPhotos.length,
-      });
-      await onRefresh();
-    } catch {
-      toast.error('Failed to upload photo. Please try again.');
-    } finally {
-      setUploading(false);
-    }
+    const ok = await upload(data.id, uri, `${Date.now()}.jpg`, selfPhotos.length);
+    if (ok) await onRefresh();
   };
 
   return (
