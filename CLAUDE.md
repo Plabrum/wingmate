@@ -103,7 +103,8 @@ wingmate/
 │       │   │       ├── queries.ts      # Drizzle fetch functions
 │       │   │       └── transformers.ts # DB row → response mappers
 │       │   ├── lib/
-│       │   │   ├── push.ts     # sendPush / pushEnabled / getPushToken (gated by PUSH_FROM_API)
+│       │   │   ├── config.ts   # env singleton — reads Deno.env once at boot, fails fast on missing vars
+│       │   │   ├── push.ts     # sendPush / getPushToken (no-op outside hosted Supabase)
 │       │   │   └── storage.ts  # service-role storage admin client (profile-photos bucket cleanup)
 │       │   └── scripts/
 │       │       └── emit-spec.ts # Writes openapi.json; run via `npm run api:spec`
@@ -465,9 +466,7 @@ The module-level `db` in `db/client.ts` is used only by the transaction middlewa
 **Required secrets** (Supabase dashboard → Edge Functions → Secrets). The `SUPABASE_` prefix is reserved by the CLI, so this uses a short name:
 
 - `DATABASE_URL` — Supavisor transaction-mode pooler URL in prod. Locally: `postgresql://postgres:postgres@host.docker.internal:54322/postgres` (the function runs in a Docker container, so `127.0.0.1` would refer to the container itself).
-- `PUSH_FROM_API` — master switch for push delivery from `api/lib/push.ts`. Set to `'true'` in prod. Defaults off so local/dev runs don't ping Expo unless explicitly enabled.
-- `PUSH_ENABLED` — optional override that bypasses the supabase.co/in host gate (`'true'` to force on locally for device testing, `'false'` to force off).
-- `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` — auto-injected by the Supabase runtime; used by `api/lib/storage.ts` to remove objects from the `profile-photos` bucket after a DB delete.
+- `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_REGION` — auto-injected by the Supabase runtime. `SUPABASE_REGION` is only set on hosted Supabase; `api/lib/config.ts` uses its presence as the sole `isProd` signal, and `api/lib/push.ts` no-ops Expo delivery (logs `[push:local]` instead) when it's absent. No operator-set push flags.
 
 Drizzle introspect (`npm run db:drizzle`) runs from the host via the Node driver, so it uses `127.0.0.1:54322` via `drizzle.config.ts`.
 
