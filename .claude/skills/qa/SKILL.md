@@ -176,7 +176,8 @@ After filing, update `flow_tests.md`:
 ## Rules
 
 - **One flow per session.** Stop after testing it and filing all issues from it. Don't chain flows.
-- Never push to `main`, never open PRs, never modify app code. Only writes allowed: `flow_tests.md` (gitignored), `.gitignore` (only on first run, to add `flow_tests.md`), GitHub issues, screenshots in a temp dir.
+- Never push to `main`, never open PRs, never modify app code. Only writes allowed: `flow_tests.md` (gitignored), `.gitignore` (only on first run, to add `flow_tests.md`), GitHub issues, and evidence files (screenshots, log slices, scratch notes) inside the gitignored `qa/` directory. Create `qa/` if it doesn't exist. Never write evidence to the repo root or any other tracked path.
+- Never `git add`, `git commit`, or `git push`. The QA loop is read-only against the working tree apart from the writes listed above.
 - Never run `npm run deploy*`, `eas submit`, `eas update`, or any production-touching script.
 - Never run destructive DB ops against anything but the local supabase stack. `supabase db reset --linked` is forbidden. Local-only `bash scripts/db-reset.sh` is fine.
 - Never commit ad-hoc seed scripts, screenshots, or log dumps.
