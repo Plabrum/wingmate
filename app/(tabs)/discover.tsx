@@ -14,7 +14,10 @@ import {
   useGetApiLikesYouCountSuspense,
   useGetApiLikesYouSuspense,
 } from '@/lib/api/generated/likes-you/likes-you';
-import { useGetApiWingerTabsSuspense } from '@/lib/api/generated/winger-tabs/winger-tabs';
+import {
+  getGetApiWingerTabsQueryKey,
+  useGetApiWingerTabsSuspense,
+} from '@/lib/api/generated/winger-tabs/winger-tabs';
 import type { DiscoverProfile, WingerTab } from '@/lib/api/generated/model';
 import {
   useGetApiDatingProfilesMeSuspense,
@@ -232,21 +235,28 @@ function PoolView({
   const [matchCard, setMatchCard] = useState<DiscoverProfile | null>(null);
   const card = pool[index] ?? null;
 
-  function invalidatePools() {
+  function invalidatePools(decidedCard: DiscoverProfile) {
     // Mark stale without refetching the active subscription — the next time a tab
     // remounts (e.g. after a tab switch unmounts DiscoverPool), the cached pool
     // won't include the just-decided candidate.
     queryClient.invalidateQueries({ queryKey: ['/api/likes-you'], refetchType: 'none' });
     queryClient.invalidateQueries({ queryKey: ['/api/discover'], refetchType: 'none' });
+    // Acting on a winger-suggested card can empty that winger's pending list,
+    // which removes their per-winger Discover tab. Refetch immediately so the
+    // tab bar reflects the new state without requiring a cold restart.
+    if (decidedCard.suggestedBy != null) {
+      queryClient.invalidateQueries({ queryKey: getGetApiWingerTabsQueryKey() });
+    }
   }
 
   async function handleLike() {
     if (!card) return;
-    onDecrement?.(card.userId);
+    const decidedCard = card;
+    onDecrement?.(decidedCard.userId);
     const result: LikeResult = await like();
-    invalidatePools();
+    invalidatePools(decidedCard);
     if (result === 'match') {
-      setMatchCard(card);
+      setMatchCard(decidedCard);
       queryClient.invalidateQueries({ queryKey: ['matches', userId] });
       queryClient.invalidateQueries({ queryKey: ['conversations', userId] });
     }
@@ -254,9 +264,10 @@ function PoolView({
 
   async function handlePass() {
     if (!card) return;
-    onDecrement?.(card.userId);
+    const decidedCard = card;
+    onDecrement?.(decidedCard.userId);
     await pass();
-    invalidatePools();
+    invalidatePools(decidedCard);
   }
 
   return (
