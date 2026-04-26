@@ -3,14 +3,8 @@ import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import { toast } from 'sonner-native';
 
 import { supabase } from '@/lib/supabase';
+import { patchApiProfilesMe } from '@/lib/api/generated/profiles/profiles';
 
-// ── Photo picker ──────────────────────────────────────────────────────────────
-
-/**
- * Prompts for media library permission, opens the image picker, and resizes
- * the selected image to a max width of 1200px at 0.8 JPEG quality.
- * Returns the local URI of the processed image, or null if cancelled/denied.
- */
 export async function pickAndResizePhoto(opts?: {
   width?: number;
   aspect?: [number, number];
@@ -37,16 +31,7 @@ export async function pickAndResizePhoto(opts?: {
   return saved.uri;
 }
 
-// ── Avatar ────────────────────────────────────────────────────────────────────
-
-/**
- * Upload a JPEG to the avatars bucket as <userId>.jpg (upsert), then persist
- * the resulting public URL to profiles.avatar_url.
- */
-export async function uploadAvatar(
-  userId: string,
-  uri: string
-): Promise<{ url: string | null; error: Error | null }> {
+export async function uploadAvatar(userId: string, uri: string): Promise<void> {
   const path = `${userId}.jpg`;
   const arrayBuffer = await fetch(uri).then((res) => res.arrayBuffer());
 
@@ -54,34 +39,15 @@ export async function uploadAvatar(
     .from('avatars')
     .upload(path, arrayBuffer, { contentType: 'image/jpeg', upsert: true });
 
-  if (uploadError) return { url: null, error: uploadError };
+  if (uploadError) throw uploadError;
 
   const { data } = supabase.storage.from('avatars').getPublicUrl(path);
-  const url = data.publicUrl;
-
-  const { error: profileError } = await supabase
-    .from('profiles')
-    .update({ avatar_url: url })
-    .eq('id', userId);
-
-  return { url, error: profileError ?? null };
+  await patchApiProfilesMe({ avatarUrl: data.publicUrl });
 }
 
-/**
- * Get a public URL for a photo. Used to display photos in the UI.
- * The bucket is public so no signed URL is needed.
- */
 export function getPhotoUrl(storagePath: string | null): string | null {
   if (!storagePath) return null;
   if (storagePath.startsWith('http')) return storagePath;
   const { data } = supabase.storage.from('profile-photos').getPublicUrl(storagePath);
   return data.publicUrl;
-}
-
-/**
- * Remove a photo file from the profile-photos bucket. Used after the API
- * deletes the metadata row to keep storage in sync.
- */
-export async function removePhotoStorage(storagePath: string) {
-  return supabase.storage.from('profile-photos').remove([storagePath]);
 }

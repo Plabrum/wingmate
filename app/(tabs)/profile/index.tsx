@@ -95,13 +95,14 @@ function AvatarPicker({ name, avatarUrl, size, userId }: AvatarPickerProps) {
     if (!uri) return;
 
     setUploading(true);
-    const { error } = await uploadAvatar(userId, uri);
-    setUploading(false);
-    if (error) {
+    try {
+      await uploadAvatar(userId, uri);
+      queryClient.invalidateQueries({ queryKey: getGetApiProfilesMeQueryKey() });
+    } catch {
       toast.error("Couldn't upload photo. Try again.");
-      return;
+    } finally {
+      setUploading(false);
     }
-    queryClient.invalidateQueries({ queryKey: getGetApiProfilesMeQueryKey() });
   };
 
   return (

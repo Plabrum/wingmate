@@ -7,7 +7,7 @@ import {
   getApiDatingProfilesMe,
 } from '@/lib/api/generated/profiles/profiles';
 import { useUploadProfilePhoto } from '@/hooks/use-upload-profile-photo';
-import { getPhotoUrl, pickAndResizePhoto, removePhotoStorage } from '@/lib/photos';
+import { getPhotoUrl, pickAndResizePhoto } from '@/lib/photos';
 import { postApiPhotosIdReject } from '@/lib/api/generated/photos/photos';
 import { colors } from '@/constants/theme';
 import { toast } from 'sonner-native';
@@ -94,7 +94,6 @@ export default function PhotosStep({ userId, dpId: initialDpId, onDpCreated, onN
           setPhotos((p) => p.filter((x) => x.id !== photo.id));
           try {
             await postApiPhotosIdReject(photo.id);
-            await removePhotoStorage(photo.storagePath);
           } catch {
             setPhotos(previous);
             toast.error('Failed to remove photo. Please try again.');

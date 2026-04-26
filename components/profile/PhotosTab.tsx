@@ -5,7 +5,7 @@ import type { UseFormReturn } from 'react-hook-form';
 import { colors } from '@/constants/theme';
 import type { OwnDatingProfileResponse } from '@/lib/api/generated/model';
 import { useUploadProfilePhoto } from '@/hooks/use-upload-profile-photo';
-import { getPhotoUrl, pickAndResizePhoto, removePhotoStorage } from '@/lib/photos';
+import { getPhotoUrl, pickAndResizePhoto } from '@/lib/photos';
 import {
   patchApiPhotosIdReorder,
   postApiPhotosIdApprove,
@@ -54,7 +54,6 @@ export function PhotosTab({ form, data, onRefresh }: Props) {
     );
     try {
       await postApiPhotosIdReject(photoId);
-      await removePhotoStorage(storagePath);
     } catch {
       form.setValue('photos', prev);
       toast.error('Could not reject photo.');
@@ -94,7 +93,6 @@ export function PhotosTab({ form, data, onRefresh }: Props) {
           );
           try {
             await postApiPhotosIdReject(photo.id);
-            await removePhotoStorage(photo.storageUrl);
           } catch {
             form.setValue('photos', prev);
             toast.error('Could not delete photo.');
