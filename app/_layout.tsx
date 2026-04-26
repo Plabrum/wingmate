@@ -7,6 +7,7 @@ import { Stack, Redirect, router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Toaster } from 'sonner-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 
 import { QueryClientProvider } from '@tanstack/react-query';
@@ -16,6 +17,8 @@ import { useProfileData } from '@/hooks/use-profile';
 import { queryClient } from '@/lib/queryClient';
 import { registerPushToken } from '@/lib/push';
 import ScreenSuspense from '@/components/ui/ScreenSuspense';
+
+SplashScreen.preventAutoHideAsync();
 
 export const unstable_settings = {
   anchor: '(dater-tabs)',

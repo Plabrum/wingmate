@@ -24,14 +24,6 @@ export default function LoginScreen() {
           <Text className="text-page font-semibold text-base">{' \uF8FF '}Continue with Apple</Text>
         </Pressable>
 
-        <Pressable
-          className="bg-surface rounded-xl items-center justify-center"
-          style={{ borderCurve: 'continuous', height: 54 }}
-          onPress={() => router.push('/(auth)/sms')}
-        >
-          <Text className="text-fg font-semibold text-base">Continue with SMS</Text>
-        </Pressable>
-
         <Text className="text-center text-fg-ghost text-xs mt-1">
           By continuing, you agree to our Terms of Service
         </Text>

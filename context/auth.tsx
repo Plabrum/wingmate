@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
+import * as SplashScreen from 'expo-splash-screen';
 import { supabase } from '@/lib/supabase';
 
 type AuthContextValue = {
@@ -32,6 +33,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (event === 'INITIAL_SESSION' && __DEV__) return;
       setSession(session);
       setLoading(false);
+      SplashScreen.hideAsync();
     });
 
     if (__DEV__) {
@@ -41,6 +43,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (error) {
             console.error('[dev] auto sign-in failed:', error.message);
             setLoading(false);
+            SplashScreen.hideAsync();
           }
         });
     }
