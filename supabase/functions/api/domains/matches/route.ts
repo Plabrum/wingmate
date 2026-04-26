@@ -10,6 +10,7 @@ import {
   fetchWingNoteForMatch,
 } from './queries.ts';
 import { buildMatchSheet, rowToMatch } from './transformers.ts';
+import { getDeps } from '../../lib/deps.ts';
 
 const listMatchesRoute = createRoute({
   method: 'get',
@@ -43,16 +44,14 @@ const getMatchSheetRoute = createRoute({
 
 export function mountMatches(app: OpenAPIHono<AppEnv>) {
   app.openapi(listMatchesRoute, async (c) => {
-    const viewerId = c.get('userId');
-    const db = c.get('db');
+    const { userId: viewerId, db } = getDeps(c);
     const rows = await fetchMatches(db, viewerId);
     const body: MatchSummary[] = rows.map(rowToMatch);
     return c.json(body, 200);
   });
 
   app.openapi(getMatchSheetRoute, async (c) => {
-    const viewerId = c.get('userId');
-    const db = c.get('db');
+    const { userId: viewerId, db } = getDeps(c);
     const { matchId } = c.req.valid('param');
 
     const otherUserId = await fetchMatchOtherUserId(db, viewerId, matchId);
