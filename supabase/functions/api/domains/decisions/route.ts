@@ -25,6 +25,7 @@ import {
 import { rowToMatch, rowToPendingSuggestion } from './transformers.ts';
 import type { DBOrTx } from '../../db/client.ts';
 import type { PushClient } from '../../lib/push.ts';
+import { getDeps } from '../../lib/deps.ts';
 
 const MATCH_PUSH_TITLE = "It's a Match! 🎉";
 const MATCH_PUSH_BODY = 'You have a new match. Say hello!';
@@ -112,8 +113,7 @@ const pendingSuggestionsRoute = createRoute({
 
 export function mountDecisions(app: OpenAPIHono<AppEnv>) {
   app.openapi(directDecisionRoute, async (c) => {
-    const actorId = c.get('userId');
-    const db = c.get('db');
+    const { userId: actorId, db, push } = getDeps(c);
     const { recipientId, decision } = c.req.valid('json');
 
     if (actorId === recipientId) {
@@ -128,15 +128,14 @@ export function mountDecisions(app: OpenAPIHono<AppEnv>) {
     const match = matchAfter != null ? rowToMatch(matchAfter) : null;
 
     if (created && matchAfter) {
-      await pushMatchCreated(db, c.get('push'), matchAfter.user_a_id, matchAfter.user_b_id);
+      await pushMatchCreated(db, push, matchAfter.user_a_id, matchAfter.user_b_id);
     }
 
     return c.json({ created, match }, 200);
   });
 
   app.openapi(actSuggestionRoute, async (c) => {
-    const actorId = c.get('userId');
-    const db = c.get('db');
+    const { userId: actorId, db, push } = getDeps(c);
     const { recipientId, decision } = c.req.valid('json');
 
     const { updated } = await actOnPendingSuggestion(db, actorId, recipientId, decision);
@@ -147,15 +146,14 @@ export function mountDecisions(app: OpenAPIHono<AppEnv>) {
     const matchRow = await findMutualMatch(db, actorId, recipientId);
 
     if (matchRow) {
-      await pushMatchCreated(db, c.get('push'), matchRow.user_a_id, matchRow.user_b_id);
+      await pushMatchCreated(db, push, matchRow.user_a_id, matchRow.user_b_id);
     }
 
     return c.json({ match: matchRow != null ? rowToMatch(matchRow) : null }, 200);
   });
 
   app.openapi(suggestRoute, async (c) => {
-    const wingerId = c.get('userId');
-    const db = c.get('db');
+    const { userId: wingerId, db, push } = getDeps(c);
     const { daterId, recipientId, note, decision } = c.req.valid('json');
 
     if (daterId === recipientId) {
@@ -171,7 +169,7 @@ export function mountDecisions(app: OpenAPIHono<AppEnv>) {
 
     if (decision == null) {
       const { daterToken, wingerName } = await getDaterPushAndWingerName(db, daterId, wingerId);
-      await c.get('push').send(
+      await push.send(
         daterToken,
         'New profile suggestion 👀',
         `${wingerName ?? 'Your wingperson'} suggested a profile for you to check out.`,
@@ -182,8 +180,7 @@ export function mountDecisions(app: OpenAPIHono<AppEnv>) {
   });
 
   app.openapi(pendingSuggestionsRoute, async (c) => {
-    const userId = c.get('userId');
-    const db = c.get('db');
+    const { userId, db } = getDeps(c);
     const rows = await fetchPendingSuggestions(db, userId);
     const body: PendingSuggestion[] = rows.map(rowToPendingSuggestion);
     return c.json(body, 200);
