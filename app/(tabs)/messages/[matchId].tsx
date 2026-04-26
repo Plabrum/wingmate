@@ -6,6 +6,7 @@ import { Controller, useForm } from 'react-hook-form';
 import { useAuth } from '@/context/auth';
 import { useMessages } from '@/hooks/use-messages';
 import { usePresence } from '@/hooks/use-presence';
+import { useTyping } from '@/hooks/use-typing';
 import { getInitials } from '@/components/profile/profile-helpers';
 import { NavHeader } from '@/components/ui/NavHeader';
 import { IconSymbol } from '@/components/ui/icon-symbol';
@@ -63,11 +64,13 @@ function MessageBubble({ body, isMine, createdAt, isOptimistic }: MessageBubbleP
 type ChatBodyProps = {
   matchId: string;
   userId: string;
+  otherUserId: string | null;
   otherName: string | undefined;
 };
 
-function ChatBody({ matchId, userId, otherName }: ChatBodyProps) {
+function ChatBody({ matchId, userId, otherUserId, otherName }: ChatBodyProps) {
   const { messages, send } = useMessages(matchId);
+  const { isOtherTyping, notifyTyping } = useTyping(otherUserId, userId);
   const listRef = useRef<FlatList>(null);
 
   const {
@@ -125,6 +128,14 @@ function ChatBody({ matchId, userId, otherName }: ChatBodyProps) {
         )}
       />
 
+      {isOtherTyping && (
+        <View className="px-4 pb-1">
+          <Text className="text-xs text-fg-muted italic">
+            {otherName ? `${otherName} is typing…` : 'typing…'}
+          </Text>
+        </View>
+      )}
+
       <View
         className="flex-row items-end px-3 py-2 pb-4 bg-white gap-2"
         style={{ borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.divider }}
@@ -137,7 +148,10 @@ function ChatBody({ matchId, userId, otherName }: ChatBodyProps) {
               className="flex-1 bg-surface rounded-2xl px-4 py-[9px] text-sm text-fg"
               style={{ maxHeight: 120, lineHeight: 20 }}
               value={value}
-              onChangeText={onChange}
+              onChangeText={(text) => {
+                onChange(text);
+                if (text.length > 0) notifyTyping();
+              }}
               placeholder="Message…"
               placeholderTextColor={colors.inkGhost}
               multiline
@@ -194,7 +208,12 @@ export default function ChatScreen() {
         }
       />
       <ScreenSuspense>
-        <ChatBody matchId={matchId} userId={userId} otherName={otherName} />
+        <ChatBody
+          matchId={matchId}
+          userId={userId}
+          otherUserId={otherUserId ?? null}
+          otherName={otherName}
+        />
       </ScreenSuspense>
     </SafeAreaView>
   );
