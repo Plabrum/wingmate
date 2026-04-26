@@ -216,7 +216,7 @@ type PoolViewProps = {
   fetchPool: PoolFetcher;
   activeTabIndex: number;
   wingerTabs: WingerTab[];
-  onDecrement: (() => void) | null;
+  onDecrement: ((recipientId: string) => void) | null;
 };
 
 function PoolView({
@@ -242,7 +242,7 @@ function PoolView({
 
   async function handleLike() {
     if (!card) return;
-    onDecrement?.();
+    onDecrement?.(card.userId);
     const result: LikeResult = await like();
     invalidatePools();
     if (result === 'match') {
@@ -253,7 +253,8 @@ function PoolView({
   }
 
   async function handlePass() {
-    onDecrement?.();
+    if (!card) return;
+    onDecrement?.(card.userId);
     await pass();
     invalidatePools();
   }
@@ -305,7 +306,7 @@ function LikesYouPool({
   userId: string;
   activeTabIndex: number;
   wingerTabs: WingerTab[];
-  onDecrement: (() => void) | null;
+  onDecrement: ((recipientId: string) => void) | null;
 }) {
   const { data: initialPool } = useGetApiLikesYouSuspense({
     pageSize: PAGE_SIZE,
@@ -340,7 +341,7 @@ function DiscoverFeedPool({
   activeTabIndex: number;
   wingerTabs: WingerTab[];
   tabs: string[];
-  onDecrement: (() => void) | null;
+  onDecrement: ((recipientId: string) => void) | null;
 }) {
   const isForYou = activeTabIndex === 1;
   const isAll = activeTabIndex === tabs.length - 1;
@@ -384,7 +385,7 @@ type DiscoverPoolProps = {
   activeTabIndex: number;
   wingerTabs: WingerTab[];
   tabs: string[];
-  onDecrement: (() => void) | null;
+  onDecrement: ((recipientId: string) => void) | null;
 };
 
 function DiscoverPool({
@@ -422,9 +423,9 @@ function DiscoverContent({ userId }: { userId: string }) {
   const { data: likesYouCountResponse } = useGetApiLikesYouCountSuspense();
   const initialLikesYouCount = likesYouCountResponse.count;
   const [activeTabIndex, setActiveTabIndex] = useState(0);
-  const [likesYouDecrements, setLikesYouDecrements] = useState(0);
+  const [decidedLikesYou, setDecidedLikesYou] = useState<ReadonlySet<string>>(() => new Set());
 
-  const likesYouCount = Math.max(0, initialLikesYouCount - likesYouDecrements);
+  const likesYouCount = Math.max(0, initialLikesYouCount - decidedLikesYou.size);
   // tabs: [Likes You, For You, ...wingers, All]
   const tabs = ['Likes You', 'For You', ...wingerTabs.map((w: WingerTab) => w.name), 'All'];
 
@@ -452,7 +453,17 @@ function DiscoverContent({ userId }: { userId: string }) {
           activeTabIndex={activeTabIndex}
           wingerTabs={wingerTabs}
           tabs={tabs}
-          onDecrement={activeTabIndex === 0 ? () => setLikesYouDecrements((d) => d + 1) : null}
+          onDecrement={
+            activeTabIndex === 0
+              ? (recipientId: string) =>
+                  setDecidedLikesYou((prev) => {
+                    if (prev.has(recipientId)) return prev;
+                    const next = new Set(prev);
+                    next.add(recipientId);
+                    return next;
+                  })
+              : null
+          }
         />
       </Suspense>
     </SafeAreaView>
