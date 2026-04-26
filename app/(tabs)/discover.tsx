@@ -232,10 +232,19 @@ function PoolView({
   const [matchCard, setMatchCard] = useState<DiscoverProfile | null>(null);
   const card = pool[index] ?? null;
 
+  function invalidatePools() {
+    // Mark stale without refetching the active subscription — the next time a tab
+    // remounts (e.g. after a tab switch unmounts DiscoverPool), the cached pool
+    // won't include the just-decided candidate.
+    queryClient.invalidateQueries({ queryKey: ['/api/likes-you'], refetchType: 'none' });
+    queryClient.invalidateQueries({ queryKey: ['/api/discover'], refetchType: 'none' });
+  }
+
   async function handleLike() {
     if (!card) return;
     onDecrement?.();
     const result: LikeResult = await like();
+    invalidatePools();
     if (result === 'match') {
       setMatchCard(card);
       queryClient.invalidateQueries({ queryKey: ['matches', userId] });
@@ -246,6 +255,7 @@ function PoolView({
   async function handlePass() {
     onDecrement?.();
     await pass();
+    invalidatePools();
   }
 
   return (
