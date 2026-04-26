@@ -451,6 +451,8 @@ Single Hono app that owns every client-facing HTTP endpoint. Structure:
   - `transformers.ts` — row → response mappers (snake_case → camelCase). One place the shape is translated.
     A shared `lib/` or `schemas/` at the `api/` level is introduced ONLY when something is genuinely reused across features — prefer duplication over premature hoisting.
 
+**Reading per-request context.** Handlers pull request context with `const { db, userId, push } = getDeps(c)` (helper at `api/lib/deps.ts`). Destructure-rename when a handler uses a domain-specific local: `const { userId: viewerId, db } = getDeps(c)`. Don't import the module-level `db` from `db/client.ts` — that bypasses the per-request transaction.
+
 **Request-scoped transactions.** Every protected route runs inside a Drizzle transaction opened by `middleware/transaction.ts`. The handle is on `c.var.db` (type `Tx`, assignable to `DBOrTx`). Query helpers in `queries.ts` take `db: DBOrTx` as their first argument and must use it for every statement, **including subquery builders** — closing over the module-level `db` bypasses the request transaction. Commit/rollback follows return/throw:
 
 | Handler does                        | Transaction                                           |
