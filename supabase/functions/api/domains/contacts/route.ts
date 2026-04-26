@@ -27,6 +27,7 @@ import {
   rowToWingingFor,
   rowToWingperson,
 } from './transformers.ts';
+import { getDeps } from '../../lib/deps.ts';
 
 const wingpeopleRoute = createRoute({
   method: 'get',
@@ -110,8 +111,7 @@ const removeRoute = createRoute({
 
 export function mountContacts(app: OpenAPIHono<AppEnv>) {
   app.openapi(wingpeopleRoute, async (c) => {
-    const userId = c.get('userId');
-    const db = c.get('db');
+    const { userId, db } = getDeps(c);
 
     const [wingpeople, invitations, sentInvitations, wingingFor] = await Promise.all([
       fetchActiveWingpeople(db, userId),
@@ -133,15 +133,14 @@ export function mountContacts(app: OpenAPIHono<AppEnv>) {
   });
 
   app.openapi(inviteRoute, async (c) => {
-    const daterId = c.get('userId');
-    const db = c.get('db');
+    const { userId: daterId, db, push } = getDeps(c);
     const { phoneNumber } = c.req.valid('json');
 
     const inserted = await insertContactInvite(db, daterId, phoneNumber);
 
     if (inserted.winger_id) {
       const wingerToken = await fetchPushToken(db, inserted.winger_id);
-      await c.get('push').send(
+      await push.send(
         wingerToken,
         "You've been invited! 🤝",
         'Someone wants you to be their wingperson on Pear.',
@@ -159,8 +158,7 @@ export function mountContacts(app: OpenAPIHono<AppEnv>) {
   });
 
   app.openapi(acceptRoute, async (c) => {
-    const wingerId = c.get('userId');
-    const db = c.get('db');
+    const { userId: wingerId, db } = getDeps(c);
     const { id } = c.req.valid('param');
 
     const { updated } = await setInvitationStatus(db, id, wingerId, 'active');
@@ -169,8 +167,7 @@ export function mountContacts(app: OpenAPIHono<AppEnv>) {
   });
 
   app.openapi(declineRoute, async (c) => {
-    const wingerId = c.get('userId');
-    const db = c.get('db');
+    const { userId: wingerId, db } = getDeps(c);
     const { id } = c.req.valid('param');
 
     const { updated } = await setInvitationStatus(db, id, wingerId, 'removed');
@@ -179,8 +176,7 @@ export function mountContacts(app: OpenAPIHono<AppEnv>) {
   });
 
   app.openapi(removeRoute, async (c) => {
-    const daterId = c.get('userId');
-    const db = c.get('db');
+    const { userId: daterId, db } = getDeps(c);
     const { id } = c.req.valid('param');
 
     const { updated } = await removeContactByDater(db, id, daterId);
