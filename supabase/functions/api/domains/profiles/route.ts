@@ -25,6 +25,7 @@ import {
   bundleToPublicProfile,
   rowToProfile,
 } from './transformers.ts';
+import { getDeps } from '../../lib/deps.ts';
 
 const UserIdParam = z.object({ userId: z.string().uuid() }).openapi('UserIdParam');
 
@@ -136,16 +137,14 @@ const getPublicProfileRoute = createRoute({
 
 export function mountProfiles(app: OpenAPIHono<AppEnv>) {
   app.openapi(getOwnProfileRoute, async (c) => {
-    const userId = c.get('userId');
-    const db = c.get('db');
+    const { userId, db } = getDeps(c);
     const row = await fetchOwnProfile(db, userId);
     if (!row) throw new HTTPException(404, { message: 'Profile not found' });
     return c.json(rowToProfile(row), 200);
   });
 
   app.openapi(updateOwnProfileRoute, async (c) => {
-    const userId = c.get('userId');
-    const db = c.get('db');
+    const { userId, db } = getDeps(c);
     const fields = c.req.valid('json');
     const row = await updateOwnProfile(db, userId, fields);
     if (!row) throw new HTTPException(404, { message: 'Profile not found' });
@@ -153,15 +152,13 @@ export function mountProfiles(app: OpenAPIHono<AppEnv>) {
   });
 
   app.openapi(getOwnDatingProfileRoute, async (c) => {
-    const userId = c.get('userId');
-    const db = c.get('db');
+    const { userId, db } = getDeps(c);
     const bundle = await fetchOwnDatingProfile(db, userId);
     return c.json(bundle ? bundleToOwnDatingProfile(bundle) : null, 200);
   });
 
   app.openapi(createDatingProfileRoute, async (c) => {
-    const userId = c.get('userId');
-    const db = c.get('db');
+    const { userId, db } = getDeps(c);
     const fields = c.req.valid('json');
 
     const existing = await fetchOwnDatingProfile(db, userId);
@@ -174,8 +171,7 @@ export function mountProfiles(app: OpenAPIHono<AppEnv>) {
   });
 
   app.openapi(updateDatingProfileRoute, async (c) => {
-    const userId = c.get('userId');
-    const db = c.get('db');
+    const { userId, db } = getDeps(c);
     const fields = c.req.valid('json');
 
     const { updated } = await updateOwnDatingProfile(db, userId, fields);
@@ -188,7 +184,7 @@ export function mountProfiles(app: OpenAPIHono<AppEnv>) {
   });
 
   app.openapi(getPublicProfileRoute, async (c) => {
-    const db = c.get('db');
+    const { db } = getDeps(c);
     const { userId } = c.req.valid('param');
     const bundle = await fetchPublicProfile(db, userId);
     if (!bundle) throw new HTTPException(404, { message: 'Profile not found' });
