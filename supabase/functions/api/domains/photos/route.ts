@@ -23,6 +23,7 @@ import {
 } from './queries.ts';
 import { rowToPhoto } from './transformers.ts';
 import { sendPush } from '../../lib/push.ts';
+import { removeProfilePhoto } from '../../lib/storage.ts';
 
 const listOwnPhotosRoute = createRoute({
   method: 'get',
@@ -83,6 +84,22 @@ const rejectPhotoRoute = createRoute({
   responses: {
     200: {
       description: 'Photo metadata rejected and removed',
+      content: { 'application/json': { schema: OkResponse } },
+    },
+    401: { description: 'Unauthenticated' },
+    404: { description: 'Photo not found for this caller' },
+  },
+});
+
+const deletePhotoRoute = createRoute({
+  method: 'delete',
+  path: '/photos/{id}',
+  tags: ['photos'],
+  security: [{ Bearer: [] }],
+  request: { params: PhotoIdParam },
+  responses: {
+    200: {
+      description: 'Photo deleted',
       content: { 'application/json': { schema: OkResponse } },
     },
     401: { description: 'Unauthenticated' },
@@ -172,8 +189,20 @@ export function mountPhotos(app: OpenAPIHono<AppEnv>) {
     const db = c.get('db');
     const { id } = c.req.valid('param');
 
-    const { deleted } = await deleteOwnedPhoto(db, id, userId);
+    const { deleted, storageUrl } = await deleteOwnedPhoto(db, id, userId);
     if (!deleted) throw new HTTPException(404, { message: 'Photo not found' });
+    if (storageUrl) await removeProfilePhoto(storageUrl);
+    return c.json({ ok: true } as const, 200);
+  });
+
+  app.openapi(deletePhotoRoute, async (c) => {
+    const userId = c.get('userId');
+    const db = c.get('db');
+    const { id } = c.req.valid('param');
+
+    const { deleted, storageUrl } = await deleteOwnedPhoto(db, id, userId);
+    if (!deleted) throw new HTTPException(404, { message: 'Photo not found' });
+    if (storageUrl) await removeProfilePhoto(storageUrl);
     return c.json({ ok: true } as const, 200);
   });
 

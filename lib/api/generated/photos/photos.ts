@@ -350,6 +350,78 @@ export const usePostApiPhotosIdReject = <TError = void, TContext = unknown>(
 > => {
   return useMutation(getPostApiPhotosIdRejectMutationOptions(options), queryClient);
 };
+export const getDeleteApiPhotosIdUrl = (id: string) => {
+  return `/api/photos/${id}`;
+};
+
+export const deleteApiPhotosId = async (
+  id: string,
+  options?: RequestInit
+): Promise<PhotosOkResponse> => {
+  return wyngFetch<PhotosOkResponse>(getDeleteApiPhotosIdUrl(id), {
+    ...options,
+    method: 'DELETE',
+  });
+};
+
+export const getDeleteApiPhotosIdMutationOptions = <TError = void, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteApiPhotosId>>,
+    TError,
+    { id: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof wyngFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteApiPhotosId>>,
+  TError,
+  { id: string },
+  TContext
+> => {
+  const mutationKey = ['deleteApiPhotosId'];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteApiPhotosId>>,
+    { id: string }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return deleteApiPhotosId(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteApiPhotosIdMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteApiPhotosId>>
+>;
+
+export type DeleteApiPhotosIdMutationError = void;
+
+export const useDeleteApiPhotosId = <TError = void, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof deleteApiPhotosId>>,
+      TError,
+      { id: string },
+      TContext
+    >;
+    request?: SecondParameter<typeof wyngFetch>;
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof deleteApiPhotosId>>,
+  TError,
+  { id: string },
+  TContext
+> => {
+  return useMutation(getDeleteApiPhotosIdMutationOptions(options), queryClient);
+};
 export const getPatchApiPhotosIdReorderUrl = (id: string) => {
   return `/api/photos/${id}/reorder`;
 };

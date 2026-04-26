@@ -152,7 +152,7 @@ export async function deleteOwnedPhoto(
   db: DBOrTx,
   photoId: string,
   ownerId: string,
-): Promise<{ deleted: boolean }> {
+): Promise<{ deleted: boolean; storageUrl: string | null }> {
   const rows = await db
     .delete(profilePhotos)
     .where(
@@ -161,8 +161,9 @@ export async function deleteOwnedPhoto(
         sql`exists (select 1 from ${datingProfiles} where ${datingProfiles.id} = ${profilePhotos.datingProfileId} and ${datingProfiles.userId} = ${ownerId})`,
       ),
     )
-    .returning({ id: profilePhotos.id });
-  return { deleted: rows.length > 0 };
+    .returning({ id: profilePhotos.id, storageUrl: profilePhotos.storageUrl });
+  const row = rows[0];
+  return { deleted: row != null, storageUrl: row?.storageUrl ?? null };
 }
 
 export async function reorderOwnedPhoto(

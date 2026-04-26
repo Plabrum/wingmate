@@ -2870,6 +2870,45 @@
         }
       }
     },
+    "/api/photos/{id}": {
+      "delete": {
+        "tags": ["photos"],
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Photo deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PhotosOkResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "404": {
+            "description": "Photo not found for this caller"
+          }
+        }
+      }
+    },
     "/api/photos/{id}/reorder": {
       "patch": {
         "tags": ["photos"],

@@ -103,19 +103,14 @@ wingmate/
 │       │   │       ├── queries.ts      # Drizzle fetch functions
 │       │   │       └── transformers.ts # DB row → response mappers
 │       │   ├── lib/
-│       │   │   └── push.ts       # sendPush / pushEnabled / getPushToken (gated by PUSH_FROM_API)
+│       │   │   ├── push.ts     # sendPush / pushEnabled / getPushToken (gated by PUSH_FROM_API)
+│       │   │   └── storage.ts  # service-role storage admin client (profile-photos bucket cleanup)
 │       │   └── scripts/
 │       │       └── emit-spec.ts # Writes openapi.json; run via `npm run api:spec`
 │       │
 │       # `domains/<feature>/` holds the whole feature: HTTP wiring, DB access, schemas,
 │       # mappers. Self-contained. Shared helpers at api/ root (lib/, schemas/) are
 │       # introduced ONLY when something is genuinely reused — prefer duplication.
-│       ├── send-wing-invite/   # SMS invite via Twilio (webhook responder)
-│       ├── notify-match/       # Push: new match (webhook responder)
-│       ├── notify-message/     # Push: new message (webhook responder)
-│       ├── notify-invite/      # Push: wing invite received (webhook responder)
-│       ├── notify-suggestion/  # Push: winger suggested someone (webhook responder)
-│       └── notify-photo/       # Push: winger suggested a photo (webhook responder)
 │
 ├── openapi.json                # Committed OpenAPI spec, regenerated via `npm run api:spec`
 ├── orval.config.ts             # Orval config — reads openapi.json → generates lib/api/generated/
@@ -429,7 +424,7 @@ npm run submit:local     # eas submit from builds/app.ipa
 
 ## Edge Functions
 
-`supabase/functions/api/` is the only function going forward. Every client-facing endpoint and every push notification originates from a Hono handler here, calling `api/lib/push.ts` inline after the Drizzle write. The standalone `notify-*` and `delete-profile-photo` directories still exist on disk and are still wired to DB triggers in production — both paths fire during the overlap window, gated by the `PUSH_FROM_API` env flag on the `api` side. PR 2 drops the trigger path. Do not add new standalone notify/webhook functions; any new push or storage side-effect belongs in a Hono handler.
+`supabase/functions/api/` is the only Deno function in the repo. Every client-facing endpoint and every push notification originates from a Hono handler here, calling `api/lib/push.ts` (push) and `api/lib/storage.ts` (bucket cleanup) inline after the Drizzle write. Do not add new standalone notify/webhook functions; any new push or storage side-effect belongs in a Hono handler.
 
 ### Client-facing API (`supabase/functions/api/`)
 
@@ -470,19 +465,11 @@ The module-level `db` in `db/client.ts` is used only by the transaction middlewa
 **Required secrets** (Supabase dashboard → Edge Functions → Secrets). The `SUPABASE_` prefix is reserved by the CLI, so this uses a short name:
 
 - `DATABASE_URL` — Supavisor transaction-mode pooler URL in prod. Locally: `postgresql://postgres:postgres@host.docker.internal:54322/postgres` (the function runs in a Docker container, so `127.0.0.1` would refer to the container itself).
-- `PUSH_FROM_API` — `'true'` to deliver pushes from `api/lib/push.ts`. Defaults off. Stays off until PR 2 drops the legacy `pg_net` triggers; flip to `true` in the same deploy that ships the trigger-drop migration to avoid duplicate pushes during the cutover.
+- `PUSH_FROM_API` — master switch for push delivery from `api/lib/push.ts`. Set to `'true'` in prod. Defaults off so local/dev runs don't ping Expo unless explicitly enabled.
 - `PUSH_ENABLED` — optional override that bypasses the supabase.co/in host gate (`'true'` to force on locally for device testing, `'false'` to force off).
+- `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` — auto-injected by the Supabase runtime; used by `api/lib/storage.ts` to remove objects from the `profile-photos` bucket after a DB delete.
 
 Drizzle introspect (`npm run db:drizzle`) runs from the host via the Node driver, so it uses `127.0.0.1:54322` via `drizzle.config.ts`.
-
-### Legacy standalone functions (being removed)
-
-These directories still exist and are still deployed, but new work must NOT extend them. Push/SMS/storage side-effects belong inside Hono handlers in `api/domains/*` (call `api/lib/push.ts` after the Drizzle write). The list below is informational only — see the "Collapse standalone Deno functions into the Hono `api`" issues for the migration plan.
-
-- `notify-match`, `notify-message`, `notify-invite`, `notify-suggestion`, `notify-photo` — push notifications, fired by Postgres `pg_net` triggers on the matching tables. The replacement path lives inline in the relevant `api/domains/*` handlers (via `api/lib/push.ts`) and is gated by `PUSH_FROM_API=true`. PR 2 drops the trigger migration and deletes these folders.
-- `delete-profile-photo` — client-facing endpoint; targeted to move to `DELETE /api/photos/{id}` inside `api/domains/photos/`.
-
----
 
 ## Image Handling
 
