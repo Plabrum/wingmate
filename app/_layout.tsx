@@ -13,7 +13,10 @@ import { useEffect } from 'react';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { AuthProvider, useSession } from '@/context/auth';
-import { useProfileData } from '@/hooks/use-profile';
+import {
+  useGetApiProfilesMeSuspense,
+  useGetApiDatingProfilesMeSuspense,
+} from '@/lib/api/generated/profiles/profiles';
 import { queryClient } from '@/lib/queryClient';
 import { registerPushToken } from '@/lib/push';
 import ScreenSuspense from '@/components/ui/ScreenSuspense';
@@ -25,12 +28,11 @@ export const unstable_settings = {
 };
 
 function AuthenticatedNavigator({ userId }: { userId: string }) {
-  const {
-    data: { profile, datingProfile },
-  } = useProfileData(userId);
+  const { data: profile } = useGetApiProfilesMeSuspense();
+  const { data: datingProfile } = useGetApiDatingProfilesMeSuspense();
 
-  const needsOnboarding = !profile?.chosen_name || (!datingProfile && profile.role !== 'winger');
-  const isWinger = profile?.role === 'winger' || datingProfile?.dating_status === 'winging';
+  const needsOnboarding = !profile?.chosenName || (!datingProfile && profile.role !== 'winger');
+  const isWinger = profile?.role === 'winger' || datingProfile?.datingStatus === 'winging';
 
   const dest = needsOnboarding
     ? '/(onboarding)'

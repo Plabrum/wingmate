@@ -14,7 +14,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { colors } from '@/constants/theme';
 import { useAuth } from '@/context/auth';
-import { useDaterProfile, daterProfileQueryKey } from '@/hooks/use-profile';
+import {
+  useGetApiProfilesUserIdSuspense,
+  getGetApiProfilesUserIdQueryKey,
+} from '@/lib/api/generated/profiles/profiles';
 import { getPhotoUrl, pickAndResizePhoto } from '@/lib/photos';
 import { postApiPromptResponses } from '@/lib/api/generated/prompts/prompts';
 import { useUploadProfilePhoto } from '@/hooks/use-upload-profile-photo';
@@ -102,19 +105,19 @@ function DaterProfileContent() {
   const { daterId } = useLocalSearchParams<{ daterId: string }>();
   const queryClient = useQueryClient();
 
-  const { data: daterProfile } = useDaterProfile(daterId);
+  const { data } = useGetApiProfilesUserIdSuspense(daterId);
   const { upload, isPending: uploading } = useUploadProfilePhoto();
   const [respondingToPrompt, setRespondingToPrompt] = useState<{
     id: string;
     question: string;
   } | null>(null);
 
-  const daterName = (daterProfile?.user as any)?.chosen_name ?? 'them';
+  const daterName = data?.chosenName ?? 'them';
   const firstName = daterName.split(' ')[0] || daterName;
 
-  const approvedPhotos = (daterProfile?.photos ?? []).filter((p) => p.approved_at !== null);
-  const myPendingPhotos = (daterProfile?.photos ?? []).filter(
-    (p) => p.approved_at === null && p.suggester_id === wingerId
+  const approvedPhotos = (data?.datingProfile?.photos ?? []).filter((p) => p.approvedAt !== null);
+  const myPendingPhotos = (data?.datingProfile?.photos ?? []).filter(
+    (p) => p.approvedAt === null && p.suggesterId === wingerId
   );
 
   const handleSuggestPhoto = async () => {
@@ -123,9 +126,9 @@ function DaterProfileContent() {
 
     const filename = `${Date.now()}.jpg`;
     const nextOrder = approvedPhotos.length + myPendingPhotos.length;
-    const ok = await upload(daterProfile!.id, uri, filename, nextOrder);
+    const ok = await upload(data!.datingProfile!.id, uri, filename, nextOrder);
     if (!ok) return;
-    queryClient.invalidateQueries({ queryKey: daterProfileQueryKey(daterId) });
+    queryClient.invalidateQueries({ queryKey: getGetApiProfilesUserIdQueryKey(daterId) });
     toast.success(`Photo suggested — ${firstName} will review it.`);
   };
 
@@ -157,12 +160,12 @@ function DaterProfileContent() {
           <View className="flex-row flex-wrap gap-2 px-5 mb-4">
             {approvedPhotos.map((photo) => (
               <View key={photo.id} style={{ width: PHOTO_COL }}>
-                <PhotoRect uri={getPhotoUrl(photo.storage_url)} ratio={4 / 5} />
+                <PhotoRect uri={getPhotoUrl(photo.storageUrl)} ratio={4 / 5} />
               </View>
             ))}
             {myPendingPhotos.map((photo) => (
               <View key={photo.id} style={{ width: PHOTO_COL, position: 'relative' }}>
-                <PhotoRect uri={getPhotoUrl(photo.storage_url)} ratio={4 / 5} blur />
+                <PhotoRect uri={getPhotoUrl(photo.storageUrl)} ratio={4 / 5} blur />
                 <View className="absolute bottom-2 left-0 right-0 items-center">
                   <View
                     className="rounded-full px-3 py-1"
@@ -196,14 +199,14 @@ function DaterProfileContent() {
           Prompts
         </Text>
 
-        {(daterProfile?.prompts ?? []).length === 0 ? (
+        {(data?.datingProfile?.prompts ?? []).length === 0 ? (
           <Text className="text-sm text-fg-muted px-5">
             {firstName} hasn{"'"}t added any prompts yet.
           </Text>
         ) : (
           <View className="px-5 gap-3">
-            {(daterProfile?.prompts ?? []).map((prompt) => {
-              const question = (prompt.template as any)?.question ?? '';
+            {(data?.datingProfile?.prompts ?? []).map((prompt) => {
+              const question = prompt.template?.question ?? '';
               return (
                 <View key={prompt.id} className="bg-white rounded-xl p-4">
                   <Text className="text-sm font-semibold text-accent mb-1.5">{question}</Text>

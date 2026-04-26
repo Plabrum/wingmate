@@ -6,8 +6,12 @@ import { useQueryClient } from '@tanstack/react-query';
 import type { UseFormReturn } from 'react-hook-form';
 
 import { colors } from '@/constants/theme';
-import type { OwnDatingProfile } from '@/hooks/use-profile';
-import { updateDatingProfile, invalidateProfile } from '@/hooks/use-profile';
+import type { OwnDatingProfileResponse } from '@/lib/api/generated/model';
+import {
+  patchApiDatingProfilesMe,
+  getGetApiProfilesMeQueryKey,
+  getGetApiDatingProfilesMeQueryKey,
+} from '@/lib/api/generated/profiles/profiles';
 
 import { Pill } from '@/components/ui/Pill';
 import { PurpleButton } from '@/components/ui/PurpleButton';
@@ -22,25 +26,24 @@ const STATUS_OPTIONS: { key: DatingStatus; label: string; sub: string }[] = [
 ];
 
 interface Props {
-  form: UseFormReturn<OwnDatingProfile>;
-  data: OwnDatingProfile;
-  userId: string;
+  form: UseFormReturn<NonNullable<OwnDatingProfileResponse>>;
+  data: NonNullable<OwnDatingProfileResponse>;
 }
 
-export function AboutMeTab({ form, data, userId }: Props) {
+export function AboutMeTab({ form, data }: Props) {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const dating_status = form.watch('dating_status');
+  const datingStatus = form.watch('datingStatus');
 
   const handleStatus = async (status: DatingStatus) => {
-    const prev = form.getValues('dating_status');
-    form.setValue('dating_status', status);
+    const prev = form.getValues('datingStatus');
+    form.setValue('datingStatus', status);
     try {
-      const { error } = await updateDatingProfile(userId, { dating_status: status });
-      if (error) throw error;
-      invalidateProfile(queryClient);
+      await patchApiDatingProfilesMe({ datingStatus: status });
+      queryClient.invalidateQueries({ queryKey: getGetApiProfilesMeQueryKey() });
+      queryClient.invalidateQueries({ queryKey: getGetApiDatingProfilesMeQueryKey() });
     } catch {
-      form.setValue('dating_status', prev);
+      form.setValue('datingStatus', prev);
       toast.error('Could not update status. Please try again.');
     }
   };
@@ -50,11 +53,11 @@ export function AboutMeTab({ form, data, userId }: Props) {
     { label: 'Religion', value: data.religion },
     {
       label: 'Age range',
-      value: data.age_to ? `${data.age_from}–${data.age_to}` : `${data.age_from}+`,
+      value: data.ageTo ? `${data.ageFrom}–${data.ageTo}` : `${data.ageFrom}+`,
     },
     {
       label: 'Interested in',
-      value: data.interested_gender.length ? data.interested_gender.join(', ') : '—',
+      value: data.interestedGender.length ? data.interestedGender.join(', ') : '—',
     },
   ];
 
@@ -69,7 +72,7 @@ export function AboutMeTab({ form, data, userId }: Props) {
       </Text>
       <View className="bg-white rounded-xl overflow-hidden">
         {STATUS_OPTIONS.map((opt, i) => {
-          const active = dating_status === opt.key;
+          const active = datingStatus === opt.key;
           return (
             <Pressable
               key={opt.key}
@@ -103,17 +106,17 @@ export function AboutMeTab({ form, data, userId }: Props) {
         })}
       </View>
 
-      {dating_status !== 'open' && (
+      {datingStatus !== 'open' && (
         <View className="flex-row items-start gap-2 bg-accent-muted rounded-lg p-3 mt-[10px]">
           <IconSymbol name="eye.slash" size={15} color={colors.purple} />
           <Text className="flex-1 text-sm text-accent leading-[18px]">
             Your profile is hidden from Discover while you{"'"}re{' '}
-            {dating_status === 'break' ? 'on a break' : 'just winging'}.
+            {datingStatus === 'break' ? 'on a break' : 'just winging'}.
           </Text>
         </View>
       )}
 
-      {dating_status !== 'winging' && (
+      {datingStatus !== 'winging' && (
         <>
           <Text className="text-xs font-bold text-fg-subtle uppercase tracking-[0.6px] mt-5 mb-2">
             Details

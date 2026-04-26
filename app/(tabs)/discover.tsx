@@ -16,7 +16,11 @@ import {
 } from '@/lib/api/generated/likes-you/likes-you';
 import { useGetApiWingerTabsSuspense } from '@/lib/api/generated/winger-tabs/winger-tabs';
 import type { DiscoverProfile, WingerTab } from '@/lib/api/generated/model';
-import { updateDatingProfile, useProfileData } from '@/hooks/use-profile';
+import {
+  useGetApiDatingProfilesMeSuspense,
+  patchApiDatingProfilesMe,
+  getGetApiDatingProfilesMeQueryKey,
+} from '@/lib/api/generated/profiles/profiles';
 import { LargeHeader } from '@/components/ui/LargeHeader';
 import { TextTabBar } from '@/components/ui/TextTabBar';
 import { PhotoRect } from '@/components/ui/PhotoRect';
@@ -38,7 +42,6 @@ function DiscoverPausedScreen({
   status: Exclude<Enums<'dating_status'>, 'open'>;
   onResume: () => void;
 }) {
-  const { userId } = useAuth();
   const {
     handleSubmit,
     formState: { isSubmitting },
@@ -61,8 +64,9 @@ function DiscoverPausedScreen({
   }
 
   async function resume() {
-    const { error: err } = await updateDatingProfile(userId, { dating_status: 'open' });
-    if (err) {
+    try {
+      await patchApiDatingProfilesMe({ datingStatus: 'open' });
+    } catch {
       toast.error('Something went wrong. Please try again.');
       return;
     }
@@ -449,22 +453,27 @@ function DiscoverContent({ userId }: { userId: string }) {
 
 export default function DiscoverScreen() {
   const { userId } = useAuth();
-  const {
-    data: { datingProfile },
-    refetch: refreshProfile,
-  } = useProfileData(userId);
+  const queryClient = useQueryClient();
+  const { data: datingProfile } = useGetApiDatingProfilesMeSuspense();
 
-  if (datingProfile?.dating_status !== 'open') {
+  if (datingProfile?.datingStatus !== 'open') {
     const status =
-      (datingProfile?.dating_status as Exclude<Enums<'dating_status'>, 'open'>) ?? 'break';
-    return <DiscoverPausedScreen status={status} onResume={refreshProfile} />;
+      (datingProfile?.datingStatus as Exclude<Enums<'dating_status'>, 'open'>) ?? 'break';
+    return (
+      <DiscoverPausedScreen
+        status={status}
+        onResume={() =>
+          queryClient.invalidateQueries({ queryKey: getGetApiDatingProfilesMeQueryKey() })
+        }
+      />
+    );
   }
 
   const prefKey = [
-    datingProfile?.age_from,
-    datingProfile?.age_to,
-    datingProfile?.interested_gender?.join(','),
-    datingProfile?.religious_preference ?? '',
+    datingProfile?.ageFrom,
+    datingProfile?.ageTo,
+    datingProfile?.interestedGender?.join(','),
+    datingProfile?.religiousPreference ?? '',
   ].join('|');
 
   return (

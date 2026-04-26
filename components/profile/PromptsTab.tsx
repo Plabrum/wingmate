@@ -10,7 +10,7 @@ import { toast } from 'sonner-native';
 import type { UseFormReturn } from 'react-hook-form';
 
 import { colors } from '@/constants/theme';
-import type { OwnDatingProfile } from '@/hooks/use-profile';
+import type { OwnDatingProfileResponse, OwnPromptResponse } from '@/lib/api/generated/model';
 import {
   deleteApiProfilePromptsId,
   deleteApiPromptResponsesId,
@@ -30,7 +30,7 @@ const SLIDE_WIDTH = Dimensions.get('window').width - 20 * 2 - 16 * 2;
 const PEEK = 20; // px of next card visible to hint at swiping
 const SNAP_INTERVAL = SLIDE_WIDTH - PEEK + 8; // slide width minus peek + gap between slides
 
-type ApprovedResponse = OwnDatingProfile['prompts'][number]['responses'][number];
+type ApprovedResponse = OwnPromptResponse;
 
 function ApprovedResponsesCarousel({ responses }: { responses: ApprovedResponse[] }) {
   const [activeIdx, setActiveIdx] = useState(0);
@@ -63,13 +63,13 @@ function ApprovedResponsesCarousel({ responses }: { responses: ApprovedResponse[
           >
             <View className="flex-row gap-2.5">
               <FaceAvatar
-                initials={getInitials((r as any).author?.chosen_name)}
+                initials={getInitials(r.author?.chosenName)}
                 size={28}
-                photoUri={(r as any).author?.avatar_url ?? null}
+                photoUri={r.author?.avatarUrl ?? null}
               />
               <View className="flex-1">
                 <Text className="text-xs font-semibold text-fg-muted mb-[3px]">
-                  {(r as any).author?.chosen_name ?? 'Wingperson'}
+                  {r.author?.chosenName ?? 'Wingperson'}
                 </Text>
                 <Text className="text-sm text-fg leading-5">{r.message}</Text>
               </View>
@@ -97,7 +97,7 @@ function ApprovedResponsesCarousel({ responses }: { responses: ApprovedResponse[
 }
 
 interface Props {
-  form: UseFormReturn<OwnDatingProfile>;
+  form: UseFormReturn<NonNullable<OwnDatingProfileResponse>>;
   onRefresh: () => void;
 }
 
@@ -125,7 +125,7 @@ export function PromptsTab({ form, onRefresh }: Props) {
           ? {
               ...p,
               responses: p.responses.map((r) =>
-                r.id === responseId ? { ...r, is_approved: true } : r
+                r.id === responseId ? { ...r, isApproved: true } : r
               ),
             }
           : p
@@ -181,8 +181,8 @@ export function PromptsTab({ form, onRefresh }: Props) {
       )}
 
       {prompts.map((prompt) => {
-        const pendingR = prompt.responses.filter((r) => !r.is_approved);
-        const approvedR = prompt.responses.filter((r) => r.is_approved);
+        const pendingR = prompt.responses.filter((r) => !r.isApproved);
+        const approvedR = prompt.responses.filter((r) => r.isApproved);
         const isExpanded = expanded.has(prompt.id);
 
         return (
@@ -219,9 +219,9 @@ export function PromptsTab({ form, onRefresh }: Props) {
                   pendingR.map((r) => (
                     <View key={r.id} className="flex-row gap-2.5 mt-3">
                       <FaceAvatar
-                        initials={getInitials((r as any).author?.chosen_name)}
+                        initials={getInitials(r.author?.chosenName)}
                         size={28}
-                        photoUri={(r as any).author?.avatar_url ?? null}
+                        photoUri={r.author?.avatarUrl ?? null}
                       />
                       <View className="flex-1">
                         <Text className="text-sm text-fg leading-5">{r.message}</Text>

@@ -15,13 +15,12 @@ import * as SMS from 'expo-sms';
 
 import { useQueryClient } from '@tanstack/react-query';
 import { colors } from '@/constants/theme';
-import { useAuth } from '@/context/auth';
 import { NavHeader } from '@/components/ui/NavHeader';
 import { FaceAvatar } from '@/components/ui/FaceAvatar';
 import { PurpleButton } from '@/components/ui/PurpleButton';
 import { getInitials } from '@/components/profile/profile-helpers';
 import { View, Text, TextInput, ScrollView, SafeAreaView, Pressable } from '@/lib/tw';
-import { useProfileData } from '@/hooks/use-profile';
+import { useGetApiProfilesMeSuspense } from '@/lib/api/generated/profiles/profiles';
 import {
   getGetApiWingpeopleQueryKey,
   useDeleteApiWingpeopleId,
@@ -303,12 +302,9 @@ type InviteForm = { phone: string };
 
 export default function WingpeopleScreen() {
   const router = useRouter();
-  const { userId } = useAuth();
   const insets = useSafeAreaInsets();
   const queryClient = useQueryClient();
-  const {
-    data: { profile },
-  } = useProfileData(userId);
+  const { data: profile } = useGetApiProfilesMeSuspense();
 
   const [inviteVisible, setInviteVisible] = useState(false);
 
@@ -344,7 +340,7 @@ export default function WingpeopleScreen() {
     if (result.wingerId == null) {
       const isAvailable = await SMS.isAvailableAsync();
       if (isAvailable) {
-        const daterName = profile?.chosen_name ?? 'Someone';
+        const daterName = profile?.chosenName ?? 'Someone';
         const appUrl = 'https://apps.apple.com/app/wyng/id6744145981';
         await SMS.sendSMSAsync(
           [e164],

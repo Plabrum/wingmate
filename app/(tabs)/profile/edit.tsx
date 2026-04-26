@@ -3,9 +3,12 @@ import { useRouter } from 'expo-router';
 import { useQueryClient } from '@tanstack/react-query';
 import { z } from 'zod';
 
-import { useAuth } from '@/context/auth';
-import { updateDatingProfile, useProfileData } from '@/hooks/use-profile';
-import type { OwnDatingProfile } from '@/hooks/use-profile';
+import {
+  useGetApiDatingProfilesMeSuspense,
+  patchApiDatingProfilesMe,
+  getGetApiDatingProfilesMeQueryKey,
+} from '@/lib/api/generated/profiles/profiles';
+import type { OwnDatingProfileResponse } from '@/lib/api/generated/model';
 import type { Database } from '@/types/database';
 import { CITIES, GENDERS, RELIGIONS, INTERESTS } from '@/constants/enums';
 import { View, Text, ScrollView, SafeAreaView, Pressable } from '@/lib/tw';
@@ -83,13 +86,9 @@ function HeaderSave() {
 
 function EditProfileForm({
   data,
-  refresh,
-  userId,
   router,
 }: {
-  data: OwnDatingProfile;
-  refresh: () => unknown;
-  userId: string;
+  data: NonNullable<OwnDatingProfileResponse>;
   router: ReturnType<typeof useRouter>;
 }) {
   const queryClient = useQueryClient();
@@ -100,30 +99,33 @@ function EditProfileForm({
         defaultValues={{
           bio: data.bio ?? '',
           city: data.city ?? undefined,
-          ageFrom: String(data.age_from ?? 18),
-          ageTo: data.age_to ? String(data.age_to) : '',
-          interestedGender: data.interested_gender ?? [],
+          ageFrom: String(data.ageFrom ?? 18),
+          ageTo: data.ageTo ? String(data.ageTo) : '',
+          interestedGender: data.interestedGender ?? [],
           religion: data.religion ?? undefined,
-          religiousPref: (data.religious_preference as Religion | null) ?? null,
+          religiousPref: (data.religiousPreference as Religion | null) ?? null,
           interests: data.interests ?? [],
         }}
         onSubmit={async (values) => {
           const fromNum = parseInt(values.ageFrom, 10);
           const toNum = values.ageTo ? parseInt(values.ageTo, 10) : null;
-          const { error } = await updateDatingProfile(userId, {
-            bio: values.bio.trim() || undefined,
-            city: values.city,
-            age_from: fromNum,
-            age_to: toNum,
-            interested_gender: values.interestedGender,
-            religion: values.religion,
-            religious_preference: values.religiousPref,
-            interests: values.interests,
-          });
-          if (error) throw new Error('Could not save changes. Please try again.');
+          try {
+            await patchApiDatingProfilesMe({
+              bio: values.bio.trim() || undefined,
+              city: values.city,
+              ageFrom: fromNum,
+              ageTo: toNum,
+              interestedGender: values.interestedGender,
+              religion: values.religion,
+              religiousPreference: values.religiousPref,
+              interests: values.interests,
+            });
+          } catch {
+            throw new Error('Could not save changes. Please try again.');
+          }
+          queryClient.invalidateQueries({ queryKey: getGetApiDatingProfilesMeQueryKey() });
           queryClient.invalidateQueries({ queryKey: ['pool'] });
           queryClient.invalidateQueries({ queryKey: ['likes-you-count'] });
-          refresh();
           router.back();
         }}
       >
@@ -196,11 +198,7 @@ function EditProfileForm({
 
 function EditProfileScreenInner() {
   const router = useRouter();
-  const { userId } = useAuth();
-  const {
-    data: { datingProfile },
-    refetch,
-  } = useProfileData(userId);
+  const { data: datingProfile } = useGetApiDatingProfilesMeSuspense();
 
   if (!datingProfile) {
     return (
@@ -210,7 +208,7 @@ function EditProfileScreenInner() {
     );
   }
 
-  return <EditProfileForm data={datingProfile} refresh={refetch} userId={userId} router={router} />;
+  return <EditProfileForm data={datingProfile} router={router} />;
 }
 
 export default function EditProfileScreen() {

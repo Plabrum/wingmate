@@ -3,7 +3,7 @@ import { toast } from 'sonner-native';
 import type { UseFormReturn } from 'react-hook-form';
 
 import { colors } from '@/constants/theme';
-import type { OwnDatingProfile } from '@/hooks/use-profile';
+import type { OwnDatingProfileResponse } from '@/lib/api/generated/model';
 import { useUploadProfilePhoto } from '@/hooks/use-upload-profile-photo';
 import { getPhotoUrl, pickAndResizePhoto, removePhotoStorage } from '@/lib/photos';
 import {
@@ -19,8 +19,8 @@ import { IconSymbol } from '@/components/ui/icon-symbol';
 const PHOTO_COL = (Dimensions.get('window').width - 20 * 2 - 8) / 2;
 
 interface Props {
-  form: UseFormReturn<OwnDatingProfile>;
-  data: OwnDatingProfile;
+  form: UseFormReturn<NonNullable<OwnDatingProfileResponse>>;
+  data: NonNullable<OwnDatingProfileResponse>;
   onRefresh: () => Promise<void>;
 }
 
@@ -28,15 +28,15 @@ export function PhotosTab({ form, data, onRefresh }: Props) {
   const { upload, isPending: uploading } = useUploadProfilePhoto();
 
   const photos = form.watch('photos');
-  const selfPhotos = photos.filter((p) => p.suggester_id === null && p.approved_at !== null);
-  const pending = photos.filter((p) => p.suggester_id !== null && p.approved_at === null);
+  const selfPhotos = photos.filter((p) => p.suggesterId === null && p.approvedAt !== null);
+  const pending = photos.filter((p) => p.suggesterId !== null && p.approvedAt === null);
 
   const handleApprove = async (photoId: string) => {
     const prev = photos;
     const now = new Date().toISOString();
     form.setValue(
       'photos',
-      photos.map((p) => (p.id === photoId ? { ...p, approved_at: now } : p))
+      photos.map((p) => (p.id === photoId ? { ...p, approvedAt: now } : p))
     );
     try {
       await postApiPhotosIdApprove(photoId);
@@ -65,14 +65,12 @@ export function PhotosTab({ form, data, onRefresh }: Props) {
     if (idx === 0) return;
     const updated = [...selfPhotos];
     [updated[idx - 1], updated[idx]] = [updated[idx], updated[idx - 1]];
-    const payload = updated.map((p, i) => ({ id: p.id, display_order: i }));
+    const payload = updated.map((p, i) => ({ id: p.id, displayOrder: i }));
     const prev = photos;
-    form.setValue('photos', [...updated.map((p, i) => ({ ...p, display_order: i })), ...pending]);
+    form.setValue('photos', [...updated.map((p, i) => ({ ...p, displayOrder: i })), ...pending]);
     try {
       await Promise.all(
-        payload.map(({ id, display_order }) =>
-          patchApiPhotosIdReorder(id, { displayOrder: display_order })
-        )
+        payload.map(({ id, displayOrder }) => patchApiPhotosIdReorder(id, { displayOrder }))
       );
       onRefresh();
     } catch {
@@ -96,7 +94,7 @@ export function PhotosTab({ form, data, onRefresh }: Props) {
           );
           try {
             await postApiPhotosIdReject(photo.id);
-            await removePhotoStorage(photo.storage_url);
+            await removePhotoStorage(photo.storageUrl);
           } catch {
             form.setValue('photos', prev);
             toast.error('Could not delete photo.');
@@ -121,11 +119,11 @@ export function PhotosTab({ form, data, onRefresh }: Props) {
             Suggested by Wingpeople
           </Text>
           {pending.map((photo) => {
-            const suggesterName = (photo as any).suggester?.chosen_name ?? 'your wingperson';
+            const suggesterName = photo.suggester?.chosenName ?? 'your wingperson';
             return (
               <View key={photo.id} className="bg-white rounded-xl overflow-hidden mb-3">
                 <PhotoRect
-                  uri={getPhotoUrl(photo.storage_url)}
+                  uri={getPhotoUrl(photo.storageUrl)}
                   ratio={4 / 3}
                   blur
                   style={{ borderRadius: 0 }}
@@ -145,7 +143,7 @@ export function PhotosTab({ form, data, onRefresh }: Props) {
                   </Pressable>
                   <Pressable
                     className="flex-1 py-[10px] rounded-lg items-center bg-surface"
-                    onPress={() => handleReject(photo.id, photo.storage_url)}
+                    onPress={() => handleReject(photo.id, photo.storageUrl)}
                   >
                     <Text className="text-fg font-semibold text-sm">Reject</Text>
                   </Pressable>
@@ -171,7 +169,7 @@ export function PhotosTab({ form, data, onRefresh }: Props) {
         <View className="flex-row flex-wrap gap-2">
           {selfPhotos.map((photo, idx) => (
             <View key={photo.id} style={{ width: PHOTO_COL, position: 'relative' }}>
-              <PhotoRect uri={getPhotoUrl(photo.storage_url)} ratio={4 / 5} />
+              <PhotoRect uri={getPhotoUrl(photo.storageUrl)} ratio={4 / 5} />
               {idx === 0 && (
                 <View className="absolute top-2 left-2 bg-accent rounded-md px-[7px] py-[3px]">
                   <Text className="text-white text-xs font-semibold">Primary</Text>

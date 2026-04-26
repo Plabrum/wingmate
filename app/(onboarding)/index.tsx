@@ -4,11 +4,13 @@ import { useQueryClient } from '@tanstack/react-query';
 import ScreenSuspense from '@/components/ui/ScreenSuspense';
 import { useAuth } from '@/context/auth';
 import {
-  updateBaseProfile,
-  createDatingProfile,
-  useProfileData,
-  invalidateProfile,
-} from '@/hooks/use-profile';
+  useGetApiProfilesMeSuspense,
+  useGetApiDatingProfilesMeSuspense,
+  patchApiProfilesMe,
+  postApiDatingProfiles,
+  getGetApiProfilesMeQueryKey,
+  getGetApiDatingProfilesMeQueryKey,
+} from '@/lib/api/generated/profiles/profiles';
 import type { Database } from '@/types/database';
 import RoleStep from '@/components/onboarding/RoleStep';
 import ProfileStep, { type ProfileFields } from '@/components/onboarding/ProfileStep';
@@ -19,10 +21,10 @@ type Role = Database['public']['Enums']['user_role'];
 type Step = 'role' | 'profile' | 'photos' | 'prompts';
 
 function deriveInitialStep(
-  profile: { chosen_name?: string | null } | null,
+  profile: { chosenName?: string | null } | null,
   datingProfile: { id: string } | null
 ): Step {
-  if (!profile?.chosen_name) return 'role';
+  if (!profile?.chosenName) return 'role';
   if (!datingProfile) return 'photos';
   return 'prompts';
 }
@@ -30,9 +32,8 @@ function deriveInitialStep(
 export default function OnboardingScreen() {
   const { userId, session } = useAuth();
   const queryClient = useQueryClient();
-  const {
-    data: { profile, datingProfile },
-  } = useProfileData(userId);
+  const { data: profile } = useGetApiProfilesMeSuspense();
+  const { data: datingProfile } = useGetApiDatingProfilesMeSuspense();
 
   const [step, setStep] = useState<Step>(() => deriveInitialStep(profile, datingProfile));
   const [selectedRole, setSelectedRole] = useState<Role | null>((profile?.role as Role) ?? null);
@@ -45,35 +46,41 @@ export default function OnboardingScreen() {
 
   async function onProfileComplete(fields: ProfileFields): Promise<string | undefined> {
     const role = selectedRole!;
-    const { error: updateError } = await updateBaseProfile(userId, {
-      chosen_name: fields.chosenName.trim(),
-      date_of_birth: fields.dateOfBirth.toISOString().split('T')[0],
-      phone_number: fields.phoneNumber.trim() || null,
-      gender: fields.gender,
-      role,
-    });
-    if (updateError) return updateError.message;
+    try {
+      await patchApiProfilesMe({
+        chosenName: fields.chosenName.trim(),
+        dateOfBirth: fields.dateOfBirth.toISOString().split('T')[0],
+        phoneNumber: fields.phoneNumber.trim() || null,
+        gender: fields.gender,
+        role,
+      });
+    } catch (e) {
+      return e instanceof Error ? e.message : 'Unknown error';
+    }
 
     switch (role) {
       case 'winger': {
-        invalidateProfile(queryClient);
+        queryClient.invalidateQueries({ queryKey: getGetApiProfilesMeQueryKey() });
+        queryClient.invalidateQueries({ queryKey: getGetApiDatingProfilesMeQueryKey() });
         router.replace('/(tabs)/profile' as any);
         return;
       }
       case 'dater': {
-        const { data: dp, error: dpError } = await createDatingProfile({
-          user_id: userId,
-          city: fields.city ?? 'Boston',
-          bio: fields.bio.trim() || undefined,
-          age_from: 18,
-          interested_gender: [],
-          religion: 'Prefer not to say',
-          interests: [],
-          dating_status: 'open',
-        });
-        if (dpError) return dpError.message;
-        setDpId(dp!.id);
-        setStep('photos');
+        try {
+          const dp = await postApiDatingProfiles({
+            city: fields.city ?? 'Boston',
+            bio: fields.bio.trim() || undefined,
+            ageFrom: 18,
+            interestedGender: [],
+            religion: 'Prefer not to say',
+            interests: [],
+            datingStatus: 'open',
+          });
+          setDpId(dp.id);
+          setStep('photos');
+        } catch (e) {
+          return e instanceof Error ? e.message : 'Unknown error';
+        }
         return;
       }
     }

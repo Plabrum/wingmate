@@ -8,12 +8,15 @@ import { useQueryClient } from '@tanstack/react-query';
 import { colors } from '@/constants/theme';
 import { useAuth } from '@/context/auth';
 import {
-  useProfileData,
-  updateDatingProfile,
-  updateBaseProfile,
-  invalidateProfile,
-} from '@/hooks/use-profile';
-import type { OwnDatingProfile } from '@/hooks/use-profile';
+  useGetApiProfilesMeSuspense,
+  useGetApiDatingProfilesMeSuspense,
+  patchApiProfilesMe,
+  patchApiDatingProfilesMe,
+  getGetApiProfilesMeQueryKey,
+  getGetApiDatingProfilesMeQueryKey,
+  getApiDatingProfilesMe,
+} from '@/lib/api/generated/profiles/profiles';
+import type { OwnDatingProfileResponse } from '@/lib/api/generated/model';
 import { useGetApiWingpeopleSuspense } from '@/lib/api/generated/contacts/contacts';
 import { pickAndResizePhoto, uploadAvatar } from '@/lib/photos';
 
@@ -98,7 +101,7 @@ function AvatarPicker({ name, avatarUrl, size, userId }: AvatarPickerProps) {
       toast.error("Couldn't upload photo. Try again.");
       return;
     }
-    invalidateProfile(queryClient);
+    queryClient.invalidateQueries({ queryKey: getGetApiProfilesMeQueryKey() });
   };
 
   return (
@@ -158,34 +161,38 @@ function ProfileScreenInner() {
   const { userId } = useAuth();
   const queryClient = useQueryClient();
 
-  const {
-    data: { profile, datingProfile },
-    refetch,
-  } = useProfileData(userId);
+  const { data: profile } = useGetApiProfilesMeSuspense();
+  const { data: datingProfile } = useGetApiDatingProfilesMeSuspense();
 
   const { data: wingpeopleData } = useGetApiWingpeopleSuspense();
   const wingpeople = wingpeopleData.wingpeople;
 
   const [activeTab, setActiveTab] = useState(0);
 
-  const form = useForm<OwnDatingProfile>({ defaultValues: datingProfile ?? undefined });
+  const form = useForm<NonNullable<OwnDatingProfileResponse>>({
+    defaultValues: datingProfile ?? undefined,
+  });
 
-  const dating_status = form.watch('dating_status');
+  const datingStatus = form.watch('datingStatus');
 
   const handleRefresh = useCallback(async () => {
-    const result = await refetch();
-    if (result.data?.datingProfile) form.reset(result.data.datingProfile);
-  }, [refetch, form]);
+    const fresh = await getApiDatingProfilesMe();
+    if (fresh) {
+      form.reset(fresh);
+      queryClient.setQueryData(getGetApiDatingProfilesMeQueryKey(), fresh);
+    }
+  }, [queryClient, form]);
 
   // ── Role = winger ─────────────────────────────────────────────────────────
   if (profile?.role === 'winger') {
     const handleSwitchToDater = async () => {
-      const { error } = await updateBaseProfile(userId, { role: 'dater' });
-      if (error) {
+      try {
+        await patchApiProfilesMe({ role: 'dater' });
+        queryClient.invalidateQueries({ queryKey: getGetApiProfilesMeQueryKey() });
+        queryClient.invalidateQueries({ queryKey: getGetApiDatingProfilesMeQueryKey() });
+      } catch {
         toast.error("Couldn't switch profile. Try again.");
-        return;
       }
-      invalidateProfile(queryClient);
     };
 
     return (
@@ -197,9 +204,9 @@ function ProfileScreenInner() {
           onPress={handleSwitchToDater}
         />
         <WingerView
-          name={profile.chosen_name}
+          name={profile.chosenName}
           userId={userId}
-          avatarUrl={profile.avatar_url ?? null}
+          avatarUrl={profile.avatarUrl ?? null}
         />
       </SafeAreaView>
     );
@@ -207,17 +214,18 @@ function ProfileScreenInner() {
 
   if (!datingProfile) return null; // routing should prevent this
 
-  // ── dating_status = winging ───────────────────────────────────────────────
-  if (dating_status === 'winging') {
+  // ── datingStatus = winging ───────────────────────────────────────────────
+  if (datingStatus === 'winging') {
     const handleResumeDating = async () => {
-      form.setValue('dating_status', 'open');
-      const { error } = await updateDatingProfile(userId, { dating_status: 'open' });
-      if (error) {
-        form.setValue('dating_status', 'winging');
+      form.setValue('datingStatus', 'open');
+      try {
+        await patchApiDatingProfilesMe({ datingStatus: 'open' });
+        queryClient.invalidateQueries({ queryKey: getGetApiProfilesMeQueryKey() });
+        queryClient.invalidateQueries({ queryKey: getGetApiDatingProfilesMeQueryKey() });
+      } catch {
+        form.setValue('datingStatus', 'winging');
         toast.error("Couldn't update status. Try again.");
-        return;
       }
-      invalidateProfile(queryClient);
     };
 
     return (
@@ -229,9 +237,9 @@ function ProfileScreenInner() {
           onPress={handleResumeDating}
         />
         <WingerView
-          name={profile?.chosen_name ?? null}
+          name={profile?.chosenName ?? null}
           userId={userId}
-          avatarUrl={profile?.avatar_url ?? null}
+          avatarUrl={profile?.avatarUrl ?? null}
         />
       </SafeAreaView>
     );
@@ -253,8 +261,8 @@ function ProfileScreenInner() {
         style={{ borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.divider }}
       >
         <AvatarPicker
-          name={profile?.chosen_name ?? null}
-          avatarUrl={profile?.avatar_url ?? null}
+          name={profile?.chosenName ?? null}
+          avatarUrl={profile?.avatarUrl ?? null}
           size={44}
           userId={userId}
         />
@@ -283,7 +291,7 @@ function ProfileScreenInner() {
         active={activeTab}
         setActive={setActiveTab}
       />
-      {activeTab === 0 && <AboutMeTab form={form} data={datingProfile} userId={userId} />}
+      {activeTab === 0 && <AboutMeTab form={form} data={datingProfile} />}
       {activeTab === 1 && <PhotosTab form={form} data={datingProfile} onRefresh={handleRefresh} />}
       {activeTab === 2 && <PromptsTab form={form} onRefresh={handleRefresh} />}
     </SafeAreaView>

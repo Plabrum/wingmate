@@ -2,7 +2,10 @@ import { useState, useEffect } from 'react';
 import { Alert, ActivityIndicator, Dimensions } from 'react-native';
 import { View, Text, SafeAreaView, Pressable } from '@/lib/tw';
 import { Image } from 'expo-image';
-import { createDatingProfile, getOwnDatingProfileSnapshot } from '@/hooks/use-profile';
+import {
+  postApiDatingProfiles,
+  getApiDatingProfilesMe,
+} from '@/lib/api/generated/profiles/profiles';
 import { useUploadProfilePhoto } from '@/hooks/use-upload-profile-photo';
 import { getPhotoUrl, pickAndResizePhoto, removePhotoStorage } from '@/lib/photos';
 import { postApiPhotosIdReject } from '@/lib/api/generated/photos/photos';
@@ -37,34 +40,34 @@ export default function PhotosStep({ userId, dpId: initialDpId, onDpCreated, onN
   // was interrupted before completing; CLAUDE.md explicitly allows this exception.
   useEffect(() => {
     if (initialDpId) return;
-    createDatingProfile({
-      user_id: userId,
+    postApiDatingProfiles({
       city: 'Boston',
-      age_from: 18,
-      interested_gender: [],
+      ageFrom: 18,
+      interestedGender: [],
       religion: 'Prefer not to say',
       interests: [],
-      dating_status: 'open',
-    }).then(({ data: dp, error: dpError }) => {
-      if (dpError || !dp) {
-        toast.error('Could not set up your profile. Please try again.');
-      } else {
+      datingStatus: 'open',
+    })
+      .then((dp) => {
         setLocalDpId(dp.id);
         onDpCreated(dp.id);
-      }
-      setInitializing(false);
-    });
+        setInitializing(false);
+      })
+      .catch(() => {
+        toast.error('Could not set up your profile. Please try again.');
+        setInitializing(false);
+      });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function refreshPhotos() {
-    const { data } = await getOwnDatingProfileSnapshot();
+    const data = await getApiDatingProfilesMe();
     if (data) {
       setPhotos(
         data.photos.flatMap((p) => {
-          const uri = getPhotoUrl(p.storage_url);
+          const uri = getPhotoUrl(p.storageUrl);
           if (!uri) return [];
-          return [{ id: p.id, uri, storagePath: p.storage_url }];
+          return [{ id: p.id, uri, storagePath: p.storageUrl }];
         })
       );
     }

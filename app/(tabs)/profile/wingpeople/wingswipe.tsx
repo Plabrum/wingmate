@@ -10,7 +10,7 @@ import { NavHeader } from '@/components/ui/NavHeader';
 import { PhotoRect } from '@/components/ui/PhotoRect';
 import { Pill } from '@/components/ui/Pill';
 import { PurpleButton } from '@/components/ui/PurpleButton';
-import { useDaterContext } from '@/hooks/use-profile';
+import { useGetApiProfilesUserIdSuspense } from '@/lib/api/generated/profiles/profiles';
 import type { WingProfile } from '@/lib/api/generated/model';
 import { useGetApiWingPoolSuspense } from '@/lib/api/generated/wing-pool/wing-pool';
 import ScreenSuspense from '@/components/ui/ScreenSuspense';
@@ -120,7 +120,7 @@ function WingSwipeContent() {
   const router = useRouter();
   const { daterId } = useLocalSearchParams<{ daterId: string }>();
 
-  const { data: daterContext } = useDaterContext(daterId);
+  const { data: daterContext } = useGetApiProfilesUserIdSuspense(daterId);
   const { data: initialPool } = useGetApiWingPoolSuspense({
     daterId,
     pageSize: PAGE_SIZE,
@@ -130,7 +130,7 @@ function WingSwipeContent() {
   const { pool, index, suggest, decline } = useWingSwipe(daterId, initialPool);
   const card = pool[index] ?? null;
 
-  const daterName = daterContext?.chosen_name ?? '';
+  const daterName = daterContext?.chosenName ?? '';
   const firstName = daterName.split(' ')[0] || daterName;
 
   const [noteVisible, setNoteVisible] = useState(false);
