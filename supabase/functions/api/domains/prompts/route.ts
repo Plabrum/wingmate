@@ -35,6 +35,7 @@ import {
   rowToPromptTemplate,
   rowsToProfilePrompts,
 } from './transformers.ts';
+import { getDeps } from '../../lib/deps.ts';
 
 const ONBOARDING_PROMPT_COUNT = 5;
 
@@ -169,30 +170,28 @@ const deletePromptResponseRoute = createRoute({
 
 export function mountPrompts(app: OpenAPIHono<AppEnv>) {
   app.openapi(listTemplatesRoute, async (c) => {
-    const db = c.get('db');
+    const { db } = getDeps(c);
     const rows = await fetchPromptTemplates(db);
     const body: PromptTemplateT[] = rows.map(rowToPromptTemplate);
     return c.json(body, 200);
   });
 
   app.openapi(onboardingTemplatesRoute, async (c) => {
-    const db = c.get('db');
+    const { db } = getDeps(c);
     const rows = await fetchOnboardingPromptTemplates(db, ONBOARDING_PROMPT_COUNT);
     const body: PromptTemplateT[] = rows.map(rowToPromptTemplate);
     return c.json(body, 200);
   });
 
   app.openapi(ownProfilePromptsRoute, async (c) => {
-    const userId = c.get('userId');
-    const db = c.get('db');
+    const { userId, db } = getDeps(c);
     const { prompts, responses } = await fetchOwnProfilePrompts(db, userId);
     const body: ProfilePromptT[] = rowsToProfilePrompts(prompts, responses);
     return c.json(body, 200);
   });
 
   app.openapi(createProfilePromptRoute, async (c) => {
-    const userId = c.get('userId');
-    const db = c.get('db');
+    const { userId, db } = getDeps(c);
     const { promptTemplateId, answer } = c.req.valid('json');
 
     const datingProfileId = await fetchOwnDatingProfileId(db, userId);
@@ -204,8 +203,7 @@ export function mountPrompts(app: OpenAPIHono<AppEnv>) {
   });
 
   app.openapi(deleteProfilePromptRoute, async (c) => {
-    const userId = c.get('userId');
-    const db = c.get('db');
+    const { userId, db } = getDeps(c);
     const { id } = c.req.valid('param');
 
     const { deleted } = await deleteOwnedProfilePrompt(db, id, userId);
@@ -214,8 +212,7 @@ export function mountPrompts(app: OpenAPIHono<AppEnv>) {
   });
 
   app.openapi(createPromptResponseRoute, async (c) => {
-    const callerId = c.get('userId');
-    const db = c.get('db');
+    const { userId: callerId, db } = getDeps(c);
     const { profilePromptId, message } = c.req.valid('json');
 
     const ownerId = await fetchProfilePromptOwner(db, profilePromptId);
@@ -239,8 +236,7 @@ export function mountPrompts(app: OpenAPIHono<AppEnv>) {
   });
 
   app.openapi(approvePromptResponseRoute, async (c) => {
-    const userId = c.get('userId');
-    const db = c.get('db');
+    const { userId, db } = getDeps(c);
     const { id } = c.req.valid('param');
 
     const row = await approveOwnedPromptResponse(db, id, userId);
@@ -249,8 +245,7 @@ export function mountPrompts(app: OpenAPIHono<AppEnv>) {
   });
 
   app.openapi(deletePromptResponseRoute, async (c) => {
-    const userId = c.get('userId');
-    const db = c.get('db');
+    const { userId, db } = getDeps(c);
     const { id } = c.req.valid('param');
 
     const { deleted } = await deletePromptResponseAsAuthorOrOwner(db, id, userId);
