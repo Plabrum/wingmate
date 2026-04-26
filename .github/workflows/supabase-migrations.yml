@@ -34,16 +34,12 @@ jobs:
           LOCAL_FNS=$(ls -d supabase/functions/*/ 2>/dev/null | xargs -I{} basename {} | sort)
           REMOTE_FNS=$(supabase functions list --project-ref ${{ secrets.SUPABASE_PROJECT_REF }} | tail -n +4 | awk '{print $1}' | grep -v '^-' | grep -v '^$' | sort)
 
-          # Deploy all local functions. The `api` function verifies JWTs in Hono
-          # middleware, so it's deployed with --no-verify-jwt to bypass the platform gate
-          # (needed so unauthenticated `/api/openapi.json` + `/api/doc` remain reachable).
+          # Deploy all local functions. Kong (the platform gateway) verifies JWTs
+          # for the `api` function. Webhook responders (`notify-*`, `delete-profile-photo`)
+          # opt out of verification via `verify_jwt = false` in supabase/config.toml.
           if [ -n "$LOCAL_FNS" ]; then
             echo "$LOCAL_FNS" | while read fn; do
-              if [ "$fn" = "api" ]; then
-                supabase functions deploy api --no-verify-jwt
-              else
-                supabase functions deploy "$fn"
-              fi
+              supabase functions deploy "$fn"
             done
           fi
 

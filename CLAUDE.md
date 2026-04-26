@@ -94,7 +94,7 @@ wingmate/
 │       │   ├── db/
 │       │   │   ├── client.ts   # drizzle + postgres.js client
 │       │   │   └── schema.ts   # READ-ONLY mirror, regenerate with `npm run db:drizzle`
-│       │   ├── middleware/     # auth (JWT verify via jose), transaction (per-request Drizzle tx), error
+│       │   ├── middleware/     # auth (decodes JWT — Kong verifies in prod), transaction (per-request Drizzle tx), error
 │       │   ├── types.ts         # AppEnv = AuthVars & DbVars (shared Hono env)
 │       │   ├── domains/
 │       │   │   └── <feature>/  # one folder per feature (see layout below)
@@ -190,17 +190,59 @@ For Supabase realtime/auth/storage (channels, `supabase.auth.*`, `supabase.stora
 
 ### When adding a new feature
 
-Add a route under `supabase/functions/api/domains/<feature>/` with a Zod schema + Drizzle query, regenerate with `npm run api:all`, and call the generated hook from the screen. Don't add new RPCs or PostgREST selects from the client.
+Add a route under `supabase/functions/api/domains/<feature>/` with a Zod schema + Drizzle query, regenerate with `npm run codegen`, and call the generated hook from the screen. Don't add new RPCs or PostgREST selects from the client.
 
-### Regenerating types
+---
+
+## Codegen
+
+There is one command: `npm run codegen`. It runs four steps in order, each writing to a single file or directory:
 
 ```bash
-npm run db:types      # supabase-js types (types/database.ts) — used by realtime/storage/auth callsites
-npm run db:drizzle    # Drizzle schema (supabase/functions/api/db/schema.ts)
-npm run api:spec      # openapi.json (from the Hono app)
-npm run api:gen       # lib/api/generated/ (Orval)
-npm run api:all       # db:drizzle + api:spec + api:gen in order
+npm run codegen
+# = supabase gen types typescript      → types/database.ts
+#   drizzle-kit introspect              → supabase/functions/api/db/schema.ts
+#   deno run … emit-spec.ts            → openapi.json
+#   orval                               → lib/api/generated/
 ```
+
+Each step is also exposed individually (`db:types`, `db:drizzle`, `api:spec`, `api:gen`) for incremental work, but `codegen` is the safe default — when in doubt, run it. The four artifacts are read-only outputs; never hand-edit them.
+
+### When to run codegen
+
+Run `npm run codegen` after any change to the following, then stage the regenerated artifacts in the same commit:
+
+| Change                                                 | Step that picks it up    | Why                             |
+| ------------------------------------------------------ | ------------------------ | ------------------------------- |
+| New SQL migration in `supabase/migrations/`            | `db:types`, `db:drizzle` | Both type sources mirror schema |
+| Hono route added / changed in `api/domains/*/route.ts` | `api:spec`, `api:gen`    | OpenAPI + client must follow    |
+| Zod schema in `api/domains/*/schemas.ts` changes       | `api:spec`, `api:gen`    | OpenAPI + client must follow    |
+| Drizzle query / transformer change only                | (none)                   | Pure runtime; no codegen needed |
+| Middleware / handler body / runtime fix                | (none)                   | Pure runtime                    |
+
+If unsure, just `npm run codegen` — it's idempotent. The only manual step in the chain: after `db:drizzle` re-introspects, the `profiles.id → auth.users` FK reappears in `db/schema.ts`. Strip it before committing (we only introspect the `public` schema).
+
+### Hard constraints
+
+- Never edit `types/database.ts` or `supabase/functions/api/db/schema.ts` by hand. Regenerate.
+- Never run `drizzle-kit generate` or `drizzle-kit push`. Schema writes happen via SQL migrations in `supabase/migrations/` only.
+- Generated artifacts (`types/database.ts`, `supabase/functions/api/db/schema.ts`, `openapi.json`, `lib/api/generated/**`) belong in the same commit as the source change that produced them. Don't leave them dirty in the working tree.
+- Service-role auth model on the `api` path: every Drizzle query in a handler must constrain to `c.var.userId` via WHERE / JOIN. This is the only authorization layer — there is no RLS on this path.
+
+---
+
+## Verify
+
+Before committing, run these. Fix failures at the root — no `--no-verify`, no `as any`, no `@ts-ignore`.
+
+```bash
+npm run lint
+npm run typecheck:functions
+npm run lint:functions
+npx tsc --noEmit
+```
+
+Passing = exit code 0. Pre-existing `expo lint` warnings about deprecated APIs don't block; only block on errors or new warnings introduced by your diff.
 
 ---
 
@@ -330,19 +372,9 @@ EXPO_PUBLIC_SUPABASE_ANON_KEY=...
 
 # api edge function (read by `npm run api:serve`)
 DATABASE_URL=postgresql://postgres:postgres@host.docker.internal:54322/postgres
-JWT_SECRET=super-secret-jwt-token-with-at-least-32-characters-long
-JWT_KEYS=<JSON array — copy from auth container, see below>
 ```
 
-`host.docker.internal` is required because the edge runtime runs inside a Docker container — `127.0.0.1` would refer to the container, not the host's Postgres. `JWT_SECRET` for local dev matches the Supabase CLI's default; in prod, set it to the project's real JWT secret.
-
-`JWT_KEYS` is required when running against a Supabase CLI ≥ 2.74 stack (and any prod project using ES256 / asymmetric JWTs). The auth container exposes the JWKS as `GOTRUE_JWT_KEYS`; pull it into `.env.local` with:
-
-```
-docker exec supabase_auth_wingmate env | grep '^GOTRUE_JWT_KEYS=' | cut -d= -f2-
-```
-
-When `JWT_KEYS` is set, `middleware/auth.ts` verifies via the JWKS; otherwise it falls back to HS256 with `JWT_SECRET`.
+`host.docker.internal` is required because the edge runtime runs inside a Docker container — `127.0.0.1` would refer to the container, not the host's Postgres. JWT verification is handled by Kong in prod and skipped locally (`--no-verify-jwt`), so no signing-key env vars are needed here.
 
 ### Running locally
 
@@ -357,16 +389,11 @@ npm run web            # expo start --web (dev auto-signs in as dev@local.test)
 ```bash
 npm run supabase:start   # start local Supabase stack
 npm run supabase:stop    # stop
-npm run db:types         # regenerate types/database.ts from local schema
-npm run db:drizzle       # regenerate supabase/functions/api/db/schema.ts
-npm run api:serve        # hot-reload the `api` edge function (supabase functions serve api --no-verify-jwt)
-npm run api:spec         # regenerate openapi.json from the Hono app
-npm run api:gen          # regenerate lib/api/generated/ via Orval
-npm run api:all          # db:drizzle + api:spec + api:gen
+npm run api:serve        # hot-reload the `api` edge function (no Kong locally, so --no-verify-jwt)
+npm run codegen          # regenerate every codegen artifact (see Codegen section)
 ```
 
-After any migration: run `npm run db:types` (supabase-js) and `npm run db:drizzle` (Drizzle), then commit both.
-After any change to `supabase/functions/api/` routes or schemas: run `npm run api:spec` + `npm run api:gen` (or `npm run api:all`) and commit `openapi.json` + `lib/api/generated/`.
+Individual codegen steps (`db:types`, `db:drizzle`, `api:spec`, `api:gen`) are also exposed for incremental work — see the **Codegen** section above for the trigger table and constraints.
 
 ### Linting & formatting
 
@@ -408,7 +435,7 @@ Single Hono app that owns every client-facing HTTP endpoint. Structure:
 
 - `app.ts` — `createApp()`: registers middleware, routes, OpenAPI doc, Swagger UI. Exported so `scripts/emit-spec.ts` can construct the app without booting a server.
 - `index.ts` — `Deno.serve(createApp().fetch)`. This is the Supabase runtime entrypoint.
-- `middleware/auth.ts` — verifies JWTs with `jose`. Uses `JWT_KEYS` (a JSON array of JWKs, ES256) when set; falls back to `JWT_SECRET` (HS256) otherwise. Sets `c.var.userId`. Applied to protected routes only; `/api/openapi.json` and `/api/doc` are public.
+- `middleware/auth.ts` — decodes the JWT to read `sub` and sets `c.var.userId`. Signature/expiry/audience verification is performed by Kong (the platform gateway) in prod; locally we trust the dev stack and run with `--no-verify-jwt`. Applied to protected routes only; `/api/openapi.json` and `/api/doc` are mounted unconditionally — locally they're reachable, in prod Kong rejects them with 401 because they have no JWT.
 - `middleware/transaction.ts` — opens a Drizzle transaction per request and exposes it via `c.var.db`. Commits on normal return, rolls back on any thrown error. Applied to protected routes only.
 - `middleware/error.ts` — maps `HTTPException`, `ZodError`, and unknown errors to JSON responses.
 - `types.ts` — `AppEnv` = the combined `AuthVars & DbVars` Hono env used by every route and `mount<Feature>(app)`.
@@ -432,17 +459,15 @@ Single Hono app that owns every client-facing HTTP endpoint. Structure:
 | Drizzle constraint violation        | Rolls back                                            |
 | Commit itself fails                 | Propagates to `onError` → 500                         |
 
-The module-level `db` in `db/client.ts` is used only by the transaction middleware — never import it in handlers or queries. Public routes (`/openapi.json`, `/doc`) intentionally skip the transaction middleware so doc hits don't consume the isolate's single pool slot.
+The module-level `db` in `db/client.ts` is used only by the transaction middleware — never import it in handlers or queries. The `/openapi.json` and `/doc` routes intentionally skip the transaction middleware so doc hits don't consume the isolate's single pool slot.
 
 **Authorization model.** No RLS on this path — the function uses the service role implicitly (connects as `postgres`). Every Drizzle query inside a handler MUST constrain results to `c.var.userId` via a WHERE or JOIN. This is enforced by code review, not the DB.
 
-**Deploy.** CI (`.github/workflows/supabase-migrations.yml`) deploys `api` with `--no-verify-jwt` so our middleware owns verification and the OpenAPI spec stays publicly reachable.
+**Deploy.** CI (`.github/workflows/supabase-migrations.yml`) deploys `api` without `--no-verify-jwt`, so Kong verifies every request before it reaches our code. `/openapi.json` and `/doc` therefore 401 in prod (no JWT) — that's intentional, the spec is committed in the repo and Swagger UI is a local-dev tool.
 
-**Required secrets** (Supabase dashboard → Edge Functions → Secrets). The `SUPABASE_` prefix is reserved by the CLI, so these use short names:
+**Required secrets** (Supabase dashboard → Edge Functions → Secrets). The `SUPABASE_` prefix is reserved by the CLI, so this uses a short name:
 
 - `DATABASE_URL` — Supavisor transaction-mode pooler URL in prod. Locally: `postgresql://postgres:postgres@host.docker.internal:54322/postgres` (the function runs in a Docker container, so `127.0.0.1` would refer to the container itself).
-- `JWT_KEYS` — JSON array of JWKs (ES256). Set this when the project issues asymmetric JWTs (Supabase CLI ≥ 2.74, and projects on the new asymmetric scheme). Locally, copy from the auth container: `docker exec supabase_auth_wingmate env | grep '^GOTRUE_JWT_KEYS=' | cut -d= -f2-`.
-- `JWT_SECRET` — HMAC secret (HS256) from Supabase auth settings. Used as fallback when `JWT_KEYS` is not set. Locally matches the CLI default (`super-secret-jwt-token-with-at-least-32-characters-long`).
 
 Drizzle introspect (`npm run db:drizzle`) runs from the host via the Node driver, so it uses `127.0.0.1:54322` via `drizzle.config.ts`.
 

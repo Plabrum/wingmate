@@ -1,29 +1,42 @@
 import { createMiddleware } from 'hono/factory';
-import { createLocalJWKSet, jwtVerify, type JWK, type JWTVerifyGetKey } from 'jose';
 
-// Supabase CLI ≥ 2.74 (and Supabase projects on the new asymmetric scheme) issue ES256 JWTs
-// and publish the JWKS via JWT_KEYS (a JSON array of JWKs). Legacy deployments still use
-// HS256 with a shared JWT_SECRET. Support both via the JWTVerifyGetKey shape.
-const keysEnv = Deno.env.get('JWT_KEYS');
-const hmacSecret = new TextEncoder().encode(Deno.env.get('JWT_SECRET') ?? '');
-const verifier: JWTVerifyGetKey = keysEnv
-  ? createLocalJWKSet({ keys: JSON.parse(keysEnv) as JWK[] })
-  : () => hmacSecret;
+// Kong (Supabase API gateway) verifies the JWT signature, expiry, and audience
+// before any request reaches this function in prod. Locally we run with
+// --no-verify-jwt and trust the dev stack. So this middleware just extracts
+// `sub` from the already-trusted token.
 
 export type AuthVars = {
   userId: string;
 };
 
+function decodeJwtPayload(token: string): { sub?: string } {
+  const segment = token.split('.')[1] ?? '';
+  const padded = segment + '='.repeat((4 - (segment.length % 4)) % 4);
+  const base64 = padded.replace(/-/g, '+').replace(/_/g, '/');
+  return JSON.parse(atob(base64));
+}
+
+// Idempotent: if a previous matching middleware already set userId on this
+// request, skip. Hono fires every registered middleware whose path matches —
+// overlapping `app.use` patterns (e.g. `/foo/me` and `/foo/:id`) would otherwise
+// run this twice for the same request.
 export const authMiddleware = createMiddleware<{ Variables: AuthVars }>(async (c, next) => {
+  if (c.get('userId')) {
+    return next();
+  }
+
   const header = c.req.header('authorization');
   const token = header?.startsWith('Bearer ') ? header.slice(7) : null;
-
   if (!token) {
     return c.json({ error: 'Missing authorization header' }, 401);
   }
 
-  const { payload } = await jwtVerify(token, verifier);
-  const sub = payload.sub;
+  let sub: string | undefined;
+  try {
+    sub = decodeJwtPayload(token).sub;
+  } catch {
+    return c.json({ error: 'Invalid token' }, 401);
+  }
   if (!sub) {
     return c.json({ error: 'Invalid token: missing sub' }, 401);
   }

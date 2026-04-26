@@ -32,101 +32,26 @@ export function createApp() {
 
   app.get('/doc', swaggerUI({ url: '/api/openapi.json' }));
 
-  // Order matters: auth first so unauthenticated requests never open a
-  // transaction or consume the pool slot. Doc routes above intentionally
-  // skip both — they don't touch the DB.
-  app.use('/discover', authMiddleware);
-  app.use('/discover', transactionMiddleware);
+  // Auth + per-request transaction for every protected route. Doc routes
+  // above are registered first so they skip both — they don't touch the DB
+  // and Kong doesn't gate them in prod.
+  //
+  // Both middlewares are idempotent (no-op if already applied to this
+  // request), so overlapping path patterns inside individual routes can't
+  // accidentally double-open a transaction and deadlock the max:1 pool.
+  app.use('/*', authMiddleware);
+  app.use('/*', transactionMiddleware);
+
   mountDiscover(app);
-
-  app.use('/likes-you', authMiddleware);
-  app.use('/likes-you', transactionMiddleware);
-  app.use('/likes-you/count', authMiddleware);
-  app.use('/likes-you/count', transactionMiddleware);
   mountLikesYou(app);
-
-  app.use('/winger-tabs', authMiddleware);
-  app.use('/winger-tabs', transactionMiddleware);
   mountWingerTabs(app);
-
-  app.use('/wing-pool', authMiddleware);
-  app.use('/wing-pool', transactionMiddleware);
   mountWingPool(app);
-
-  app.use('/decisions', authMiddleware);
-  app.use('/decisions', transactionMiddleware);
-  app.use('/decisions/suggestions', authMiddleware);
-  app.use('/decisions/suggestions', transactionMiddleware);
-  app.use('/decisions/suggestions/act', authMiddleware);
-  app.use('/decisions/suggestions/act', transactionMiddleware);
-  app.use('/decisions/pending-suggestions', authMiddleware);
-  app.use('/decisions/pending-suggestions', transactionMiddleware);
   mountDecisions(app);
-
-  app.use('/profiles/me', authMiddleware);
-  app.use('/profiles/me', transactionMiddleware);
-  app.use('/profiles/:userId', authMiddleware);
-  app.use('/profiles/:userId', transactionMiddleware);
-  app.use('/dating-profiles', authMiddleware);
-  app.use('/dating-profiles', transactionMiddleware);
-  app.use('/dating-profiles/me', authMiddleware);
-  app.use('/dating-profiles/me', transactionMiddleware);
   mountProfiles(app);
-
-  app.use('/matches', authMiddleware);
-  app.use('/matches', transactionMiddleware);
-  app.use('/matches/:matchId/sheet', authMiddleware);
-  app.use('/matches/:matchId/sheet', transactionMiddleware);
   mountMatches(app);
-
-  app.use('/conversations', authMiddleware);
-  app.use('/conversations', transactionMiddleware);
-  app.use('/matches/:matchId/messages', authMiddleware);
-  app.use('/matches/:matchId/messages', transactionMiddleware);
-  app.use('/matches/:matchId/messages/read', authMiddleware);
-  app.use('/matches/:matchId/messages/read', transactionMiddleware);
   mountMessages(app);
-
-  app.use('/photos', authMiddleware);
-  app.use('/photos', transactionMiddleware);
-  app.use('/photos/me', authMiddleware);
-  app.use('/photos/me', transactionMiddleware);
-  app.use('/photos/:id/approve', authMiddleware);
-  app.use('/photos/:id/approve', transactionMiddleware);
-  app.use('/photos/:id/reject', authMiddleware);
-  app.use('/photos/:id/reject', transactionMiddleware);
-  app.use('/photos/:id/reorder', authMiddleware);
-  app.use('/photos/:id/reorder', transactionMiddleware);
   mountPhotos(app);
-
-  app.use('/prompt-templates', authMiddleware);
-  app.use('/prompt-templates', transactionMiddleware);
-  app.use('/prompt-templates/onboarding', authMiddleware);
-  app.use('/prompt-templates/onboarding', transactionMiddleware);
-  app.use('/profile-prompts', authMiddleware);
-  app.use('/profile-prompts', transactionMiddleware);
-  app.use('/profile-prompts/me', authMiddleware);
-  app.use('/profile-prompts/me', transactionMiddleware);
-  app.use('/profile-prompts/:id', authMiddleware);
-  app.use('/profile-prompts/:id', transactionMiddleware);
-  app.use('/prompt-responses', authMiddleware);
-  app.use('/prompt-responses', transactionMiddleware);
-  app.use('/prompt-responses/:id', authMiddleware);
-  app.use('/prompt-responses/:id', transactionMiddleware);
-  app.use('/prompt-responses/:id/approve', authMiddleware);
-  app.use('/prompt-responses/:id/approve', transactionMiddleware);
   mountPrompts(app);
-
-  app.use('/wingpeople', authMiddleware);
-  app.use('/wingpeople', transactionMiddleware);
-  app.use('/wingpeople/invite', authMiddleware);
-  app.use('/wingpeople/invite', transactionMiddleware);
-  app.use('/wingpeople/:id', authMiddleware);
-  app.use('/wingpeople/:id', transactionMiddleware);
-  app.use('/wingpeople/:id/accept', authMiddleware);
-  app.use('/wingpeople/:id/accept', transactionMiddleware);
-  app.use('/wingpeople/:id/decline', authMiddleware);
-  app.use('/wingpeople/:id/decline', transactionMiddleware);
   mountContacts(app);
 
   app.onError(errorHandler);

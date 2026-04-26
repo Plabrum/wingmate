@@ -11,8 +11,7 @@
     "drizzle-orm": "npm:drizzle-orm@^0.45.2",
     "drizzle-orm/pg-core": "npm:drizzle-orm@^0.45.2/pg-core",
     "drizzle-orm/postgres-js": "npm:drizzle-orm@^0.45.2/postgres-js",
-    "postgres": "npm:postgres@^3.4.9",
-    "jose": "npm:jose@^5.9.6"
+    "postgres": "npm:postgres@^3.4.9"
   },
   "lint": {
     "rules": { "tags": ["recommended"] },
