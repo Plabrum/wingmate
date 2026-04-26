@@ -94,8 +94,8 @@ wingmate/
 │       │   ├── db/
 │       │   │   ├── client.ts   # drizzle + postgres.js client
 │       │   │   └── schema.ts   # READ-ONLY mirror, regenerate with `npm run db:drizzle`
-│       │   ├── middleware/     # auth (decodes JWT — Kong verifies in prod), transaction (per-request Drizzle tx), error
-│       │   ├── types.ts         # AppEnv = AuthVars & DbVars (shared Hono env)
+│       │   ├── middleware/     # auth (JWT → c.var.{userId,token,claims}), supabase (c.var.supabase), push (c.var.push), transaction (c.var.db), error
+│       │   ├── types.ts         # AppEnv = AuthVars & SupabaseVars & PushVars & DbVars (shared Hono env)
 │       │   ├── domains/
 │       │   │   └── <feature>/  # one folder per feature (see layout below)
 │       │   │       ├── route.ts        # Hono createRoute + mount<Feature>(app)
@@ -104,8 +104,8 @@ wingmate/
 │       │   │       └── transformers.ts # DB row → response mappers
 │       │   ├── lib/
 │       │   │   ├── config.ts   # env singleton — reads Deno.env once at boot, fails fast on missing vars
-│       │   │   ├── push.ts     # sendPush / getPushToken (no-op outside hosted Supabase)
-│       │   │   └── storage.ts  # per-request user-JWT supabase-js client (profile-photos bucket cleanup)
+│       │   │   ├── push.ts     # PushClient factory — Expo push endpoint + isProd no-op (injected via middleware as c.var.push)
+│       │   │   └── storage.ts  # removeProfilePhoto(client, url) — best-effort delete; handlers pass c.var.supabase
 │       │   └── scripts/
 │       │       └── emit-spec.ts # Writes openapi.json; run via `npm run api:spec`
 │       │
@@ -437,9 +437,11 @@ Single Hono app that owns every client-facing HTTP endpoint. Structure:
 - `app.ts` — `createApp()`: registers middleware, routes, OpenAPI doc, Swagger UI. Exported so `scripts/emit-spec.ts` can construct the app without booting a server.
 - `index.ts` — `Deno.serve(createApp().fetch)`. This is the Supabase runtime entrypoint.
 - `middleware/auth.ts` — decodes the JWT and sets `c.var.userId` (`sub`), `c.var.token` (raw bearer), and `c.var.claims` (full payload). Signature/expiry/audience verification is performed by Kong (the platform gateway) in prod; locally we trust the dev stack and run with `--no-verify-jwt`. Applied to protected routes only; `/api/openapi.json` and `/api/doc` are mounted unconditionally — locally they're reachable, in prod Kong rejects them with 401 because they have no JWT.
+- `middleware/supabase.ts` — builds a per-request `SupabaseClient` carrying the caller's JWT and exposes it as `c.var.supabase`. Used for non-Drizzle Supabase surfaces (Storage today; auth-admin / edge invokes if added later). Storage RLS sees `auth.uid()` because the bearer is forwarded.
+- `middleware/push.ts` — exposes a singleton `PushClient` (`c.var.push`) wrapping the Expo push endpoint. The client is stateless and built once at module load; the middleware just wires it onto the request. Handlers call `c.var.push.send(token, title, body)` — no auth or endpoint detail leaks into business code.
 - `middleware/transaction.ts` — opens a Drizzle transaction per request, runs `set_config('role', 'authenticated', true)` + `set_config('request.jwt.claims', <claims>, true)` so RLS sees the caller, and exposes the tx via `c.var.db`. Commits on normal return, rolls back on any thrown error. Applied to protected routes only.
 - `middleware/error.ts` — maps `HTTPException`, `ZodError`, and unknown errors to JSON responses.
-- `types.ts` — `AppEnv` = the combined `AuthVars & DbVars` Hono env used by every route and `mount<Feature>(app)`.
+- `types.ts` — `AppEnv` = the combined `AuthVars & SupabaseVars & PushVars & DbVars` Hono env used by every route and `mount<Feature>(app)`.
 - `db/client.ts` — Drizzle client over `postgres.js` using `DATABASE_URL` (Supavisor transaction-mode pooler in prod). `max: 1`, `prepare: false`. Initialized at module scope so warm isolates reuse the pool. Exports `DB`, `Tx`, `DBOrTx` types; the module-level `db` should only be imported by `middleware/transaction.ts`.
 - `db/schema.ts` — READ-ONLY Drizzle schema, generated via `drizzle-kit introspect` (see Data Model section).
 - `domains/<feature>/` — one folder per feature, holding the whole feature module (HTTP wiring + DB access + schemas + mappers):
@@ -461,6 +463,8 @@ Single Hono app that owns every client-facing HTTP endpoint. Structure:
 | Commit itself fails                 | Propagates to `onError` → 500                         |
 
 The module-level `db` in `db/client.ts` is used only by the transaction middleware — never import it in handlers or queries. The `/openapi.json` and `/doc` routes intentionally skip the transaction middleware so doc hits don't consume the isolate's single pool slot.
+
+**External service clients.** Anything that calls outside the function (Expo push, Supabase storage/auth-admin, third-party APIs) is wrapped in a small client module under `lib/`, exposed via a middleware as `c.var.<name>`, and used in handlers without any auth/endpoint detail leaking in. Today: `c.var.push` (Expo), `c.var.supabase` (per-request user-JWT supabase-js client). To add another: write a `createXxxClient(...)` factory in `lib/xxx.ts`, a `xxxMiddleware` that sets `c.var.xxx`, mount it in `app.ts`, and add `XxxVars` to `types.ts`. Per-request auth (e.g. JWT-carrying clients) → build inside the middleware. Stateless (e.g. Expo push) → build once at module scope.
 
 **Authorization model.** RLS is the authorization boundary. The api connects as the `authenticator` role and the request transaction runs as `authenticated` with `request.jwt.claims` set, so every existing `auth.uid()`-based policy on `public.*` and `storage.objects` is the security floor. Handler-side `where(eq(...))` clauses remain — they document what data each endpoint wants and let the planner pick indexes — but a missing WHERE is a correctness/perf bug, not a security incident. There is no service-role escape hatch in `domains/`; the storage delete in `lib/storage.ts` uses the user's JWT.
 

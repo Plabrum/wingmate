@@ -24,19 +24,20 @@ import {
 } from './queries.ts';
 import { rowToMatch, rowToPendingSuggestion } from './transformers.ts';
 import type { DBOrTx } from '../../db/client.ts';
-import { sendPush } from '../../lib/push.ts';
+import type { PushClient } from '../../lib/push.ts';
 
 const MATCH_PUSH_TITLE = "It's a Match! 🎉";
 const MATCH_PUSH_BODY = 'You have a new match. Say hello!';
 
 async function pushMatchCreated(
   db: DBOrTx,
+  push: PushClient,
   userAId: string,
   userBId: string,
 ): Promise<void> {
   const tokens = await getPushTokensFor(db, [userAId, userBId]);
   await Promise.all(
-    tokens.map((row) => sendPush(row.pushToken, MATCH_PUSH_TITLE, MATCH_PUSH_BODY)),
+    tokens.map((row) => push.send(row.pushToken, MATCH_PUSH_TITLE, MATCH_PUSH_BODY)),
   );
 }
 
@@ -127,7 +128,7 @@ export function mountDecisions(app: OpenAPIHono<AppEnv>) {
     const match = matchAfter != null ? rowToMatch(matchAfter) : null;
 
     if (created && matchAfter) {
-      await pushMatchCreated(db, matchAfter.user_a_id, matchAfter.user_b_id);
+      await pushMatchCreated(db, c.get('push'), matchAfter.user_a_id, matchAfter.user_b_id);
     }
 
     return c.json({ created, match }, 200);
@@ -146,7 +147,7 @@ export function mountDecisions(app: OpenAPIHono<AppEnv>) {
     const matchRow = await findMutualMatch(db, actorId, recipientId);
 
     if (matchRow) {
-      await pushMatchCreated(db, matchRow.user_a_id, matchRow.user_b_id);
+      await pushMatchCreated(db, c.get('push'), matchRow.user_a_id, matchRow.user_b_id);
     }
 
     return c.json({ match: matchRow != null ? rowToMatch(matchRow) : null }, 200);
@@ -170,7 +171,7 @@ export function mountDecisions(app: OpenAPIHono<AppEnv>) {
 
     if (decision == null) {
       const { daterToken, wingerName } = await getDaterPushAndWingerName(db, daterId, wingerId);
-      await sendPush(
+      await c.get('push').send(
         daterToken,
         'New profile suggestion 👀',
         `${wingerName ?? 'Your wingperson'} suggested a profile for you to check out.`,

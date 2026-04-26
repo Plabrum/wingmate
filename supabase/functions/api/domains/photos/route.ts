@@ -22,7 +22,6 @@ import {
   reorderOwnedPhoto,
 } from './queries.ts';
 import { rowToPhoto } from './transformers.ts';
-import { sendPush } from '../../lib/push.ts';
 import { removeProfilePhoto } from '../../lib/storage.ts';
 
 const listOwnPhotosRoute = createRoute({
@@ -164,7 +163,7 @@ export function mountPhotos(app: OpenAPIHono<AppEnv>) {
         ownerId,
         callerId,
       );
-      await sendPush(
+      await c.get('push').send(
         daterToken,
         'New photo suggestion 📸',
         `${suggesterName ?? 'Your wingperson'} suggested a photo for your profile.`,
@@ -191,7 +190,7 @@ export function mountPhotos(app: OpenAPIHono<AppEnv>) {
 
     const { deleted, storageUrl } = await deleteOwnedPhoto(db, id, userId);
     if (!deleted) throw new HTTPException(404, { message: 'Photo not found' });
-    if (storageUrl) await removeProfilePhoto(c.get('token'), storageUrl);
+    if (storageUrl) await removeProfilePhoto(c.get('supabase'), storageUrl);
     return c.json({ ok: true } as const, 200);
   });
 
@@ -202,7 +201,7 @@ export function mountPhotos(app: OpenAPIHono<AppEnv>) {
 
     const { deleted, storageUrl } = await deleteOwnedPhoto(db, id, userId);
     if (!deleted) throw new HTTPException(404, { message: 'Photo not found' });
-    if (storageUrl) await removeProfilePhoto(c.get('token'), storageUrl);
+    if (storageUrl) await removeProfilePhoto(c.get('supabase'), storageUrl);
     return c.json({ ok: true } as const, 200);
   });
 

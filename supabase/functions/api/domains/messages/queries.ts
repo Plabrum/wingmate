@@ -3,6 +3,15 @@ import type { DBOrTx } from '../../db/client.ts';
 import { matches, messages, profiles } from '../../db/schema.ts';
 import type { ConversationRow, MessageRow } from './transformers.ts';
 
+export async function fetchPushToken(db: DBOrTx, userId: string): Promise<string | null> {
+  const [row] = await db
+    .select({ push_token: profiles.pushToken })
+    .from(profiles)
+    .where(eq(profiles.id, userId))
+    .limit(1);
+  return row?.push_token ?? null;
+}
+
 export async function isViewerInMatch(
   db: DBOrTx,
   viewerId: string,

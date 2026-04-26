@@ -15,13 +15,13 @@ import {
 import {
   fetchConversations,
   fetchMessagesForMatch,
+  fetchPushToken,
   getMatchPeers,
   insertMessage,
   isViewerInMatch,
   markMessagesRead,
 } from './queries.ts';
 import { rowToConversation, rowToMessage } from './transformers.ts';
-import { getPushToken, sendPush } from '../../lib/push.ts';
 
 const listMessagesRoute = createRoute({
   method: 'get',
@@ -118,10 +118,10 @@ export function mountMessages(app: OpenAPIHono<AppEnv>) {
     const peers = await getMatchPeers(db, matchId);
     if (peers) {
       const recipientId = peers.userAId === viewerId ? peers.userBId : peers.userAId;
-      const recipientToken = await getPushToken(db, recipientId);
+      const recipientToken = await fetchPushToken(db, recipientId);
       const senderName = row.sender_chosen_name ?? 'Someone';
       const preview = body.length > 80 ? body.slice(0, 77) + '…' : body;
-      await sendPush(recipientToken, `New message from ${senderName}`, preview);
+      await c.get('push').send(recipientToken, `New message from ${senderName}`, preview);
     }
 
     return c.json(rowToMessage(row), 200);

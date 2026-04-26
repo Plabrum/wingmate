@@ -1,6 +1,8 @@
 import { OpenAPIHono } from '@hono/zod-openapi';
 import { swaggerUI } from '@hono/swagger-ui';
 import { authMiddleware } from './middleware/auth.ts';
+import { pushMiddleware } from './middleware/push.ts';
+import { supabaseMiddleware } from './middleware/supabase.ts';
 import { transactionMiddleware } from './middleware/transaction.ts';
 import { errorHandler } from './middleware/error.ts';
 import { mountContacts } from './domains/contacts/route.ts';
@@ -32,14 +34,16 @@ export function createApp() {
 
   app.get('/doc', swaggerUI({ url: '/api/openapi.json' }));
 
-  // Auth + per-request transaction for every protected route. Doc routes
-  // above are registered first so they skip both — they don't touch the DB
-  // and Kong doesn't gate them in prod.
+  // Auth → supabase client → push client → per-request transaction for every
+  // protected route. Doc routes above are registered first so they skip all
+  // four — they don't touch the DB and Kong doesn't gate them in prod.
   //
-  // Both middlewares are idempotent (no-op if already applied to this
+  // All four middlewares are idempotent (no-op if already applied to this
   // request), so overlapping path patterns inside individual routes can't
   // accidentally double-open a transaction and deadlock the max:1 pool.
   app.use('/*', authMiddleware);
+  app.use('/*', supabaseMiddleware);
+  app.use('/*', pushMiddleware);
   app.use('/*', transactionMiddleware);
 
   mountDiscover(app);

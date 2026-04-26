@@ -13,6 +13,7 @@ import {
 import {
   fetchActiveWingpeople,
   fetchIncomingInvitations,
+  fetchPushToken,
   fetchSentInvitations,
   fetchWeeklyCounts,
   fetchWingingFor,
@@ -26,7 +27,6 @@ import {
   rowToWingingFor,
   rowToWingperson,
 } from './transformers.ts';
-import { getPushToken, sendPush } from '../../lib/push.ts';
 
 const wingpeopleRoute = createRoute({
   method: 'get',
@@ -140,8 +140,8 @@ export function mountContacts(app: OpenAPIHono<AppEnv>) {
     const inserted = await insertContactInvite(db, daterId, phoneNumber);
 
     if (inserted.winger_id) {
-      const wingerToken = await getPushToken(db, inserted.winger_id);
-      await sendPush(
+      const wingerToken = await fetchPushToken(db, inserted.winger_id);
+      await c.get('push').send(
         wingerToken,
         "You've been invited! 🤝",
         'Someone wants you to be their wingperson on Pear.',
