@@ -23,6 +23,7 @@ import {
 } from './queries.ts';
 import { rowToPhoto } from './transformers.ts';
 import { removeProfilePhoto } from '../../lib/storage.ts';
+import { getDeps } from '../../lib/deps.ts';
 
 const listOwnPhotosRoute = createRoute({
   method: 'get',
@@ -127,16 +128,14 @@ const reorderPhotoRoute = createRoute({
 
 export function mountPhotos(app: OpenAPIHono<AppEnv>) {
   app.openapi(listOwnPhotosRoute, async (c) => {
-    const userId = c.get('userId');
-    const db = c.get('db');
+    const { userId, db } = getDeps(c);
     const rows = await fetchOwnPhotos(db, userId);
     const body: PhotoT[] = rows.map(rowToPhoto);
     return c.json(body, 200);
   });
 
   app.openapi(createPhotoRoute, async (c) => {
-    const callerId = c.get('userId');
-    const db = c.get('db');
+    const { userId: callerId, db, push } = getDeps(c);
     const { datingProfileId, storageUrl, displayOrder } = c.req.valid('json');
 
     const ownerId = await fetchDatingProfileOwner(db, datingProfileId);
@@ -163,7 +162,7 @@ export function mountPhotos(app: OpenAPIHono<AppEnv>) {
         ownerId,
         callerId,
       );
-      await c.get('push').send(
+      await push.send(
         daterToken,
         'New photo suggestion 📸',
         `${suggesterName ?? 'Your wingperson'} suggested a photo for your profile.`,
@@ -174,8 +173,7 @@ export function mountPhotos(app: OpenAPIHono<AppEnv>) {
   });
 
   app.openapi(approvePhotoRoute, async (c) => {
-    const userId = c.get('userId');
-    const db = c.get('db');
+    const { userId, db } = getDeps(c);
     const { id } = c.req.valid('param');
 
     const row = await approveOwnedPhoto(db, id, userId);
@@ -184,30 +182,27 @@ export function mountPhotos(app: OpenAPIHono<AppEnv>) {
   });
 
   app.openapi(rejectPhotoRoute, async (c) => {
-    const userId = c.get('userId');
-    const db = c.get('db');
+    const { userId, db, supabase } = getDeps(c);
     const { id } = c.req.valid('param');
 
     const { deleted, storageUrl } = await deleteOwnedPhoto(db, id, userId);
     if (!deleted) throw new HTTPException(404, { message: 'Photo not found' });
-    if (storageUrl) await removeProfilePhoto(c.get('supabase'), storageUrl);
+    if (storageUrl) await removeProfilePhoto(supabase, storageUrl);
     return c.json({ ok: true } as const, 200);
   });
 
   app.openapi(deletePhotoRoute, async (c) => {
-    const userId = c.get('userId');
-    const db = c.get('db');
+    const { userId, db, supabase } = getDeps(c);
     const { id } = c.req.valid('param');
 
     const { deleted, storageUrl } = await deleteOwnedPhoto(db, id, userId);
     if (!deleted) throw new HTTPException(404, { message: 'Photo not found' });
-    if (storageUrl) await removeProfilePhoto(c.get('supabase'), storageUrl);
+    if (storageUrl) await removeProfilePhoto(supabase, storageUrl);
     return c.json({ ok: true } as const, 200);
   });
 
   app.openapi(reorderPhotoRoute, async (c) => {
-    const userId = c.get('userId');
-    const db = c.get('db');
+    const { userId, db } = getDeps(c);
     const { id } = c.req.valid('param');
     const { displayOrder } = c.req.valid('json');
 
