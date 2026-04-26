@@ -5,7 +5,7 @@ import { createMiddleware } from 'hono/factory';
 // --no-verify-jwt and trust the dev stack. So this middleware just extracts
 // claims from the already-trusted token and stashes them for the transaction
 // middleware (which sets `request.jwt.claims` for RLS) and the storage helper
-// (which builds a per-request user-JWT supabase-js client).
+// (which forwards the raw bearer to the Storage REST API).
 
 export type AuthVars = {
   userId: string;

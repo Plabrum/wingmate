@@ -74,6 +74,8 @@ export * from './photo';
 export * from './photosOkResponse';
 export * from './photoSuggester';
 export * from './photoSuggesterRef';
+export * from './photoUploadUrlRequest';
+export * from './photoUploadUrlResponse';
 export * from './profile';
 export * from './profileGender';
 export * from './profilePrompt';

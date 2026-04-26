@@ -21,11 +21,13 @@ import type {
   CreatePhotoRequest,
   OwnPhotosResponse,
   Photo,
+  PhotoUploadUrlRequest,
+  PhotoUploadUrlResponse,
   PhotosOkResponse,
   ReorderPhotoRequest,
 } from '../model';
 
-import { wyngFetch } from '../../http';
+import { pearFetch } from '../../http';
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
@@ -34,7 +36,7 @@ export const getGetApiPhotosMeUrl = () => {
 };
 
 export const getApiPhotosMe = async (options?: RequestInit): Promise<OwnPhotosResponse> => {
-  return wyngFetch<OwnPhotosResponse>(getGetApiPhotosMeUrl(), {
+  return pearFetch<OwnPhotosResponse>(getGetApiPhotosMeUrl(), {
     ...options,
     method: 'GET',
   });
@@ -51,7 +53,7 @@ export const getGetApiPhotosMeSuspenseQueryOptions = <
   query?: Partial<
     UseSuspenseQueryOptions<Awaited<ReturnType<typeof getApiPhotosMe>>, TError, TData>
   >;
-  request?: SecondParameter<typeof wyngFetch>;
+  request?: SecondParameter<typeof pearFetch>;
 }) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
@@ -80,7 +82,7 @@ export function useGetApiPhotosMeSuspense<
     query: Partial<
       UseSuspenseQueryOptions<Awaited<ReturnType<typeof getApiPhotosMe>>, TError, TData>
     >;
-    request?: SecondParameter<typeof wyngFetch>;
+    request?: SecondParameter<typeof pearFetch>;
   },
   queryClient?: QueryClient
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
@@ -92,7 +94,7 @@ export function useGetApiPhotosMeSuspense<
     query?: Partial<
       UseSuspenseQueryOptions<Awaited<ReturnType<typeof getApiPhotosMe>>, TError, TData>
     >;
-    request?: SecondParameter<typeof wyngFetch>;
+    request?: SecondParameter<typeof pearFetch>;
   },
   queryClient?: QueryClient
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
@@ -104,7 +106,7 @@ export function useGetApiPhotosMeSuspense<
     query?: Partial<
       UseSuspenseQueryOptions<Awaited<ReturnType<typeof getApiPhotosMe>>, TError, TData>
     >;
-    request?: SecondParameter<typeof wyngFetch>;
+    request?: SecondParameter<typeof pearFetch>;
   },
   queryClient?: QueryClient
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
@@ -117,7 +119,7 @@ export function useGetApiPhotosMeSuspense<
     query?: Partial<
       UseSuspenseQueryOptions<Awaited<ReturnType<typeof getApiPhotosMe>>, TError, TData>
     >;
-    request?: SecondParameter<typeof wyngFetch>;
+    request?: SecondParameter<typeof pearFetch>;
   },
   queryClient?: QueryClient
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
@@ -139,7 +141,7 @@ export const postApiPhotos = async (
   createPhotoRequest: CreatePhotoRequest,
   options?: RequestInit
 ): Promise<Photo> => {
-  return wyngFetch<Photo>(getPostApiPhotosUrl(), {
+  return pearFetch<Photo>(getPostApiPhotosUrl(), {
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...options?.headers },
@@ -154,7 +156,7 @@ export const getPostApiPhotosMutationOptions = <TError = void, TContext = unknow
     { data: CreatePhotoRequest },
     TContext
   >;
-  request?: SecondParameter<typeof wyngFetch>;
+  request?: SecondParameter<typeof pearFetch>;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof postApiPhotos>>,
   TError,
@@ -192,7 +194,7 @@ export const usePostApiPhotos = <TError = void, TContext = unknown>(
       { data: CreatePhotoRequest },
       TContext
     >;
-    request?: SecondParameter<typeof wyngFetch>;
+    request?: SecondParameter<typeof pearFetch>;
   },
   queryClient?: QueryClient
 ): UseMutationResult<
@@ -203,12 +205,89 @@ export const usePostApiPhotos = <TError = void, TContext = unknown>(
 > => {
   return useMutation(getPostApiPhotosMutationOptions(options), queryClient);
 };
+export const getPostApiPhotosUploadUrlUrl = () => {
+  return `/api/photos/upload-url`;
+};
+
+export const postApiPhotosUploadUrl = async (
+  photoUploadUrlRequest: PhotoUploadUrlRequest,
+  options?: RequestInit
+): Promise<PhotoUploadUrlResponse> => {
+  return pearFetch<PhotoUploadUrlResponse>(getPostApiPhotosUploadUrlUrl(), {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(photoUploadUrlRequest),
+  });
+};
+
+export const getPostApiPhotosUploadUrlMutationOptions = <
+  TError = void,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof postApiPhotosUploadUrl>>,
+    TError,
+    { data: PhotoUploadUrlRequest },
+    TContext
+  >;
+  request?: SecondParameter<typeof pearFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof postApiPhotosUploadUrl>>,
+  TError,
+  { data: PhotoUploadUrlRequest },
+  TContext
+> => {
+  const mutationKey = ['postApiPhotosUploadUrl'];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof postApiPhotosUploadUrl>>,
+    { data: PhotoUploadUrlRequest }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return postApiPhotosUploadUrl(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type PostApiPhotosUploadUrlMutationResult = NonNullable<
+  Awaited<ReturnType<typeof postApiPhotosUploadUrl>>
+>;
+export type PostApiPhotosUploadUrlMutationBody = PhotoUploadUrlRequest;
+export type PostApiPhotosUploadUrlMutationError = void;
+
+export const usePostApiPhotosUploadUrl = <TError = void, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof postApiPhotosUploadUrl>>,
+      TError,
+      { data: PhotoUploadUrlRequest },
+      TContext
+    >;
+    request?: SecondParameter<typeof pearFetch>;
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof postApiPhotosUploadUrl>>,
+  TError,
+  { data: PhotoUploadUrlRequest },
+  TContext
+> => {
+  return useMutation(getPostApiPhotosUploadUrlMutationOptions(options), queryClient);
+};
 export const getPostApiPhotosIdApproveUrl = (id: string) => {
   return `/api/photos/${id}/approve`;
 };
 
 export const postApiPhotosIdApprove = async (id: string, options?: RequestInit): Promise<Photo> => {
-  return wyngFetch<Photo>(getPostApiPhotosIdApproveUrl(id), {
+  return pearFetch<Photo>(getPostApiPhotosIdApproveUrl(id), {
     ...options,
     method: 'POST',
   });
@@ -224,7 +303,7 @@ export const getPostApiPhotosIdApproveMutationOptions = <
     { id: string },
     TContext
   >;
-  request?: SecondParameter<typeof wyngFetch>;
+  request?: SecondParameter<typeof pearFetch>;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof postApiPhotosIdApprove>>,
   TError,
@@ -264,7 +343,7 @@ export const usePostApiPhotosIdApprove = <TError = void, TContext = unknown>(
       { id: string },
       TContext
     >;
-    request?: SecondParameter<typeof wyngFetch>;
+    request?: SecondParameter<typeof pearFetch>;
   },
   queryClient?: QueryClient
 ): UseMutationResult<
@@ -283,7 +362,7 @@ export const postApiPhotosIdReject = async (
   id: string,
   options?: RequestInit
 ): Promise<PhotosOkResponse> => {
-  return wyngFetch<PhotosOkResponse>(getPostApiPhotosIdRejectUrl(id), {
+  return pearFetch<PhotosOkResponse>(getPostApiPhotosIdRejectUrl(id), {
     ...options,
     method: 'POST',
   });
@@ -299,7 +378,7 @@ export const getPostApiPhotosIdRejectMutationOptions = <
     { id: string },
     TContext
   >;
-  request?: SecondParameter<typeof wyngFetch>;
+  request?: SecondParameter<typeof pearFetch>;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof postApiPhotosIdReject>>,
   TError,
@@ -339,7 +418,7 @@ export const usePostApiPhotosIdReject = <TError = void, TContext = unknown>(
       { id: string },
       TContext
     >;
-    request?: SecondParameter<typeof wyngFetch>;
+    request?: SecondParameter<typeof pearFetch>;
   },
   queryClient?: QueryClient
 ): UseMutationResult<
@@ -358,7 +437,7 @@ export const deleteApiPhotosId = async (
   id: string,
   options?: RequestInit
 ): Promise<PhotosOkResponse> => {
-  return wyngFetch<PhotosOkResponse>(getDeleteApiPhotosIdUrl(id), {
+  return pearFetch<PhotosOkResponse>(getDeleteApiPhotosIdUrl(id), {
     ...options,
     method: 'DELETE',
   });
@@ -371,7 +450,7 @@ export const getDeleteApiPhotosIdMutationOptions = <TError = void, TContext = un
     { id: string },
     TContext
   >;
-  request?: SecondParameter<typeof wyngFetch>;
+  request?: SecondParameter<typeof pearFetch>;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof deleteApiPhotosId>>,
   TError,
@@ -411,7 +490,7 @@ export const useDeleteApiPhotosId = <TError = void, TContext = unknown>(
       { id: string },
       TContext
     >;
-    request?: SecondParameter<typeof wyngFetch>;
+    request?: SecondParameter<typeof pearFetch>;
   },
   queryClient?: QueryClient
 ): UseMutationResult<
@@ -431,7 +510,7 @@ export const patchApiPhotosIdReorder = async (
   reorderPhotoRequest: ReorderPhotoRequest,
   options?: RequestInit
 ): Promise<Photo> => {
-  return wyngFetch<Photo>(getPatchApiPhotosIdReorderUrl(id), {
+  return pearFetch<Photo>(getPatchApiPhotosIdReorderUrl(id), {
     ...options,
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json', ...options?.headers },
@@ -449,7 +528,7 @@ export const getPatchApiPhotosIdReorderMutationOptions = <
     { id: string; data: ReorderPhotoRequest },
     TContext
   >;
-  request?: SecondParameter<typeof wyngFetch>;
+  request?: SecondParameter<typeof pearFetch>;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof patchApiPhotosIdReorder>>,
   TError,
@@ -489,7 +568,7 @@ export const usePatchApiPhotosIdReorder = <TError = void, TContext = unknown>(
       { id: string; data: ReorderPhotoRequest },
       TContext
     >;
-    request?: SecondParameter<typeof wyngFetch>;
+    request?: SecondParameter<typeof pearFetch>;
   },
   queryClient?: QueryClient
 ): UseMutationResult<

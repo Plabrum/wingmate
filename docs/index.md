@@ -9,8 +9,8 @@ Pear is a dating app with a wingperson mechanic, available on iOS.
 
 ## Legal Documents
 
-- [Privacy Policy](/wingmate/privacy-policy)
-- [Terms of Service](/wingmate/terms)
+- [Privacy Policy](/pear/privacy-policy)
+- [Terms of Service](/pear/terms)
 
 ## Contact
 

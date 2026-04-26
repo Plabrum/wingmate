@@ -10,7 +10,6 @@ export function getDeps(c: Context<AppEnv>) {
     token: c.get('token'),
     claims: c.get('claims'),
     db: c.get('db'),
-    supabase: c.get('supabase'),
     push: c.get('push'),
   };
 }

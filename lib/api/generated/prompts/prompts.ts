@@ -27,7 +27,7 @@ import type {
   PromptsOkResponse,
 } from '../model';
 
-import { wyngFetch } from '../../http';
+import { pearFetch } from '../../http';
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
@@ -38,7 +38,7 @@ export const getGetApiPromptTemplatesUrl = () => {
 export const getApiPromptTemplates = async (
   options?: RequestInit
 ): Promise<PromptTemplatesResponse> => {
-  return wyngFetch<PromptTemplatesResponse>(getGetApiPromptTemplatesUrl(), {
+  return pearFetch<PromptTemplatesResponse>(getGetApiPromptTemplatesUrl(), {
     ...options,
     method: 'GET',
   });
@@ -55,7 +55,7 @@ export const getGetApiPromptTemplatesSuspenseQueryOptions = <
   query?: Partial<
     UseSuspenseQueryOptions<Awaited<ReturnType<typeof getApiPromptTemplates>>, TError, TData>
   >;
-  request?: SecondParameter<typeof wyngFetch>;
+  request?: SecondParameter<typeof pearFetch>;
 }) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
@@ -84,7 +84,7 @@ export function useGetApiPromptTemplatesSuspense<
     query: Partial<
       UseSuspenseQueryOptions<Awaited<ReturnType<typeof getApiPromptTemplates>>, TError, TData>
     >;
-    request?: SecondParameter<typeof wyngFetch>;
+    request?: SecondParameter<typeof pearFetch>;
   },
   queryClient?: QueryClient
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
@@ -96,7 +96,7 @@ export function useGetApiPromptTemplatesSuspense<
     query?: Partial<
       UseSuspenseQueryOptions<Awaited<ReturnType<typeof getApiPromptTemplates>>, TError, TData>
     >;
-    request?: SecondParameter<typeof wyngFetch>;
+    request?: SecondParameter<typeof pearFetch>;
   },
   queryClient?: QueryClient
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
@@ -108,7 +108,7 @@ export function useGetApiPromptTemplatesSuspense<
     query?: Partial<
       UseSuspenseQueryOptions<Awaited<ReturnType<typeof getApiPromptTemplates>>, TError, TData>
     >;
-    request?: SecondParameter<typeof wyngFetch>;
+    request?: SecondParameter<typeof pearFetch>;
   },
   queryClient?: QueryClient
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
@@ -121,7 +121,7 @@ export function useGetApiPromptTemplatesSuspense<
     query?: Partial<
       UseSuspenseQueryOptions<Awaited<ReturnType<typeof getApiPromptTemplates>>, TError, TData>
     >;
-    request?: SecondParameter<typeof wyngFetch>;
+    request?: SecondParameter<typeof pearFetch>;
   },
   queryClient?: QueryClient
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
@@ -142,7 +142,7 @@ export const getGetApiPromptTemplatesOnboardingUrl = () => {
 export const getApiPromptTemplatesOnboarding = async (
   options?: RequestInit
 ): Promise<PromptTemplatesResponse> => {
-  return wyngFetch<PromptTemplatesResponse>(getGetApiPromptTemplatesOnboardingUrl(), {
+  return pearFetch<PromptTemplatesResponse>(getGetApiPromptTemplatesOnboardingUrl(), {
     ...options,
     method: 'GET',
   });
@@ -163,7 +163,7 @@ export const getGetApiPromptTemplatesOnboardingSuspenseQueryOptions = <
       TData
     >
   >;
-  request?: SecondParameter<typeof wyngFetch>;
+  request?: SecondParameter<typeof pearFetch>;
 }) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
@@ -197,7 +197,7 @@ export function useGetApiPromptTemplatesOnboardingSuspense<
         TData
       >
     >;
-    request?: SecondParameter<typeof wyngFetch>;
+    request?: SecondParameter<typeof pearFetch>;
   },
   queryClient?: QueryClient
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
@@ -213,7 +213,7 @@ export function useGetApiPromptTemplatesOnboardingSuspense<
         TData
       >
     >;
-    request?: SecondParameter<typeof wyngFetch>;
+    request?: SecondParameter<typeof pearFetch>;
   },
   queryClient?: QueryClient
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
@@ -229,7 +229,7 @@ export function useGetApiPromptTemplatesOnboardingSuspense<
         TData
       >
     >;
-    request?: SecondParameter<typeof wyngFetch>;
+    request?: SecondParameter<typeof pearFetch>;
   },
   queryClient?: QueryClient
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
@@ -246,7 +246,7 @@ export function useGetApiPromptTemplatesOnboardingSuspense<
         TData
       >
     >;
-    request?: SecondParameter<typeof wyngFetch>;
+    request?: SecondParameter<typeof pearFetch>;
   },
   queryClient?: QueryClient
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
@@ -267,7 +267,7 @@ export const getGetApiProfilePromptsMeUrl = () => {
 export const getApiProfilePromptsMe = async (
   options?: RequestInit
 ): Promise<ProfilePromptsResponse> => {
-  return wyngFetch<ProfilePromptsResponse>(getGetApiProfilePromptsMeUrl(), {
+  return pearFetch<ProfilePromptsResponse>(getGetApiProfilePromptsMeUrl(), {
     ...options,
     method: 'GET',
   });
@@ -284,7 +284,7 @@ export const getGetApiProfilePromptsMeSuspenseQueryOptions = <
   query?: Partial<
     UseSuspenseQueryOptions<Awaited<ReturnType<typeof getApiProfilePromptsMe>>, TError, TData>
   >;
-  request?: SecondParameter<typeof wyngFetch>;
+  request?: SecondParameter<typeof pearFetch>;
 }) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
@@ -313,7 +313,7 @@ export function useGetApiProfilePromptsMeSuspense<
     query: Partial<
       UseSuspenseQueryOptions<Awaited<ReturnType<typeof getApiProfilePromptsMe>>, TError, TData>
     >;
-    request?: SecondParameter<typeof wyngFetch>;
+    request?: SecondParameter<typeof pearFetch>;
   },
   queryClient?: QueryClient
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
@@ -325,7 +325,7 @@ export function useGetApiProfilePromptsMeSuspense<
     query?: Partial<
       UseSuspenseQueryOptions<Awaited<ReturnType<typeof getApiProfilePromptsMe>>, TError, TData>
     >;
-    request?: SecondParameter<typeof wyngFetch>;
+    request?: SecondParameter<typeof pearFetch>;
   },
   queryClient?: QueryClient
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
@@ -337,7 +337,7 @@ export function useGetApiProfilePromptsMeSuspense<
     query?: Partial<
       UseSuspenseQueryOptions<Awaited<ReturnType<typeof getApiProfilePromptsMe>>, TError, TData>
     >;
-    request?: SecondParameter<typeof wyngFetch>;
+    request?: SecondParameter<typeof pearFetch>;
   },
   queryClient?: QueryClient
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
@@ -350,7 +350,7 @@ export function useGetApiProfilePromptsMeSuspense<
     query?: Partial<
       UseSuspenseQueryOptions<Awaited<ReturnType<typeof getApiProfilePromptsMe>>, TError, TData>
     >;
-    request?: SecondParameter<typeof wyngFetch>;
+    request?: SecondParameter<typeof pearFetch>;
   },
   queryClient?: QueryClient
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
@@ -372,7 +372,7 @@ export const postApiProfilePrompts = async (
   createProfilePromptRequest: CreateProfilePromptRequest,
   options?: RequestInit
 ): Promise<ProfilePrompt> => {
-  return wyngFetch<ProfilePrompt>(getPostApiProfilePromptsUrl(), {
+  return pearFetch<ProfilePrompt>(getPostApiProfilePromptsUrl(), {
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...options?.headers },
@@ -390,7 +390,7 @@ export const getPostApiProfilePromptsMutationOptions = <
     { data: CreateProfilePromptRequest },
     TContext
   >;
-  request?: SecondParameter<typeof wyngFetch>;
+  request?: SecondParameter<typeof pearFetch>;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof postApiProfilePrompts>>,
   TError,
@@ -430,7 +430,7 @@ export const usePostApiProfilePrompts = <TError = void, TContext = unknown>(
       { data: CreateProfilePromptRequest },
       TContext
     >;
-    request?: SecondParameter<typeof wyngFetch>;
+    request?: SecondParameter<typeof pearFetch>;
   },
   queryClient?: QueryClient
 ): UseMutationResult<
@@ -449,7 +449,7 @@ export const deleteApiProfilePromptsId = async (
   id: string,
   options?: RequestInit
 ): Promise<PromptsOkResponse> => {
-  return wyngFetch<PromptsOkResponse>(getDeleteApiProfilePromptsIdUrl(id), {
+  return pearFetch<PromptsOkResponse>(getDeleteApiProfilePromptsIdUrl(id), {
     ...options,
     method: 'DELETE',
   });
@@ -465,7 +465,7 @@ export const getDeleteApiProfilePromptsIdMutationOptions = <
     { id: string },
     TContext
   >;
-  request?: SecondParameter<typeof wyngFetch>;
+  request?: SecondParameter<typeof pearFetch>;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof deleteApiProfilePromptsId>>,
   TError,
@@ -505,7 +505,7 @@ export const useDeleteApiProfilePromptsId = <TError = void, TContext = unknown>(
       { id: string },
       TContext
     >;
-    request?: SecondParameter<typeof wyngFetch>;
+    request?: SecondParameter<typeof pearFetch>;
   },
   queryClient?: QueryClient
 ): UseMutationResult<
@@ -524,7 +524,7 @@ export const postApiPromptResponses = async (
   createPromptResponseRequest: CreatePromptResponseRequest,
   options?: RequestInit
 ): Promise<PromptResponse> => {
-  return wyngFetch<PromptResponse>(getPostApiPromptResponsesUrl(), {
+  return pearFetch<PromptResponse>(getPostApiPromptResponsesUrl(), {
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...options?.headers },
@@ -542,7 +542,7 @@ export const getPostApiPromptResponsesMutationOptions = <
     { data: CreatePromptResponseRequest },
     TContext
   >;
-  request?: SecondParameter<typeof wyngFetch>;
+  request?: SecondParameter<typeof pearFetch>;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof postApiPromptResponses>>,
   TError,
@@ -582,7 +582,7 @@ export const usePostApiPromptResponses = <TError = void, TContext = unknown>(
       { data: CreatePromptResponseRequest },
       TContext
     >;
-    request?: SecondParameter<typeof wyngFetch>;
+    request?: SecondParameter<typeof pearFetch>;
   },
   queryClient?: QueryClient
 ): UseMutationResult<
@@ -601,7 +601,7 @@ export const postApiPromptResponsesIdApprove = async (
   id: string,
   options?: RequestInit
 ): Promise<PromptResponse> => {
-  return wyngFetch<PromptResponse>(getPostApiPromptResponsesIdApproveUrl(id), {
+  return pearFetch<PromptResponse>(getPostApiPromptResponsesIdApproveUrl(id), {
     ...options,
     method: 'POST',
   });
@@ -617,7 +617,7 @@ export const getPostApiPromptResponsesIdApproveMutationOptions = <
     { id: string },
     TContext
   >;
-  request?: SecondParameter<typeof wyngFetch>;
+  request?: SecondParameter<typeof pearFetch>;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof postApiPromptResponsesIdApprove>>,
   TError,
@@ -657,7 +657,7 @@ export const usePostApiPromptResponsesIdApprove = <TError = void, TContext = unk
       { id: string },
       TContext
     >;
-    request?: SecondParameter<typeof wyngFetch>;
+    request?: SecondParameter<typeof pearFetch>;
   },
   queryClient?: QueryClient
 ): UseMutationResult<
@@ -676,7 +676,7 @@ export const deleteApiPromptResponsesId = async (
   id: string,
   options?: RequestInit
 ): Promise<PromptsOkResponse> => {
-  return wyngFetch<PromptsOkResponse>(getDeleteApiPromptResponsesIdUrl(id), {
+  return pearFetch<PromptsOkResponse>(getDeleteApiPromptResponsesIdUrl(id), {
     ...options,
     method: 'DELETE',
   });
@@ -692,7 +692,7 @@ export const getDeleteApiPromptResponsesIdMutationOptions = <
     { id: string },
     TContext
   >;
-  request?: SecondParameter<typeof wyngFetch>;
+  request?: SecondParameter<typeof pearFetch>;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof deleteApiPromptResponsesId>>,
   TError,
@@ -732,7 +732,7 @@ export const useDeleteApiPromptResponsesId = <TError = void, TContext = unknown>
       { id: string },
       TContext
     >;
-    request?: SecondParameter<typeof wyngFetch>;
+    request?: SecondParameter<typeof pearFetch>;
   },
   queryClient?: QueryClient
 ): UseMutationResult<

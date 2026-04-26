@@ -8,7 +8,7 @@
  *   npx tsx scripts/seed-prod.ts
  *
  * Idempotent: skips any user whose email already exists.
- * To wipe seed users, delete accounts with email ending in @seed.orbit.test.
+ * To wipe seed users, delete accounts with email ending in @seed.pear.test.
  */
 
 import { createClient } from '@supabase/supabase-js';
@@ -253,13 +253,13 @@ async function seedPerson(
   gender: 'Male' | 'Female',
   photoIndex: number
 ): Promise<void> {
-  const email = `seed.${first.toLowerCase()}.${last.toLowerCase()}@seed.orbit.test`;
+  const email = `seed.${first.toLowerCase()}.${last.toLowerCase()}@seed.pear.test`;
   const label = `[${String(index + 1).padStart(2, ' ')}/50] ${first} ${last}`;
 
   // 1. Create auth user
   const { data: authData, error: authError } = await supabase.auth.admin.createUser({
     email,
-    password: 'Orbit123!',
+    password: 'Pear123!',
     email_confirm: true,
     user_metadata: { full_name: `${first} ${last}` },
   });
@@ -353,7 +353,7 @@ async function seedPerson(
 async function seedDecisions(targetId: string, gender: 'Male' | 'Female'): Promise<void> {
   const nameList = gender === 'Female' ? WOMEN : MEN;
   const seedEmails = new Set(
-    nameList.map((p) => `seed.${p.first.toLowerCase()}.${p.last.toLowerCase()}@seed.orbit.test`)
+    nameList.map((p) => `seed.${p.first.toLowerCase()}.${p.last.toLowerCase()}@seed.pear.test`)
   );
 
   const { data, error } = await supabase.auth.admin.listUsers({ perPage: 1000 });

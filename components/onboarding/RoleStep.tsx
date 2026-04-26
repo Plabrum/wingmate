@@ -26,7 +26,7 @@ export default function RoleStep({ onNext }: Props) {
     <SafeAreaView className="flex-1 bg-page">
       <View className="flex-1 px-6 pt-12 pb-10">
         <Text className="font-serif text-3xl font-semibold text-fg leading-9 mb-10">
-          How do you want to use Orbit?
+          How do you want to use Pear?
         </Text>
 
         <View className="flex-1 gap-4">

@@ -6,7 +6,7 @@ if (!SUPABASE_URL) {
 }
 const API_BASE = `${SUPABASE_URL}/functions/v1`;
 
-export async function wyngFetch<T>(url: string, options: RequestInit = {}): Promise<T> {
+export async function pearFetch<T>(url: string, options: RequestInit = {}): Promise<T> {
   const target = url.startsWith('http') ? url : `${API_BASE}${url}`;
 
   const { data: sessionData } = await supabase.auth.getSession();
@@ -35,4 +35,4 @@ export async function wyngFetch<T>(url: string, options: RequestInit = {}): Prom
   return data as T;
 }
 
-export default wyngFetch;
+export default pearFetch;

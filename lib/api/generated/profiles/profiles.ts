@@ -27,7 +27,7 @@ import type {
   UpdateProfileRequest,
 } from '../model';
 
-import { wyngFetch } from '../../http';
+import { pearFetch } from '../../http';
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
@@ -36,7 +36,7 @@ export const getGetApiProfilesMeUrl = () => {
 };
 
 export const getApiProfilesMe = async (options?: RequestInit): Promise<Profile> => {
-  return wyngFetch<Profile>(getGetApiProfilesMeUrl(), {
+  return pearFetch<Profile>(getGetApiProfilesMeUrl(), {
     ...options,
     method: 'GET',
   });
@@ -53,7 +53,7 @@ export const getGetApiProfilesMeSuspenseQueryOptions = <
   query?: Partial<
     UseSuspenseQueryOptions<Awaited<ReturnType<typeof getApiProfilesMe>>, TError, TData>
   >;
-  request?: SecondParameter<typeof wyngFetch>;
+  request?: SecondParameter<typeof pearFetch>;
 }) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
@@ -82,7 +82,7 @@ export function useGetApiProfilesMeSuspense<
     query: Partial<
       UseSuspenseQueryOptions<Awaited<ReturnType<typeof getApiProfilesMe>>, TError, TData>
     >;
-    request?: SecondParameter<typeof wyngFetch>;
+    request?: SecondParameter<typeof pearFetch>;
   },
   queryClient?: QueryClient
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
@@ -94,7 +94,7 @@ export function useGetApiProfilesMeSuspense<
     query?: Partial<
       UseSuspenseQueryOptions<Awaited<ReturnType<typeof getApiProfilesMe>>, TError, TData>
     >;
-    request?: SecondParameter<typeof wyngFetch>;
+    request?: SecondParameter<typeof pearFetch>;
   },
   queryClient?: QueryClient
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
@@ -106,7 +106,7 @@ export function useGetApiProfilesMeSuspense<
     query?: Partial<
       UseSuspenseQueryOptions<Awaited<ReturnType<typeof getApiProfilesMe>>, TError, TData>
     >;
-    request?: SecondParameter<typeof wyngFetch>;
+    request?: SecondParameter<typeof pearFetch>;
   },
   queryClient?: QueryClient
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
@@ -119,7 +119,7 @@ export function useGetApiProfilesMeSuspense<
     query?: Partial<
       UseSuspenseQueryOptions<Awaited<ReturnType<typeof getApiProfilesMe>>, TError, TData>
     >;
-    request?: SecondParameter<typeof wyngFetch>;
+    request?: SecondParameter<typeof pearFetch>;
   },
   queryClient?: QueryClient
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
@@ -141,7 +141,7 @@ export const patchApiProfilesMe = async (
   updateProfileRequest: UpdateProfileRequest,
   options?: RequestInit
 ): Promise<Profile> => {
-  return wyngFetch<Profile>(getPatchApiProfilesMeUrl(), {
+  return pearFetch<Profile>(getPatchApiProfilesMeUrl(), {
     ...options,
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json', ...options?.headers },
@@ -156,7 +156,7 @@ export const getPatchApiProfilesMeMutationOptions = <TError = void, TContext = u
     { data: UpdateProfileRequest },
     TContext
   >;
-  request?: SecondParameter<typeof wyngFetch>;
+  request?: SecondParameter<typeof pearFetch>;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof patchApiProfilesMe>>,
   TError,
@@ -196,7 +196,7 @@ export const usePatchApiProfilesMe = <TError = void, TContext = unknown>(
       { data: UpdateProfileRequest },
       TContext
     >;
-    request?: SecondParameter<typeof wyngFetch>;
+    request?: SecondParameter<typeof pearFetch>;
   },
   queryClient?: QueryClient
 ): UseMutationResult<
@@ -214,7 +214,7 @@ export const getGetApiDatingProfilesMeUrl = () => {
 export const getApiDatingProfilesMe = async (
   options?: RequestInit
 ): Promise<OwnDatingProfileResponse | null> => {
-  return wyngFetch<OwnDatingProfileResponse | null>(getGetApiDatingProfilesMeUrl(), {
+  return pearFetch<OwnDatingProfileResponse | null>(getGetApiDatingProfilesMeUrl(), {
     ...options,
     method: 'GET',
   });
@@ -231,7 +231,7 @@ export const getGetApiDatingProfilesMeSuspenseQueryOptions = <
   query?: Partial<
     UseSuspenseQueryOptions<Awaited<ReturnType<typeof getApiDatingProfilesMe>>, TError, TData>
   >;
-  request?: SecondParameter<typeof wyngFetch>;
+  request?: SecondParameter<typeof pearFetch>;
 }) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
@@ -260,7 +260,7 @@ export function useGetApiDatingProfilesMeSuspense<
     query: Partial<
       UseSuspenseQueryOptions<Awaited<ReturnType<typeof getApiDatingProfilesMe>>, TError, TData>
     >;
-    request?: SecondParameter<typeof wyngFetch>;
+    request?: SecondParameter<typeof pearFetch>;
   },
   queryClient?: QueryClient
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
@@ -272,7 +272,7 @@ export function useGetApiDatingProfilesMeSuspense<
     query?: Partial<
       UseSuspenseQueryOptions<Awaited<ReturnType<typeof getApiDatingProfilesMe>>, TError, TData>
     >;
-    request?: SecondParameter<typeof wyngFetch>;
+    request?: SecondParameter<typeof pearFetch>;
   },
   queryClient?: QueryClient
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
@@ -284,7 +284,7 @@ export function useGetApiDatingProfilesMeSuspense<
     query?: Partial<
       UseSuspenseQueryOptions<Awaited<ReturnType<typeof getApiDatingProfilesMe>>, TError, TData>
     >;
-    request?: SecondParameter<typeof wyngFetch>;
+    request?: SecondParameter<typeof pearFetch>;
   },
   queryClient?: QueryClient
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
@@ -297,7 +297,7 @@ export function useGetApiDatingProfilesMeSuspense<
     query?: Partial<
       UseSuspenseQueryOptions<Awaited<ReturnType<typeof getApiDatingProfilesMe>>, TError, TData>
     >;
-    request?: SecondParameter<typeof wyngFetch>;
+    request?: SecondParameter<typeof pearFetch>;
   },
   queryClient?: QueryClient
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
@@ -319,7 +319,7 @@ export const patchApiDatingProfilesMe = async (
   updateDatingProfileRequest: UpdateDatingProfileRequest,
   options?: RequestInit
 ): Promise<OwnDatingProfileResponse | null> => {
-  return wyngFetch<OwnDatingProfileResponse | null>(getPatchApiDatingProfilesMeUrl(), {
+  return pearFetch<OwnDatingProfileResponse | null>(getPatchApiDatingProfilesMeUrl(), {
     ...options,
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json', ...options?.headers },
@@ -337,7 +337,7 @@ export const getPatchApiDatingProfilesMeMutationOptions = <
     { data: UpdateDatingProfileRequest },
     TContext
   >;
-  request?: SecondParameter<typeof wyngFetch>;
+  request?: SecondParameter<typeof pearFetch>;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof patchApiDatingProfilesMe>>,
   TError,
@@ -377,7 +377,7 @@ export const usePatchApiDatingProfilesMe = <TError = void, TContext = unknown>(
       { data: UpdateDatingProfileRequest },
       TContext
     >;
-    request?: SecondParameter<typeof wyngFetch>;
+    request?: SecondParameter<typeof pearFetch>;
   },
   queryClient?: QueryClient
 ): UseMutationResult<
@@ -396,7 +396,7 @@ export const postApiDatingProfiles = async (
   createDatingProfileRequest: CreateDatingProfileRequest,
   options?: RequestInit
 ): Promise<CreateDatingProfileResponse> => {
-  return wyngFetch<CreateDatingProfileResponse>(getPostApiDatingProfilesUrl(), {
+  return pearFetch<CreateDatingProfileResponse>(getPostApiDatingProfilesUrl(), {
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...options?.headers },
@@ -414,7 +414,7 @@ export const getPostApiDatingProfilesMutationOptions = <
     { data: CreateDatingProfileRequest },
     TContext
   >;
-  request?: SecondParameter<typeof wyngFetch>;
+  request?: SecondParameter<typeof pearFetch>;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof postApiDatingProfiles>>,
   TError,
@@ -454,7 +454,7 @@ export const usePostApiDatingProfiles = <TError = void, TContext = unknown>(
       { data: CreateDatingProfileRequest },
       TContext
     >;
-    request?: SecondParameter<typeof wyngFetch>;
+    request?: SecondParameter<typeof pearFetch>;
   },
   queryClient?: QueryClient
 ): UseMutationResult<
@@ -473,7 +473,7 @@ export const getApiProfilesUserId = async (
   userId: string,
   options?: RequestInit
 ): Promise<PublicProfile> => {
-  return wyngFetch<PublicProfile>(getGetApiProfilesUserIdUrl(userId), {
+  return pearFetch<PublicProfile>(getGetApiProfilesUserIdUrl(userId), {
     ...options,
     method: 'GET',
   });
@@ -492,7 +492,7 @@ export const getGetApiProfilesUserIdSuspenseQueryOptions = <
     query?: Partial<
       UseSuspenseQueryOptions<Awaited<ReturnType<typeof getApiProfilesUserId>>, TError, TData>
     >;
-    request?: SecondParameter<typeof wyngFetch>;
+    request?: SecondParameter<typeof pearFetch>;
   }
 ) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
@@ -523,7 +523,7 @@ export function useGetApiProfilesUserIdSuspense<
     query: Partial<
       UseSuspenseQueryOptions<Awaited<ReturnType<typeof getApiProfilesUserId>>, TError, TData>
     >;
-    request?: SecondParameter<typeof wyngFetch>;
+    request?: SecondParameter<typeof pearFetch>;
   },
   queryClient?: QueryClient
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
@@ -536,7 +536,7 @@ export function useGetApiProfilesUserIdSuspense<
     query?: Partial<
       UseSuspenseQueryOptions<Awaited<ReturnType<typeof getApiProfilesUserId>>, TError, TData>
     >;
-    request?: SecondParameter<typeof wyngFetch>;
+    request?: SecondParameter<typeof pearFetch>;
   },
   queryClient?: QueryClient
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
@@ -549,7 +549,7 @@ export function useGetApiProfilesUserIdSuspense<
     query?: Partial<
       UseSuspenseQueryOptions<Awaited<ReturnType<typeof getApiProfilesUserId>>, TError, TData>
     >;
-    request?: SecondParameter<typeof wyngFetch>;
+    request?: SecondParameter<typeof pearFetch>;
   },
   queryClient?: QueryClient
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
@@ -563,7 +563,7 @@ export function useGetApiProfilesUserIdSuspense<
     query?: Partial<
       UseSuspenseQueryOptions<Awaited<ReturnType<typeof getApiProfilesUserId>>, TError, TData>
     >;
-    request?: SecondParameter<typeof wyngFetch>;
+    request?: SecondParameter<typeof pearFetch>;
   },
   queryClient?: QueryClient
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {

@@ -16,7 +16,7 @@ import type {
 
 import type { GetApiWingPoolParams, WingPoolResponse } from '../model';
 
-import { wyngFetch } from '../../http';
+import { pearFetch } from '../../http';
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
@@ -38,7 +38,7 @@ export const getApiWingPool = async (
   params: GetApiWingPoolParams,
   options?: RequestInit
 ): Promise<WingPoolResponse> => {
-  return wyngFetch<WingPoolResponse>(getGetApiWingPoolUrl(params), {
+  return pearFetch<WingPoolResponse>(getGetApiWingPoolUrl(params), {
     ...options,
     method: 'GET',
   });
@@ -57,7 +57,7 @@ export const getGetApiWingPoolSuspenseQueryOptions = <
     query?: Partial<
       UseSuspenseQueryOptions<Awaited<ReturnType<typeof getApiWingPool>>, TError, TData>
     >;
-    request?: SecondParameter<typeof wyngFetch>;
+    request?: SecondParameter<typeof pearFetch>;
   }
 ) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
@@ -88,7 +88,7 @@ export function useGetApiWingPoolSuspense<
     query: Partial<
       UseSuspenseQueryOptions<Awaited<ReturnType<typeof getApiWingPool>>, TError, TData>
     >;
-    request?: SecondParameter<typeof wyngFetch>;
+    request?: SecondParameter<typeof pearFetch>;
   },
   queryClient?: QueryClient
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
@@ -101,7 +101,7 @@ export function useGetApiWingPoolSuspense<
     query?: Partial<
       UseSuspenseQueryOptions<Awaited<ReturnType<typeof getApiWingPool>>, TError, TData>
     >;
-    request?: SecondParameter<typeof wyngFetch>;
+    request?: SecondParameter<typeof pearFetch>;
   },
   queryClient?: QueryClient
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
@@ -114,7 +114,7 @@ export function useGetApiWingPoolSuspense<
     query?: Partial<
       UseSuspenseQueryOptions<Awaited<ReturnType<typeof getApiWingPool>>, TError, TData>
     >;
-    request?: SecondParameter<typeof wyngFetch>;
+    request?: SecondParameter<typeof pearFetch>;
   },
   queryClient?: QueryClient
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
@@ -128,7 +128,7 @@ export function useGetApiWingPoolSuspense<
     query?: Partial<
       UseSuspenseQueryOptions<Awaited<ReturnType<typeof getApiWingPool>>, TError, TData>
     >;
-    request?: SecondParameter<typeof wyngFetch>;
+    request?: SecondParameter<typeof pearFetch>;
   },
   queryClient?: QueryClient
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {

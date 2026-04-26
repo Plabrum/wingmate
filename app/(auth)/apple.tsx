@@ -57,7 +57,7 @@ export default function AppleModal() {
       contentContainerClassName="flex-1 p-6 justify-center gap-5"
     >
       <View className="items-center gap-2">
-        <Text className="text-xl font-bold">Welcome to Orbit</Text>
+        <Text className="text-xl font-bold">Welcome to Pear</Text>
         <Text className="text-sm text-[#666] text-center">
           Use your Apple ID to securely sign in. No password required.
         </Text>

@@ -24,7 +24,7 @@ import type {
   WingpeopleResponse,
 } from '../model';
 
-import { wyngFetch } from '../../http';
+import { pearFetch } from '../../http';
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
@@ -33,7 +33,7 @@ export const getGetApiWingpeopleUrl = () => {
 };
 
 export const getApiWingpeople = async (options?: RequestInit): Promise<WingpeopleResponse> => {
-  return wyngFetch<WingpeopleResponse>(getGetApiWingpeopleUrl(), {
+  return pearFetch<WingpeopleResponse>(getGetApiWingpeopleUrl(), {
     ...options,
     method: 'GET',
   });
@@ -50,7 +50,7 @@ export const getGetApiWingpeopleSuspenseQueryOptions = <
   query?: Partial<
     UseSuspenseQueryOptions<Awaited<ReturnType<typeof getApiWingpeople>>, TError, TData>
   >;
-  request?: SecondParameter<typeof wyngFetch>;
+  request?: SecondParameter<typeof pearFetch>;
 }) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
@@ -79,7 +79,7 @@ export function useGetApiWingpeopleSuspense<
     query: Partial<
       UseSuspenseQueryOptions<Awaited<ReturnType<typeof getApiWingpeople>>, TError, TData>
     >;
-    request?: SecondParameter<typeof wyngFetch>;
+    request?: SecondParameter<typeof pearFetch>;
   },
   queryClient?: QueryClient
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
@@ -91,7 +91,7 @@ export function useGetApiWingpeopleSuspense<
     query?: Partial<
       UseSuspenseQueryOptions<Awaited<ReturnType<typeof getApiWingpeople>>, TError, TData>
     >;
-    request?: SecondParameter<typeof wyngFetch>;
+    request?: SecondParameter<typeof pearFetch>;
   },
   queryClient?: QueryClient
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
@@ -103,7 +103,7 @@ export function useGetApiWingpeopleSuspense<
     query?: Partial<
       UseSuspenseQueryOptions<Awaited<ReturnType<typeof getApiWingpeople>>, TError, TData>
     >;
-    request?: SecondParameter<typeof wyngFetch>;
+    request?: SecondParameter<typeof pearFetch>;
   },
   queryClient?: QueryClient
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
@@ -116,7 +116,7 @@ export function useGetApiWingpeopleSuspense<
     query?: Partial<
       UseSuspenseQueryOptions<Awaited<ReturnType<typeof getApiWingpeople>>, TError, TData>
     >;
-    request?: SecondParameter<typeof wyngFetch>;
+    request?: SecondParameter<typeof pearFetch>;
   },
   queryClient?: QueryClient
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
@@ -138,7 +138,7 @@ export const postApiWingpeopleInvite = async (
   inviteWingpersonRequest: InviteWingpersonRequest,
   options?: RequestInit
 ): Promise<InviteWingpersonResponse> => {
-  return wyngFetch<InviteWingpersonResponse>(getPostApiWingpeopleInviteUrl(), {
+  return pearFetch<InviteWingpersonResponse>(getPostApiWingpeopleInviteUrl(), {
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...options?.headers },
@@ -156,7 +156,7 @@ export const getPostApiWingpeopleInviteMutationOptions = <
     { data: InviteWingpersonRequest },
     TContext
   >;
-  request?: SecondParameter<typeof wyngFetch>;
+  request?: SecondParameter<typeof pearFetch>;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof postApiWingpeopleInvite>>,
   TError,
@@ -196,7 +196,7 @@ export const usePostApiWingpeopleInvite = <TError = void, TContext = unknown>(
       { data: InviteWingpersonRequest },
       TContext
     >;
-    request?: SecondParameter<typeof wyngFetch>;
+    request?: SecondParameter<typeof pearFetch>;
   },
   queryClient?: QueryClient
 ): UseMutationResult<
@@ -215,7 +215,7 @@ export const postApiWingpeopleIdAccept = async (
   id: string,
   options?: RequestInit
 ): Promise<ContactsOkResponse> => {
-  return wyngFetch<ContactsOkResponse>(getPostApiWingpeopleIdAcceptUrl(id), {
+  return pearFetch<ContactsOkResponse>(getPostApiWingpeopleIdAcceptUrl(id), {
     ...options,
     method: 'POST',
   });
@@ -231,7 +231,7 @@ export const getPostApiWingpeopleIdAcceptMutationOptions = <
     { id: string },
     TContext
   >;
-  request?: SecondParameter<typeof wyngFetch>;
+  request?: SecondParameter<typeof pearFetch>;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof postApiWingpeopleIdAccept>>,
   TError,
@@ -271,7 +271,7 @@ export const usePostApiWingpeopleIdAccept = <TError = void, TContext = unknown>(
       { id: string },
       TContext
     >;
-    request?: SecondParameter<typeof wyngFetch>;
+    request?: SecondParameter<typeof pearFetch>;
   },
   queryClient?: QueryClient
 ): UseMutationResult<
@@ -290,7 +290,7 @@ export const postApiWingpeopleIdDecline = async (
   id: string,
   options?: RequestInit
 ): Promise<ContactsOkResponse> => {
-  return wyngFetch<ContactsOkResponse>(getPostApiWingpeopleIdDeclineUrl(id), {
+  return pearFetch<ContactsOkResponse>(getPostApiWingpeopleIdDeclineUrl(id), {
     ...options,
     method: 'POST',
   });
@@ -306,7 +306,7 @@ export const getPostApiWingpeopleIdDeclineMutationOptions = <
     { id: string },
     TContext
   >;
-  request?: SecondParameter<typeof wyngFetch>;
+  request?: SecondParameter<typeof pearFetch>;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof postApiWingpeopleIdDecline>>,
   TError,
@@ -346,7 +346,7 @@ export const usePostApiWingpeopleIdDecline = <TError = void, TContext = unknown>
       { id: string },
       TContext
     >;
-    request?: SecondParameter<typeof wyngFetch>;
+    request?: SecondParameter<typeof pearFetch>;
   },
   queryClient?: QueryClient
 ): UseMutationResult<
@@ -365,7 +365,7 @@ export const deleteApiWingpeopleId = async (
   id: string,
   options?: RequestInit
 ): Promise<ContactsOkResponse> => {
-  return wyngFetch<ContactsOkResponse>(getDeleteApiWingpeopleIdUrl(id), {
+  return pearFetch<ContactsOkResponse>(getDeleteApiWingpeopleIdUrl(id), {
     ...options,
     method: 'DELETE',
   });
@@ -381,7 +381,7 @@ export const getDeleteApiWingpeopleIdMutationOptions = <
     { id: string },
     TContext
   >;
-  request?: SecondParameter<typeof wyngFetch>;
+  request?: SecondParameter<typeof pearFetch>;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof deleteApiWingpeopleId>>,
   TError,
@@ -421,7 +421,7 @@ export const useDeleteApiWingpeopleId = <TError = void, TContext = unknown>(
       { id: string },
       TContext
     >;
-    request?: SecondParameter<typeof wyngFetch>;
+    request?: SecondParameter<typeof pearFetch>;
   },
   queryClient?: QueryClient
 ): UseMutationResult<

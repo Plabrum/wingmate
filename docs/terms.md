@@ -66,7 +66,7 @@ We reserve the right to remove content and suspend or terminate accounts that vi
 
 ## 6. Privacy
 
-Our collection and use of your personal information is described in our [Privacy Policy](/wingmate/privacy-policy). By using the App, you consent to our data practices as described there.
+Our collection and use of your personal information is described in our [Privacy Policy](/pear/privacy-policy). By using the App, you consent to our data practices as described there.
 
 ---
 

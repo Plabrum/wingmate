@@ -16,7 +16,7 @@ import type {
 
 import type { DiscoverResponse, GetApiDiscoverParams } from '../model';
 
-import { wyngFetch } from '../../http';
+import { pearFetch } from '../../http';
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
@@ -38,7 +38,7 @@ export const getApiDiscover = async (
   params?: GetApiDiscoverParams,
   options?: RequestInit
 ): Promise<DiscoverResponse> => {
-  return wyngFetch<DiscoverResponse>(getGetApiDiscoverUrl(params), {
+  return pearFetch<DiscoverResponse>(getGetApiDiscoverUrl(params), {
     ...options,
     method: 'GET',
   });
@@ -57,7 +57,7 @@ export const getGetApiDiscoverSuspenseQueryOptions = <
     query?: Partial<
       UseSuspenseQueryOptions<Awaited<ReturnType<typeof getApiDiscover>>, TError, TData>
     >;
-    request?: SecondParameter<typeof wyngFetch>;
+    request?: SecondParameter<typeof pearFetch>;
   }
 ) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
@@ -88,7 +88,7 @@ export function useGetApiDiscoverSuspense<
     query: Partial<
       UseSuspenseQueryOptions<Awaited<ReturnType<typeof getApiDiscover>>, TError, TData>
     >;
-    request?: SecondParameter<typeof wyngFetch>;
+    request?: SecondParameter<typeof pearFetch>;
   },
   queryClient?: QueryClient
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
@@ -101,7 +101,7 @@ export function useGetApiDiscoverSuspense<
     query?: Partial<
       UseSuspenseQueryOptions<Awaited<ReturnType<typeof getApiDiscover>>, TError, TData>
     >;
-    request?: SecondParameter<typeof wyngFetch>;
+    request?: SecondParameter<typeof pearFetch>;
   },
   queryClient?: QueryClient
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
@@ -114,7 +114,7 @@ export function useGetApiDiscoverSuspense<
     query?: Partial<
       UseSuspenseQueryOptions<Awaited<ReturnType<typeof getApiDiscover>>, TError, TData>
     >;
-    request?: SecondParameter<typeof wyngFetch>;
+    request?: SecondParameter<typeof pearFetch>;
   },
   queryClient?: QueryClient
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
@@ -128,7 +128,7 @@ export function useGetApiDiscoverSuspense<
     query?: Partial<
       UseSuspenseQueryOptions<Awaited<ReturnType<typeof getApiDiscover>>, TError, TData>
     >;
-    request?: SecondParameter<typeof wyngFetch>;
+    request?: SecondParameter<typeof pearFetch>;
   },
   queryClient?: QueryClient
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {

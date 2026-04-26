@@ -16,7 +16,7 @@ import type {
 
 import type { MatchSheet, MatchesResponse } from '../model';
 
-import { wyngFetch } from '../../http';
+import { pearFetch } from '../../http';
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
@@ -25,7 +25,7 @@ export const getGetApiMatchesUrl = () => {
 };
 
 export const getApiMatches = async (options?: RequestInit): Promise<MatchesResponse> => {
-  return wyngFetch<MatchesResponse>(getGetApiMatchesUrl(), {
+  return pearFetch<MatchesResponse>(getGetApiMatchesUrl(), {
     ...options,
     method: 'GET',
   });
@@ -42,7 +42,7 @@ export const getGetApiMatchesSuspenseQueryOptions = <
   query?: Partial<
     UseSuspenseQueryOptions<Awaited<ReturnType<typeof getApiMatches>>, TError, TData>
   >;
-  request?: SecondParameter<typeof wyngFetch>;
+  request?: SecondParameter<typeof pearFetch>;
 }) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
@@ -71,7 +71,7 @@ export function useGetApiMatchesSuspense<
     query: Partial<
       UseSuspenseQueryOptions<Awaited<ReturnType<typeof getApiMatches>>, TError, TData>
     >;
-    request?: SecondParameter<typeof wyngFetch>;
+    request?: SecondParameter<typeof pearFetch>;
   },
   queryClient?: QueryClient
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
@@ -83,7 +83,7 @@ export function useGetApiMatchesSuspense<
     query?: Partial<
       UseSuspenseQueryOptions<Awaited<ReturnType<typeof getApiMatches>>, TError, TData>
     >;
-    request?: SecondParameter<typeof wyngFetch>;
+    request?: SecondParameter<typeof pearFetch>;
   },
   queryClient?: QueryClient
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
@@ -95,7 +95,7 @@ export function useGetApiMatchesSuspense<
     query?: Partial<
       UseSuspenseQueryOptions<Awaited<ReturnType<typeof getApiMatches>>, TError, TData>
     >;
-    request?: SecondParameter<typeof wyngFetch>;
+    request?: SecondParameter<typeof pearFetch>;
   },
   queryClient?: QueryClient
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
@@ -108,7 +108,7 @@ export function useGetApiMatchesSuspense<
     query?: Partial<
       UseSuspenseQueryOptions<Awaited<ReturnType<typeof getApiMatches>>, TError, TData>
     >;
-    request?: SecondParameter<typeof wyngFetch>;
+    request?: SecondParameter<typeof pearFetch>;
   },
   queryClient?: QueryClient
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
@@ -130,7 +130,7 @@ export const getApiMatchesMatchIdSheet = async (
   matchId: string,
   options?: RequestInit
 ): Promise<MatchSheet> => {
-  return wyngFetch<MatchSheet>(getGetApiMatchesMatchIdSheetUrl(matchId), {
+  return pearFetch<MatchSheet>(getGetApiMatchesMatchIdSheetUrl(matchId), {
     ...options,
     method: 'GET',
   });
@@ -149,7 +149,7 @@ export const getGetApiMatchesMatchIdSheetSuspenseQueryOptions = <
     query?: Partial<
       UseSuspenseQueryOptions<Awaited<ReturnType<typeof getApiMatchesMatchIdSheet>>, TError, TData>
     >;
-    request?: SecondParameter<typeof wyngFetch>;
+    request?: SecondParameter<typeof pearFetch>;
   }
 ) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
@@ -181,7 +181,7 @@ export function useGetApiMatchesMatchIdSheetSuspense<
     query: Partial<
       UseSuspenseQueryOptions<Awaited<ReturnType<typeof getApiMatchesMatchIdSheet>>, TError, TData>
     >;
-    request?: SecondParameter<typeof wyngFetch>;
+    request?: SecondParameter<typeof pearFetch>;
   },
   queryClient?: QueryClient
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
@@ -194,7 +194,7 @@ export function useGetApiMatchesMatchIdSheetSuspense<
     query?: Partial<
       UseSuspenseQueryOptions<Awaited<ReturnType<typeof getApiMatchesMatchIdSheet>>, TError, TData>
     >;
-    request?: SecondParameter<typeof wyngFetch>;
+    request?: SecondParameter<typeof pearFetch>;
   },
   queryClient?: QueryClient
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
@@ -207,7 +207,7 @@ export function useGetApiMatchesMatchIdSheetSuspense<
     query?: Partial<
       UseSuspenseQueryOptions<Awaited<ReturnType<typeof getApiMatchesMatchIdSheet>>, TError, TData>
     >;
-    request?: SecondParameter<typeof wyngFetch>;
+    request?: SecondParameter<typeof pearFetch>;
   },
   queryClient?: QueryClient
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
@@ -221,7 +221,7 @@ export function useGetApiMatchesMatchIdSheetSuspense<
     query?: Partial<
       UseSuspenseQueryOptions<Awaited<ReturnType<typeof getApiMatchesMatchIdSheet>>, TError, TData>
     >;
-    request?: SecondParameter<typeof wyngFetch>;
+    request?: SecondParameter<typeof pearFetch>;
   },
   queryClient?: QueryClient
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {

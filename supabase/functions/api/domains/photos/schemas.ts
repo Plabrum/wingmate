@@ -43,6 +43,21 @@ export const OkResponse = z
   .object({ ok: z.literal(true) })
   .openapi('PhotosOkResponse');
 
+export const PhotoUploadUrlRequest = z
+  .object({
+    datingProfileId: z.string().uuid(),
+    filename: z.string().min(1).max(120),
+  })
+  .openapi('PhotoUploadUrlRequest');
+
+export const PhotoUploadUrlResponse = z
+  .object({
+    path: z.string(),
+    signedUrl: z.string(),
+    uploadToken: z.string(),
+  })
+  .openapi('PhotoUploadUrlResponse');
+
 export type Photo = z.infer<typeof Photo>;
 export type CreatePhotoRequest = z.infer<typeof CreatePhotoRequest>;
 export type ReorderPhotoRequest = z.infer<typeof ReorderPhotoRequest>;

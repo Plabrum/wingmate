@@ -1,7 +1,7 @@
 import { defineConfig } from 'orval';
 
 export default defineConfig({
-  wyng: {
+  pear: {
     input: { target: './openapi.json' },
     output: {
       mode: 'tags-split',
@@ -13,7 +13,7 @@ export default defineConfig({
       override: {
         mutator: {
           path: './lib/api/http.ts',
-          name: 'wyngFetch',
+          name: 'pearFetch',
         },
         fetch: {
           includeHttpResponseReturnType: false,

@@ -27,7 +27,7 @@ import type {
   SuggestResponse,
 } from '../model';
 
-import { wyngFetch } from '../../http';
+import { pearFetch } from '../../http';
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
@@ -39,7 +39,7 @@ export const postApiDecisions = async (
   directDecisionRequest: DirectDecisionRequest,
   options?: RequestInit
 ): Promise<DirectDecisionResponse> => {
-  return wyngFetch<DirectDecisionResponse>(getPostApiDecisionsUrl(), {
+  return pearFetch<DirectDecisionResponse>(getPostApiDecisionsUrl(), {
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...options?.headers },
@@ -54,7 +54,7 @@ export const getPostApiDecisionsMutationOptions = <TError = void, TContext = unk
     { data: DirectDecisionRequest },
     TContext
   >;
-  request?: SecondParameter<typeof wyngFetch>;
+  request?: SecondParameter<typeof pearFetch>;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof postApiDecisions>>,
   TError,
@@ -94,7 +94,7 @@ export const usePostApiDecisions = <TError = void, TContext = unknown>(
       { data: DirectDecisionRequest },
       TContext
     >;
-    request?: SecondParameter<typeof wyngFetch>;
+    request?: SecondParameter<typeof pearFetch>;
   },
   queryClient?: QueryClient
 ): UseMutationResult<
@@ -113,7 +113,7 @@ export const postApiDecisionsSuggestionsAct = async (
   actSuggestionRequest: ActSuggestionRequest,
   options?: RequestInit
 ): Promise<ActSuggestionResponse> => {
-  return wyngFetch<ActSuggestionResponse>(getPostApiDecisionsSuggestionsActUrl(), {
+  return pearFetch<ActSuggestionResponse>(getPostApiDecisionsSuggestionsActUrl(), {
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...options?.headers },
@@ -131,7 +131,7 @@ export const getPostApiDecisionsSuggestionsActMutationOptions = <
     { data: ActSuggestionRequest },
     TContext
   >;
-  request?: SecondParameter<typeof wyngFetch>;
+  request?: SecondParameter<typeof pearFetch>;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof postApiDecisionsSuggestionsAct>>,
   TError,
@@ -171,7 +171,7 @@ export const usePostApiDecisionsSuggestionsAct = <TError = void, TContext = unkn
       { data: ActSuggestionRequest },
       TContext
     >;
-    request?: SecondParameter<typeof wyngFetch>;
+    request?: SecondParameter<typeof pearFetch>;
   },
   queryClient?: QueryClient
 ): UseMutationResult<
@@ -190,7 +190,7 @@ export const postApiDecisionsSuggestions = async (
   suggestRequest: SuggestRequest,
   options?: RequestInit
 ): Promise<SuggestResponse> => {
-  return wyngFetch<SuggestResponse>(getPostApiDecisionsSuggestionsUrl(), {
+  return pearFetch<SuggestResponse>(getPostApiDecisionsSuggestionsUrl(), {
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...options?.headers },
@@ -208,7 +208,7 @@ export const getPostApiDecisionsSuggestionsMutationOptions = <
     { data: SuggestRequest },
     TContext
   >;
-  request?: SecondParameter<typeof wyngFetch>;
+  request?: SecondParameter<typeof pearFetch>;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof postApiDecisionsSuggestions>>,
   TError,
@@ -248,7 +248,7 @@ export const usePostApiDecisionsSuggestions = <TError = void, TContext = unknown
       { data: SuggestRequest },
       TContext
     >;
-    request?: SecondParameter<typeof wyngFetch>;
+    request?: SecondParameter<typeof pearFetch>;
   },
   queryClient?: QueryClient
 ): UseMutationResult<
@@ -266,7 +266,7 @@ export const getGetApiDecisionsPendingSuggestionsUrl = () => {
 export const getApiDecisionsPendingSuggestions = async (
   options?: RequestInit
 ): Promise<PendingSuggestionsResponse> => {
-  return wyngFetch<PendingSuggestionsResponse>(getGetApiDecisionsPendingSuggestionsUrl(), {
+  return pearFetch<PendingSuggestionsResponse>(getGetApiDecisionsPendingSuggestionsUrl(), {
     ...options,
     method: 'GET',
   });
@@ -287,7 +287,7 @@ export const getGetApiDecisionsPendingSuggestionsSuspenseQueryOptions = <
       TData
     >
   >;
-  request?: SecondParameter<typeof wyngFetch>;
+  request?: SecondParameter<typeof pearFetch>;
 }) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
@@ -321,7 +321,7 @@ export function useGetApiDecisionsPendingSuggestionsSuspense<
         TData
       >
     >;
-    request?: SecondParameter<typeof wyngFetch>;
+    request?: SecondParameter<typeof pearFetch>;
   },
   queryClient?: QueryClient
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
@@ -337,7 +337,7 @@ export function useGetApiDecisionsPendingSuggestionsSuspense<
         TData
       >
     >;
-    request?: SecondParameter<typeof wyngFetch>;
+    request?: SecondParameter<typeof pearFetch>;
   },
   queryClient?: QueryClient
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
@@ -353,7 +353,7 @@ export function useGetApiDecisionsPendingSuggestionsSuspense<
         TData
       >
     >;
-    request?: SecondParameter<typeof wyngFetch>;
+    request?: SecondParameter<typeof pearFetch>;
   },
   queryClient?: QueryClient
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
@@ -370,7 +370,7 @@ export function useGetApiDecisionsPendingSuggestionsSuspense<
         TData
       >
     >;
-    request?: SecondParameter<typeof wyngFetch>;
+    request?: SecondParameter<typeof pearFetch>;
   },
   queryClient?: QueryClient
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {

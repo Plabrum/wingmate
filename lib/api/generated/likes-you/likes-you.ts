@@ -16,7 +16,7 @@ import type {
 
 import type { GetApiLikesYouParams, LikesYouCountResponse, LikesYouResponse } from '../model';
 
-import { wyngFetch } from '../../http';
+import { pearFetch } from '../../http';
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
@@ -38,7 +38,7 @@ export const getApiLikesYou = async (
   params?: GetApiLikesYouParams,
   options?: RequestInit
 ): Promise<LikesYouResponse> => {
-  return wyngFetch<LikesYouResponse>(getGetApiLikesYouUrl(params), {
+  return pearFetch<LikesYouResponse>(getGetApiLikesYouUrl(params), {
     ...options,
     method: 'GET',
   });
@@ -57,7 +57,7 @@ export const getGetApiLikesYouSuspenseQueryOptions = <
     query?: Partial<
       UseSuspenseQueryOptions<Awaited<ReturnType<typeof getApiLikesYou>>, TError, TData>
     >;
-    request?: SecondParameter<typeof wyngFetch>;
+    request?: SecondParameter<typeof pearFetch>;
   }
 ) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
@@ -88,7 +88,7 @@ export function useGetApiLikesYouSuspense<
     query: Partial<
       UseSuspenseQueryOptions<Awaited<ReturnType<typeof getApiLikesYou>>, TError, TData>
     >;
-    request?: SecondParameter<typeof wyngFetch>;
+    request?: SecondParameter<typeof pearFetch>;
   },
   queryClient?: QueryClient
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
@@ -101,7 +101,7 @@ export function useGetApiLikesYouSuspense<
     query?: Partial<
       UseSuspenseQueryOptions<Awaited<ReturnType<typeof getApiLikesYou>>, TError, TData>
     >;
-    request?: SecondParameter<typeof wyngFetch>;
+    request?: SecondParameter<typeof pearFetch>;
   },
   queryClient?: QueryClient
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
@@ -114,7 +114,7 @@ export function useGetApiLikesYouSuspense<
     query?: Partial<
       UseSuspenseQueryOptions<Awaited<ReturnType<typeof getApiLikesYou>>, TError, TData>
     >;
-    request?: SecondParameter<typeof wyngFetch>;
+    request?: SecondParameter<typeof pearFetch>;
   },
   queryClient?: QueryClient
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
@@ -128,7 +128,7 @@ export function useGetApiLikesYouSuspense<
     query?: Partial<
       UseSuspenseQueryOptions<Awaited<ReturnType<typeof getApiLikesYou>>, TError, TData>
     >;
-    request?: SecondParameter<typeof wyngFetch>;
+    request?: SecondParameter<typeof pearFetch>;
   },
   queryClient?: QueryClient
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
@@ -149,7 +149,7 @@ export const getGetApiLikesYouCountUrl = () => {
 export const getApiLikesYouCount = async (
   options?: RequestInit
 ): Promise<LikesYouCountResponse> => {
-  return wyngFetch<LikesYouCountResponse>(getGetApiLikesYouCountUrl(), {
+  return pearFetch<LikesYouCountResponse>(getGetApiLikesYouCountUrl(), {
     ...options,
     method: 'GET',
   });
@@ -166,7 +166,7 @@ export const getGetApiLikesYouCountSuspenseQueryOptions = <
   query?: Partial<
     UseSuspenseQueryOptions<Awaited<ReturnType<typeof getApiLikesYouCount>>, TError, TData>
   >;
-  request?: SecondParameter<typeof wyngFetch>;
+  request?: SecondParameter<typeof pearFetch>;
 }) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
@@ -195,7 +195,7 @@ export function useGetApiLikesYouCountSuspense<
     query: Partial<
       UseSuspenseQueryOptions<Awaited<ReturnType<typeof getApiLikesYouCount>>, TError, TData>
     >;
-    request?: SecondParameter<typeof wyngFetch>;
+    request?: SecondParameter<typeof pearFetch>;
   },
   queryClient?: QueryClient
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
@@ -207,7 +207,7 @@ export function useGetApiLikesYouCountSuspense<
     query?: Partial<
       UseSuspenseQueryOptions<Awaited<ReturnType<typeof getApiLikesYouCount>>, TError, TData>
     >;
-    request?: SecondParameter<typeof wyngFetch>;
+    request?: SecondParameter<typeof pearFetch>;
   },
   queryClient?: QueryClient
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
@@ -219,7 +219,7 @@ export function useGetApiLikesYouCountSuspense<
     query?: Partial<
       UseSuspenseQueryOptions<Awaited<ReturnType<typeof getApiLikesYouCount>>, TError, TData>
     >;
-    request?: SecondParameter<typeof wyngFetch>;
+    request?: SecondParameter<typeof pearFetch>;
   },
   queryClient?: QueryClient
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
@@ -232,7 +232,7 @@ export function useGetApiLikesYouCountSuspense<
     query?: Partial<
       UseSuspenseQueryOptions<Awaited<ReturnType<typeof getApiLikesYouCount>>, TError, TData>
     >;
-    request?: SecondParameter<typeof wyngFetch>;
+    request?: SecondParameter<typeof pearFetch>;
   },
   queryClient?: QueryClient
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {

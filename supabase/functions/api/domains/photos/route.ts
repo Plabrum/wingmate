@@ -8,6 +8,8 @@ import {
   OwnPhotosResponse,
   Photo,
   PhotoIdParam,
+  PhotoUploadUrlRequest,
+  PhotoUploadUrlResponse,
   ReorderPhotoRequest,
   type Photo as PhotoT,
 } from './schemas.ts';
@@ -22,7 +24,7 @@ import {
   reorderOwnedPhoto,
 } from './queries.ts';
 import { rowToPhoto } from './transformers.ts';
-import { removeProfilePhoto } from '../../lib/storage.ts';
+import { createSignedUploadUrl, removeProfilePhoto } from '../../lib/storage.ts';
 import { getDeps } from '../../lib/deps.ts';
 
 const listOwnPhotosRoute = createRoute({
@@ -107,6 +109,25 @@ const deletePhotoRoute = createRoute({
   },
 });
 
+const photoUploadUrlRoute = createRoute({
+  method: 'post',
+  path: '/photos/upload-url',
+  tags: ['photos'],
+  security: [{ Bearer: [] }],
+  request: {
+    body: { content: { 'application/json': { schema: PhotoUploadUrlRequest } }, required: true },
+  },
+  responses: {
+    200: {
+      description: 'Signed upload URL into the dater\'s profile-photos folder',
+      content: { 'application/json': { schema: PhotoUploadUrlResponse } },
+    },
+    401: { description: 'Unauthenticated' },
+    403: { description: 'Caller is not the dater or an active wingperson' },
+    404: { description: 'Dating profile not found' },
+  },
+});
+
 const reorderPhotoRoute = createRoute({
   method: 'patch',
   path: '/photos/{id}/reorder',
@@ -172,6 +193,27 @@ export function mountPhotos(app: OpenAPIHono<AppEnv>) {
     return c.json(rowToPhoto(inserted), 200);
   });
 
+  app.openapi(photoUploadUrlRoute, async (c) => {
+    const { userId: callerId, db, token } = getDeps(c);
+    const { datingProfileId, filename } = c.req.valid('json');
+
+    const ownerId = await fetchDatingProfileOwner(db, datingProfileId);
+    if (!ownerId) throw new HTTPException(404, { message: 'Dating profile not found' });
+
+    if (ownerId !== callerId) {
+      const allowed = await isActiveWingperson(db, ownerId, callerId);
+      if (!allowed) {
+        throw new HTTPException(403, { message: 'Not the dater or an active wingperson' });
+      }
+    }
+
+    const dot = filename.lastIndexOf('.');
+    const ext = dot > 0 && dot < filename.length - 1 ? filename.slice(dot + 1) : 'jpg';
+    const path = `${ownerId}/${crypto.randomUUID()}.${ext}`;
+    const { signedUrl, uploadToken } = await createSignedUploadUrl(token, path);
+    return c.json({ path, signedUrl, uploadToken }, 200);
+  });
+
   app.openapi(approvePhotoRoute, async (c) => {
     const { userId, db } = getDeps(c);
     const { id } = c.req.valid('param');
@@ -182,22 +224,22 @@ export function mountPhotos(app: OpenAPIHono<AppEnv>) {
   });
 
   app.openapi(rejectPhotoRoute, async (c) => {
-    const { userId, db, supabase } = getDeps(c);
+    const { userId, db, token } = getDeps(c);
     const { id } = c.req.valid('param');
 
     const { deleted, storageUrl } = await deleteOwnedPhoto(db, id, userId);
     if (!deleted) throw new HTTPException(404, { message: 'Photo not found' });
-    if (storageUrl) await removeProfilePhoto(supabase, storageUrl);
+    if (storageUrl) await removeProfilePhoto(token, storageUrl);
     return c.json({ ok: true } as const, 200);
   });
 
   app.openapi(deletePhotoRoute, async (c) => {
-    const { userId, db, supabase } = getDeps(c);
+    const { userId, db, token } = getDeps(c);
     const { id } = c.req.valid('param');
 
     const { deleted, storageUrl } = await deleteOwnedPhoto(db, id, userId);
     if (!deleted) throw new HTTPException(404, { message: 'Photo not found' });
-    if (storageUrl) await removeProfilePhoto(supabase, storageUrl);
+    if (storageUrl) await removeProfilePhoto(token, storageUrl);
     return c.json({ ok: true } as const, 200);
   });
 
