@@ -24,7 +24,7 @@ import {
   reorderOwnedPhoto,
 } from './queries.ts';
 import { rowToPhoto } from './transformers.ts';
-import { createSignedUploadUrl, removeProfilePhoto } from '../../lib/storage.ts';
+import { createSignedUploadToken, removeProfilePhoto } from '../../lib/storage.ts';
 import { getDeps } from '../../lib/deps.ts';
 
 const listOwnPhotosRoute = createRoute({
@@ -210,8 +210,8 @@ export function mountPhotos(app: OpenAPIHono<AppEnv>) {
     const dot = filename.lastIndexOf('.');
     const ext = dot > 0 && dot < filename.length - 1 ? filename.slice(dot + 1) : 'jpg';
     const path = `${ownerId}/${crypto.randomUUID()}.${ext}`;
-    const { signedUrl, uploadToken } = await createSignedUploadUrl(token, path);
-    return c.json({ path, signedUrl, uploadToken }, 200);
+    const { uploadToken } = await createSignedUploadToken(token, path);
+    return c.json({ path, uploadToken }, 200);
   });
 
   app.openapi(approvePhotoRoute, async (c) => {

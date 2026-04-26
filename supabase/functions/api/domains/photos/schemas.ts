@@ -53,7 +53,6 @@ export const PhotoUploadUrlRequest = z
 export const PhotoUploadUrlResponse = z
   .object({
     path: z.string(),
-    signedUrl: z.string(),
     uploadToken: z.string(),
   })
   .openapi('PhotoUploadUrlResponse');

@@ -5,14 +5,15 @@ function encodePath(path: string): string {
   return path.split('/').map(encodeURIComponent).join('/');
 }
 
-// Mints a one-shot signed upload URL into profile-photos for the caller.
+// Mints a one-shot signed upload token into profile-photos for the caller.
 // The Storage RLS check on `storage.objects` INSERT runs as the caller, so
 // this only succeeds when the caller can already write to {path}'s folder
 // (own folder, or active wingperson uploading into the dater's folder).
-export async function createSignedUploadUrl(
+// The returned token feeds supabase-js `uploadToSignedUrl(path, token, body)`.
+export async function createSignedUploadToken(
   token: string,
   path: string,
-): Promise<{ signedUrl: string; uploadToken: string }> {
+): Promise<{ uploadToken: string }> {
   const url = `${config.supabaseUrl}/storage/v1/object/upload/sign/profile-photos/${encodePath(path)}`;
   const res = await fetch(url, {
     method: 'POST',
@@ -24,10 +25,7 @@ export async function createSignedUploadUrl(
     throw new HTTPException(500, { message: 'Could not create upload URL' });
   }
   const json = (await res.json()) as { url: string; token: string };
-  return {
-    signedUrl: `${config.supabaseUrl}/storage/v1${json.url}`,
-    uploadToken: json.token,
-  };
+  return { uploadToken: json.token };
 }
 
 // Removes an object from the profile-photos bucket via the Storage REST API,

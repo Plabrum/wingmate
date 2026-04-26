@@ -15,9 +15,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '@/constants/theme';
 import { useAuth } from '@/context/auth';
 import { useDaterProfile, daterProfileQueryKey } from '@/hooks/use-profile';
-import { getPhotoUrl, pickAndResizePhoto, uploadPhoto } from '@/lib/photos';
-import { postApiPhotos } from '@/lib/api/generated/photos/photos';
+import { getPhotoUrl, pickAndResizePhoto } from '@/lib/photos';
 import { postApiPromptResponses } from '@/lib/api/generated/prompts/prompts';
+import { useSuggestPhoto } from '@/hooks/use-suggest-photo';
 
 import { View, Text, Pressable, ScrollView, SafeAreaView, TextInput } from '@/lib/tw';
 import { NavHeader } from '@/components/ui/NavHeader';
@@ -103,7 +103,7 @@ function DaterProfileContent() {
   const queryClient = useQueryClient();
 
   const { data: daterProfile } = useDaterProfile(daterId);
-  const [uploading, setUploading] = useState(false);
+  const { suggest, isPending: uploading } = useSuggestPhoto();
   const [respondingToPrompt, setRespondingToPrompt] = useState<{
     id: string;
     question: string;
@@ -121,24 +121,12 @@ function DaterProfileContent() {
     const uri = await pickAndResizePhoto();
     if (!uri) return;
 
-    setUploading(true);
-    try {
-      const filename = `${Date.now()}.jpg`;
-      const { path, error: upErr } = await uploadPhoto(wingerId, uri, filename);
-      if (upErr) throw upErr;
-      const nextOrder = approvedPhotos.length + myPendingPhotos.length;
-      await postApiPhotos({
-        datingProfileId: daterProfile!.id,
-        storageUrl: path,
-        displayOrder: nextOrder,
-      });
-      queryClient.invalidateQueries({ queryKey: daterProfileQueryKey(daterId) });
-      toast.success(`Photo suggested — ${firstName} will review it.`);
-    } catch {
-      toast.error('Failed to suggest photo. Please try again.');
-    } finally {
-      setUploading(false);
-    }
+    const filename = `${Date.now()}.jpg`;
+    const nextOrder = approvedPhotos.length + myPendingPhotos.length;
+    const ok = await suggest(daterProfile!.id, uri, filename, nextOrder);
+    if (!ok) return;
+    queryClient.invalidateQueries({ queryKey: daterProfileQueryKey(daterId) });
+    toast.success(`Photo suggested — ${firstName} will review it.`);
   };
 
   const handleSubmitResponse = async (message: string) => {

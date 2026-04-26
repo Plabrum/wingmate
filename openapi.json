@@ -1516,14 +1516,11 @@
           "path": {
             "type": "string"
           },
-          "signedUrl": {
-            "type": "string"
-          },
           "uploadToken": {
             "type": "string"
           }
         },
-        "required": ["path", "signedUrl", "uploadToken"]
+        "required": ["path", "uploadToken"]
       },
       "PhotoUploadUrlRequest": {
         "type": "object",
