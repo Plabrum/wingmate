@@ -4,6 +4,7 @@ import type { AppEnv } from '../../types.ts';
 import { WingerTabsResponse, type WingerTab } from './schemas.ts';
 import { fetchWingerTabs } from './queries.ts';
 import { rowsToWingerTabs } from './transformers.ts';
+import { getDeps } from '../../lib/deps.ts';
 
 const wingerTabsRoute = createRoute({
   method: 'get',
@@ -21,8 +22,7 @@ const wingerTabsRoute = createRoute({
 
 export function mountWingerTabs(app: OpenAPIHono<AppEnv>) {
   app.openapi(wingerTabsRoute, async (c) => {
-    const viewerId = c.get('userId');
-    const db = c.get('db');
+    const { userId: viewerId, db } = getDeps(c);
 
     const rows = await fetchWingerTabs(db, viewerId);
     const body: WingerTab[] = rowsToWingerTabs(rows);
