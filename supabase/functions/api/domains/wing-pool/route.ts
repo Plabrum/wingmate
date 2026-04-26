@@ -5,6 +5,7 @@ import type { AppEnv } from '../../types.ts';
 import { WingPoolQuery, WingPoolResponse, type WingProfile } from './schemas.ts';
 import { fetchWingPool, isActiveWingperson } from './queries.ts';
 import { rowToWingProfile } from './transformers.ts';
+import { getDeps } from '../../lib/deps.ts';
 
 const wingPoolRoute = createRoute({
   method: 'get',
@@ -24,8 +25,7 @@ const wingPoolRoute = createRoute({
 
 export function mountWingPool(app: OpenAPIHono<AppEnv>) {
   app.openapi(wingPoolRoute, async (c) => {
-    const wingerId = c.get('userId');
-    const db = c.get('db');
+    const { userId: wingerId, db } = getDeps(c);
     const { daterId, pageSize, pageOffset } = c.req.valid('query');
 
     const allowed = await isActiveWingperson(db, wingerId, daterId);
