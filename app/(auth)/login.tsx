@@ -12,7 +12,7 @@ export default function LoginScreen() {
       style={{ paddingTop: insets.top, paddingBottom: insets.bottom + 24 }}
     >
       <View className="flex-1 justify-center items-center gap-3">
-        <Text className="text-4xl font-extrabold tracking-[-1px] text-fg">Wyng</Text>
+        <Text className="text-4xl font-extrabold tracking-[-1px] text-fg">Pear</Text>
       </View>
 
       <View className="gap-3">

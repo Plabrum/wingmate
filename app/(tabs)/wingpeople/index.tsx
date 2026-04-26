@@ -346,7 +346,7 @@ export default function WingpeopleScreen() {
         const appUrl = 'https://apps.apple.com/app/wyng/id6744145981';
         await SMS.sendSMSAsync(
           [e164],
-          `${daterName} invited you to be their wingperson on Wyng! Download the app: ${appUrl}`
+          `${daterName} invited you to be their wingperson on Pear! Download the app: ${appUrl}`
         );
       } else {
         toast.error('SMS is not available on this device.');

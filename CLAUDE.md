@@ -1,8 +1,8 @@
-# Wyng — AI Assistant Guide
+# Pear — AI Assistant Guide
 
 ## What This App Is
 
-Wyng (package name `hane`, app slug `wingmate`, display name `Wyng`) is an iOS dating app with a "wingperson" mechanic. Two user roles exist:
+Pear (package name `hane`, app slug `wingmate`, display name `Pear`) is an iOS dating app with a "wingperson" mechanic. Two user roles exist:
 
 - **Dater** — browses profiles, swipes, chats with matches.
 - **Winger** — a trusted friend who swipes on behalf of a dater and suggests profiles.

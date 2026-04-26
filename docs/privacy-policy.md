@@ -7,7 +7,7 @@ permalink: /privacy-policy/
 **Effective Date:** March 7, 2026
 **Last Updated:** March 7, 2026
 
-This Privacy Policy describes how Philip Labrum ("we," "us," or "our"), a sole proprietor operating the Wyng mobile application ("App"), collects, uses, and shares information about you.
+This Privacy Policy describes how Philip Labrum ("we," "us," or "our"), a sole proprietor operating the Pear mobile application ("App"), collects, uses, and shares information about you.
 
 ---
 

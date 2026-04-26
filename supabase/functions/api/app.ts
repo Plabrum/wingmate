@@ -27,7 +27,7 @@ export function createApp() {
 
   app.doc('/openapi.json', {
     openapi: '3.0.0',
-    info: { title: 'Wyng API', version: '1.0.0' },
+    info: { title: 'Pear API', version: '1.0.0' },
   });
 
   app.get('/doc', swaggerUI({ url: '/api/openapi.json' }));

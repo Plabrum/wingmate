@@ -1,11 +1,11 @@
 ---
 layout: home
-title: Wyng — Legal
+title: Pear — Legal
 ---
 
-# Wyng
+# Pear
 
-Wyng is a dating app with a wingperson mechanic, available on iOS.
+Pear is a dating app with a wingperson mechanic, available on iOS.
 
 ## Legal Documents
 
