@@ -22,6 +22,7 @@ import {
   markMessagesRead,
 } from './queries.ts';
 import { rowToConversation, rowToMessage } from './transformers.ts';
+import { getDeps } from '../../lib/deps.ts';
 
 const listMessagesRoute = createRoute({
   method: 'get',
@@ -91,8 +92,7 @@ const listConversationsRoute = createRoute({
 
 export function mountMessages(app: OpenAPIHono<AppEnv>) {
   app.openapi(listMessagesRoute, async (c) => {
-    const viewerId = c.get('userId');
-    const db = c.get('db');
+    const { userId: viewerId, db } = getDeps(c);
     const { matchId } = c.req.valid('param');
     const { limit, offset } = c.req.valid('query');
 
@@ -105,8 +105,7 @@ export function mountMessages(app: OpenAPIHono<AppEnv>) {
   });
 
   app.openapi(sendMessageRoute, async (c) => {
-    const viewerId = c.get('userId');
-    const db = c.get('db');
+    const { userId: viewerId, db, push } = getDeps(c);
     const { matchId } = c.req.valid('param');
     const { body } = c.req.valid('json');
 
@@ -121,15 +120,14 @@ export function mountMessages(app: OpenAPIHono<AppEnv>) {
       const recipientToken = await fetchPushToken(db, recipientId);
       const senderName = row.sender_chosen_name ?? 'Someone';
       const preview = body.length > 80 ? body.slice(0, 77) + '…' : body;
-      await c.get('push').send(recipientToken, `New message from ${senderName}`, preview);
+      await push.send(recipientToken, `New message from ${senderName}`, preview);
     }
 
     return c.json(rowToMessage(row), 200);
   });
 
   app.openapi(markReadRoute, async (c) => {
-    const viewerId = c.get('userId');
-    const db = c.get('db');
+    const { userId: viewerId, db } = getDeps(c);
     const { matchId } = c.req.valid('param');
 
     const allowed = await isViewerInMatch(db, viewerId, matchId);
@@ -140,8 +138,7 @@ export function mountMessages(app: OpenAPIHono<AppEnv>) {
   });
 
   app.openapi(listConversationsRoute, async (c) => {
-    const viewerId = c.get('userId');
-    const db = c.get('db');
+    const { userId: viewerId, db } = getDeps(c);
     const rows = await fetchConversations(db, viewerId);
     const body: Conversation[] = rows.map(rowToConversation);
     return c.json(body, 200);
