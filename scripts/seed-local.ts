@@ -27,13 +27,10 @@ function makeServiceRoleJwt(): string {
 
   if (GOTRUE_JWT_KEYS) {
     // Asymmetric ES256 keys (newer Supabase CLI)
-    const jwks: { alg: string; kid?: string; d?: string }[] = JSON.parse(GOTRUE_JWT_KEYS);
+    const jwks: (JsonWebKey & { kid?: string })[] = JSON.parse(GOTRUE_JWT_KEYS);
     const jwk = jwks.find((k) => k.d); // find a private key
     if (!jwk) throw new Error('No private key found in GOTRUE_JWT_KEYS');
-    const privateKey = createPrivateKey({
-      format: 'jwk',
-      key: jwk as Parameters<typeof createPrivateKey>[0] & object,
-    });
+    const privateKey = createPrivateKey({ format: 'jwk', key: jwk });
     return jwt.sign(claims, privateKey, { algorithm: 'ES256', keyid: jwk.kid });
   }
 

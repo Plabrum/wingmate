@@ -60,11 +60,11 @@ export default function PhotosStep({ userId, dpId: initialDpId, onDpCreated, onN
     const { data } = await getOwnDatingProfileSnapshot();
     if (data) {
       setPhotos(
-        data.photos.map((p) => ({
-          id: p.id,
-          uri: getPhotoUrl(p.storage_url),
-          storagePath: p.storage_url,
-        }))
+        data.photos.flatMap((p) => {
+          const uri = getPhotoUrl(p.storage_url);
+          if (!uri) return [];
+          return [{ id: p.id, uri, storagePath: p.storage_url }];
+        })
       );
     }
   }

@@ -57,7 +57,8 @@ export default function OnboardingScreen() {
     switch (role) {
       case 'winger': {
         invalidateProfile(queryClient);
-        return router.replace('/(tabs)/profile' as any);
+        router.replace('/(tabs)/profile' as any);
+        return;
       }
       case 'dater': {
         const { data: dp, error: dpError } = await createDatingProfile({
@@ -72,7 +73,8 @@ export default function OnboardingScreen() {
         });
         if (dpError) return dpError.message;
         setDpId(dp!.id);
-        return setStep('photos');
+        setStep('photos');
+        return;
       }
     }
   }
