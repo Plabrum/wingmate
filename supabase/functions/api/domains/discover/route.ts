@@ -6,11 +6,11 @@
 //                       no Hono/Zod imports
 //   • transformers.ts — row → response mappers (snake_case → camelCase)
 //
-// Handlers read the request-scoped transaction with `const db = c.get('db')` and pass
-// it to query helpers. NEVER import the module-level `db` from `db/client.ts` inside
-// handlers or queries — that bypasses the per-request transaction and its rollback
-// semantics. Normal returns (including `c.json(..., 4xx)`) commit; any thrown error
-// (including `HTTPException`) rolls back.
+// Handlers pull request context with `const { db, userId } = getDeps(c)` (from
+// `lib/deps.ts`) and pass them to query helpers. NEVER import the module-level
+// `db` from `db/client.ts` inside handlers or queries — that bypasses the
+// per-request transaction and its rollback semantics. Normal returns (including
+// `c.json(..., 4xx)`) commit; any thrown error (including `HTTPException`) rolls back.
 //
 // Shared helpers at api/ root (e.g. lib/, schemas/) are introduced ONLY when something
 // is genuinely reused across domains. Prefer duplication over premature hoisting.
@@ -21,6 +21,7 @@ import type { AppEnv } from '../../types.ts';
 import { DiscoverQuery, DiscoverResponse, type DiscoverProfile } from './schemas.ts';
 import { fetchDiscoverPool } from './queries.ts';
 import { rowToDiscoverProfile } from './transformers.ts';
+import { getDeps } from '../../lib/deps.ts';
 
 const discoverRoute = createRoute({
   method: 'get',
@@ -39,8 +40,7 @@ const discoverRoute = createRoute({
 
 export function mountDiscover(app: OpenAPIHono<AppEnv>) {
   app.openapi(discoverRoute, async (c) => {
-    const viewerId = c.get('userId');
-    const db = c.get('db');
+    const { userId: viewerId, db } = getDeps(c);
     const query = c.req.valid('query');
 
     const rows = await fetchDiscoverPool(db, {
