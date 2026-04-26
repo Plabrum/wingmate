@@ -10,6 +10,15 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 
+import { useFonts } from 'expo-font';
+import { DMSerifDisplay_400Regular } from '@expo-google-fonts/dm-serif-display';
+import {
+  Geist_400Regular,
+  Geist_500Medium,
+  Geist_600SemiBold,
+  Geist_700Bold,
+} from '@expo-google-fonts/geist';
+
 import { QueryClientProvider } from '@tanstack/react-query';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { AuthProvider, useSession } from '@/context/auth';
@@ -74,6 +83,16 @@ function RootNavigator() {
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
+  const [fontsLoaded] = useFonts({
+    DMSerifDisplay: DMSerifDisplay_400Regular,
+    Geist: Geist_400Regular,
+    Geist_500Medium,
+    Geist_600SemiBold,
+    Geist_700Bold,
+  });
+
+  if (!fontsLoaded) return null;
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <QueryClientProvider client={queryClient}>
