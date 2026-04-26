@@ -9,6 +9,7 @@ import {
 } from './schemas.ts';
 import { fetchLikesYouCount, fetchLikesYouPool } from './queries.ts';
 import { rowToLikesYouProfile } from './transformers.ts';
+import { getDeps } from '../../lib/deps.ts';
 
 const likesYouRoute = createRoute({
   method: 'get',
@@ -41,8 +42,7 @@ const likesYouCountRoute = createRoute({
 
 export function mountLikesYou(app: OpenAPIHono<AppEnv>) {
   app.openapi(likesYouRoute, async (c) => {
-    const viewerId = c.get('userId');
-    const db = c.get('db');
+    const { userId: viewerId, db } = getDeps(c);
     const query = c.req.valid('query');
 
     const rows = await fetchLikesYouPool(db, {
@@ -56,8 +56,7 @@ export function mountLikesYou(app: OpenAPIHono<AppEnv>) {
   });
 
   app.openapi(likesYouCountRoute, async (c) => {
-    const viewerId = c.get('userId');
-    const db = c.get('db');
+    const { userId: viewerId, db } = getDeps(c);
 
     const count = await fetchLikesYouCount(db, viewerId);
     return c.json({ count }, 200);
