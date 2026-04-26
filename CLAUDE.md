@@ -427,7 +427,7 @@ npm run submit:local     # eas submit from builds/app.ipa
 
 ## Edge Functions
 
-There are two kinds of Deno functions in `supabase/functions/`. They have different trust models and invocation patterns — keep them separate.
+`supabase/functions/api/` is the only function going forward. Every client-facing endpoint and every push notification originates from a Hono handler here. The standalone `notify-*` and `delete-profile-photo` directories still exist on disk and are still wired to DB triggers in production, but they're being absorbed into `api/` — do not add new ones, and any new push or webhook side-effect should be a Hono handler that calls `api/lib/push.ts` (or the equivalent helper) inline after the Drizzle write.
 
 ### Client-facing API (`supabase/functions/api/`)
 
@@ -471,17 +471,12 @@ The module-level `db` in `db/client.ts` is used only by the transaction middlewa
 
 Drizzle introspect (`npm run db:drizzle`) runs from the host via the Node driver, so it uses `127.0.0.1:54322` via `drizzle.config.ts`.
 
-### Webhook responders
+### Legacy standalone functions (being removed)
 
-Standalone single-purpose functions. Triggered either by DB changes via `pg_net` or invoked from the app for side effects. No client JWT; they use the service role. Do not merge them into `api` — different trust model, different perf shape.
+These directories still exist and are still deployed, but new work must NOT extend them. Push/SMS/storage side-effects belong inside Hono handlers in `api/domains/*` (call `api/lib/push.ts` after the Drizzle write). The list below is informational only — see the "Collapse standalone Deno functions into the Hono `api`" issues for the migration plan.
 
-- `send-wing-invite` — SMS invite to a prospective winger (Twilio)
-- `notify-match` — push on new match (DB trigger)
-- `notify-message` — push on new message (DB trigger)
-- `notify-invite` — push on wing invite received (DB trigger)
-- `notify-suggestion` — push on winger suggestion (DB trigger)
-- `notify-photo` — push on winger photo suggestion (DB trigger)
-- `delete-profile-photo` — storage cleanup on photo delete
+- `notify-match`, `notify-message`, `notify-invite`, `notify-suggestion`, `notify-photo` — push notifications, currently fired by Postgres `pg_net` triggers on the matching tables. Targeted for replacement by inline `sendPush(...)` calls in the relevant `api/domains/*` handlers.
+- `delete-profile-photo` — client-facing endpoint; targeted to move to `DELETE /api/photos/{id}` inside `api/domains/photos/`.
 
 ---
 

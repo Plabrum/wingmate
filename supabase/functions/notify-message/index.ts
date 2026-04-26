@@ -1,11 +1,9 @@
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 
-interface WebhookPayload {
-  type: 'INSERT' | 'UPDATE' | 'DELETE';
-  table: string;
-  schema: 'public';
-  record: Record<string, unknown>;
-  old_record: Record<string, unknown> | null;
+interface TriggerPayload {
+  match_id: string;
+  sender_id: string;
+  body: string;
 }
 
 const corsHeaders = {
@@ -45,17 +43,14 @@ Deno.serve(async (req) => {
     return json({ ok: true, skipped: 'push-disabled' }, 200);
   }
 
-  let payload: WebhookPayload;
+  let payload: TriggerPayload;
   try {
     payload = await req.json();
   } catch {
     return json({ error: 'Invalid JSON' }, 400);
   }
 
-  const { record } = payload;
-  const match_id = record.match_id as string;
-  const sender_id = record.sender_id as string;
-  const msgBody = record.body as string;
+  const { match_id, sender_id, body: msgBody } = payload;
 
   if (!match_id || !sender_id || !msgBody) {
     return json({ error: 'match_id, sender_id, and body required' }, 400);
