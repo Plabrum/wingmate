@@ -1,4 +1,4 @@
-import { and, desc, eq, isNotNull, isNull, sql } from 'drizzle-orm';
+import { and, desc, eq, inArray, isNotNull, isNull, sql } from 'drizzle-orm';
 import type { DBOrTx } from '../../db/client.ts';
 import { contacts, decisions, matches, profiles } from '../../db/schema.ts';
 import type { MatchRow, PendingSuggestionRow } from './transformers.ts';
@@ -106,6 +106,40 @@ export async function isActiveWingperson(
     )
     .limit(1);
   return row != null;
+}
+
+export async function getPushTokensFor(
+  db: DBOrTx,
+  userIds: string[],
+): Promise<Array<{ id: string; pushToken: string | null }>> {
+  if (userIds.length === 0) return [];
+  const rows = await db
+    .select({ id: profiles.id, pushToken: profiles.pushToken })
+    .from(profiles)
+    .where(inArray(profiles.id, userIds));
+  return rows;
+}
+
+export async function getDaterPushAndWingerName(
+  db: DBOrTx,
+  daterId: string,
+  wingerId: string,
+): Promise<{ daterToken: string | null; wingerName: string | null }> {
+  const rows = await db
+    .select({
+      id: profiles.id,
+      pushToken: profiles.pushToken,
+      chosenName: profiles.chosenName,
+    })
+    .from(profiles)
+    .where(inArray(profiles.id, [daterId, wingerId]));
+
+  const dater = rows.find((r) => r.id === daterId);
+  const winger = rows.find((r) => r.id === wingerId);
+  return {
+    daterToken: dater?.pushToken ?? null,
+    wingerName: winger?.chosenName ?? null,
+  };
 }
 
 export async function fetchPendingSuggestions(

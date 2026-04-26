@@ -21,6 +21,18 @@ export async function isViewerInMatch(
   return row != null;
 }
 
+export async function getMatchPeers(
+  db: DBOrTx,
+  matchId: string,
+): Promise<{ userAId: string; userBId: string } | null> {
+  const [row] = await db
+    .select({ userAId: matches.userAId, userBId: matches.userBId })
+    .from(matches)
+    .where(eq(matches.id, matchId))
+    .limit(1);
+  return row ?? null;
+}
+
 export async function fetchMessagesForMatch(
   db: DBOrTx,
   matchId: string,

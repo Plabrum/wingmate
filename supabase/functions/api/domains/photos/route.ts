@@ -16,11 +16,13 @@ import {
   deleteOwnedPhoto,
   fetchDatingProfileOwner,
   fetchOwnPhotos,
+  getDaterPushAndSuggesterName,
   insertPhoto,
   isActiveWingperson,
   reorderOwnedPhoto,
 } from './queries.ts';
 import { rowToPhoto } from './transformers.ts';
+import { sendPush } from '../../lib/push.ts';
 
 const listOwnPhotosRoute = createRoute({
   method: 'get',
@@ -138,6 +140,20 @@ export function mountPhotos(app: OpenAPIHono<AppEnv>) {
       displayOrder,
       suggesterId: isOwner ? null : callerId,
     });
+
+    if (!isOwner) {
+      const { daterToken, suggesterName } = await getDaterPushAndSuggesterName(
+        db,
+        ownerId,
+        callerId,
+      );
+      await sendPush(
+        daterToken,
+        'New photo suggestion 📸',
+        `${suggesterName ?? 'Your wingperson'} suggested a photo for your profile.`,
+      );
+    }
+
     return c.json(rowToPhoto(inserted), 200);
   });
 

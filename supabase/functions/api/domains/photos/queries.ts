@@ -1,7 +1,29 @@
-import { and, asc, eq, sql } from 'drizzle-orm';
+import { and, asc, eq, inArray, sql } from 'drizzle-orm';
 import type { DBOrTx } from '../../db/client.ts';
 import { contacts, datingProfiles, profilePhotos, profiles } from '../../db/schema.ts';
 import type { PhotoRow } from './transformers.ts';
+
+export async function getDaterPushAndSuggesterName(
+  db: DBOrTx,
+  daterId: string,
+  suggesterId: string,
+): Promise<{ daterToken: string | null; suggesterName: string | null }> {
+  const rows = await db
+    .select({
+      id: profiles.id,
+      pushToken: profiles.pushToken,
+      chosenName: profiles.chosenName,
+    })
+    .from(profiles)
+    .where(inArray(profiles.id, [daterId, suggesterId]));
+
+  const dater = rows.find((r) => r.id === daterId);
+  const suggester = rows.find((r) => r.id === suggesterId);
+  return {
+    daterToken: dater?.pushToken ?? null,
+    suggesterName: suggester?.chosenName ?? null,
+  };
+}
 
 const photoSelection = {
   id: profilePhotos.id,
