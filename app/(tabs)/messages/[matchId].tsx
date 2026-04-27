@@ -2,24 +2,117 @@ import React, { useRef, useState } from 'react';
 import { FlatList, KeyboardAvoidingView, Platform, StyleSheet } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Controller, useForm } from 'react-hook-form';
+import Svg, { Path } from 'react-native-svg';
 
 import { useAuth } from '@/context/auth';
 import { useMessages } from '@/hooks/use-messages';
 import { usePresence } from '@/hooks/use-presence';
 import { useTyping } from '@/hooks/use-typing';
-import { getInitials } from '@/components/profile/profile-helpers';
-import { NavHeader } from '@/components/ui/NavHeader';
-import { IconSymbol } from '@/components/ui/icon-symbol';
+import { FaceAvatar } from '@/components/ui/FaceAvatar';
 import ScreenSuspense from '@/components/ui/ScreenSuspense';
-import { colors } from '@/constants/theme';
 import { View, Text, TextInput, Pressable, SafeAreaView } from '@/lib/tw';
-import { cn } from '@/lib/cn';
+
+const LEAF = '#5A8C3A';
+const LEAF_BRIGHT = '#6FA947';
+const PAPER = '#FBF8F1';
+const CREAM = '#F5F1E8';
+const CREAM2 = '#EDE6D6';
+const INK = '#1F1B16';
+const INK_SUBTLE = '#8B8170';
+const LINE = 'rgba(31,27,22,0.10)';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function formatTimestamp(isoString: string): string {
   const date = new Date(isoString);
   return date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+}
+
+// ── Icons ─────────────────────────────────────────────────────────────────────
+
+function BackIcon({ color = INK }: { color?: string }) {
+  return (
+    <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M15 18l-6-6 6-6"
+        stroke={color}
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
+function SendIcon({ color }: { color: string }) {
+  return (
+    <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M5 12h14M13 6l6 6-6 6"
+        stroke={color}
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
+// ── ChatHeader ────────────────────────────────────────────────────────────────
+
+type ChatHeaderProps = {
+  name: string;
+  isOnline: boolean;
+};
+
+function ChatHeader({ name, isOnline }: ChatHeaderProps) {
+  return (
+    <View
+      className="flex-row items-center"
+      style={{
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        gap: 10,
+        backgroundColor: PAPER,
+        borderBottomWidth: StyleSheet.hairlineWidth,
+        borderBottomColor: LINE,
+      }}
+    >
+      <Pressable
+        onPress={() => router.back()}
+        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        style={{ padding: 4, marginLeft: -4 }}
+      >
+        <BackIcon />
+      </Pressable>
+      <View style={{ position: 'relative' }}>
+        <FaceAvatar name={name} size={36} />
+        {isOnline && (
+          <View
+            style={{
+              position: 'absolute',
+              bottom: -1,
+              right: -1,
+              width: 10,
+              height: 10,
+              borderRadius: 5,
+              backgroundColor: LEAF_BRIGHT,
+              borderWidth: 2,
+              borderColor: PAPER,
+            }}
+          />
+        )}
+      </View>
+      <View style={{ flex: 1 }}>
+        <Text style={{ fontSize: 15, fontWeight: '600', color: INK }} numberOfLines={1}>
+          {name}
+        </Text>
+        <Text style={{ fontSize: 11.5, color: INK_SUBTLE }} numberOfLines={1}>
+          {isOnline ? 'online' : 'offline'}
+        </Text>
+      </View>
+    </View>
+  );
 }
 
 // ── MessageBubble ─────────────────────────────────────────────────────────────
@@ -36,21 +129,45 @@ function MessageBubble({ body, isMine, createdAt, isOptimistic }: MessageBubbleP
 
   return (
     <View
-      className={cn('my-0.5 max-w-[78%]', isMine ? 'self-end items-end' : 'self-start items-start')}
+      style={{
+        alignSelf: isMine ? 'flex-end' : 'flex-start',
+        maxWidth: '78%',
+        marginVertical: 2,
+      }}
     >
       <Pressable
         onPress={() => setShowTime((v) => !v)}
-        className={cn(
-          'rounded-[18px] py-[9px] px-3.5',
-          isMine ? 'bg-accent-muted rounded-br-[4px]' : 'bg-white rounded-bl-[4px]',
-          isOptimistic && 'opacity-65'
-        )}
+        style={{
+          paddingHorizontal: 13,
+          paddingVertical: 8,
+          borderRadius: 18,
+          borderBottomRightRadius: isMine ? 5 : 18,
+          borderBottomLeftRadius: isMine ? 18 : 5,
+          backgroundColor: isMine ? LEAF : PAPER,
+          borderWidth: isMine ? 0 : StyleSheet.hairlineWidth,
+          borderColor: LINE,
+          opacity: isOptimistic ? 0.65 : 1,
+        }}
       >
-        <Text className="text-sm leading-[21px] text-fg">{body}</Text>
+        <Text
+          style={{
+            fontSize: 14.5,
+            lineHeight: 20,
+            color: isMine ? PAPER : INK,
+          }}
+        >
+          {body}
+        </Text>
       </Pressable>
       {showTime && (
         <Text
-          className={cn('text-xs text-fg-ghost mt-[3px] mx-1', isMine ? 'text-right' : 'text-left')}
+          style={{
+            fontSize: 10.5,
+            color: INK_SUBTLE,
+            paddingHorizontal: 8,
+            paddingTop: 3,
+            textAlign: isMine ? 'right' : 'left',
+          }}
         >
           {formatTimestamp(createdAt)}
         </Text>
@@ -85,6 +202,7 @@ function ChatBody({ matchId, userId, otherUserId, otherName }: ChatBodyProps) {
   });
 
   const messageValue = watch('message');
+  const canSend = messageValue.trim().length > 0 && !isSubmitting;
 
   const onSubmit = handleSubmit(async ({ message }) => {
     const text = message.trim();
@@ -106,14 +224,14 @@ function ChatBody({ matchId, userId, otherUserId, otherName }: ChatBodyProps) {
         keyExtractor={(item) => item.id}
         contentContainerStyle={{
           flexGrow: 1,
+          paddingHorizontal: 14,
           paddingVertical: 12,
-          paddingHorizontal: 12,
-          gap: 4,
+          gap: 2,
         }}
         onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: false })}
         ListEmptyComponent={
-          <View className="flex-1 items-center justify-center p-10">
-            <Text className="text-sm text-fg-muted text-center">
+          <View className="flex-1 items-center justify-center" style={{ padding: 40 }}>
+            <Text style={{ fontSize: 14, color: INK_SUBTLE, textAlign: 'center' }}>
               Say hello to {otherName ?? 'your match'}!
             </Text>
           </View>
@@ -129,49 +247,77 @@ function ChatBody({ matchId, userId, otherUserId, otherName }: ChatBodyProps) {
       />
 
       {isOtherTyping && (
-        <View className="px-4 pb-1">
-          <Text className="text-xs text-fg-muted italic">
+        <View style={{ paddingHorizontal: 16, paddingBottom: 4 }}>
+          <Text style={{ fontSize: 11.5, color: INK_SUBTLE, fontStyle: 'italic' }}>
             {otherName ? `${otherName} is typing…` : 'typing…'}
           </Text>
         </View>
       )}
 
       <View
-        className="flex-row items-end px-3 py-2 pb-4 bg-white gap-2"
-        style={{ borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.divider }}
+        className="flex-row items-center"
+        style={{
+          paddingHorizontal: 12,
+          paddingTop: 10,
+          paddingBottom: 12,
+          gap: 8,
+          backgroundColor: PAPER,
+          borderTopWidth: StyleSheet.hairlineWidth,
+          borderTopColor: LINE,
+        }}
       >
-        <Controller
-          control={control}
-          name="message"
-          render={({ field: { value, onChange } }) => (
-            <TextInput
-              className="flex-1 bg-surface rounded-2xl px-4 py-[9px] text-sm text-fg"
-              style={{ maxHeight: 120, lineHeight: 20 }}
-              value={value}
-              onChangeText={(text) => {
-                onChange(text);
-                if (text.length > 0) notifyTyping();
-              }}
-              placeholder="Message…"
-              placeholderTextColor={colors.inkGhost}
-              multiline
-              maxLength={1000}
-              returnKeyType="send"
-              blurOnSubmit={false}
-              onSubmitEditing={onSubmit}
-            />
-          )}
-        />
-        <Pressable
-          className={cn(
-            'w-9 h-9 rounded-[18px] bg-accent items-center justify-center',
-            (!messageValue.trim() || isSubmitting) && 'opacity-40'
-          )}
-          onPress={onSubmit}
-          disabled={!messageValue.trim() || isSubmitting}
-          hitSlop={8}
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: CREAM,
+            borderRadius: 20,
+            paddingHorizontal: 14,
+            paddingVertical: 4,
+            minHeight: 40,
+            justifyContent: 'center',
+          }}
         >
-          <IconSymbol name="arrow.up" size={18} color={colors.white} />
+          <Controller
+            control={control}
+            name="message"
+            render={({ field: { value, onChange } }) => (
+              <TextInput
+                style={{
+                  fontSize: 14.5,
+                  lineHeight: 20,
+                  color: INK,
+                  maxHeight: 120,
+                }}
+                value={value}
+                onChangeText={(text) => {
+                  onChange(text);
+                  if (text.length > 0) notifyTyping();
+                }}
+                placeholder={otherName ? `Message ${otherName}…` : 'Message…'}
+                placeholderTextColor={INK_SUBTLE}
+                multiline
+                maxLength={1000}
+                returnKeyType="send"
+                blurOnSubmit={false}
+                onSubmitEditing={onSubmit}
+              />
+            )}
+          />
+        </View>
+        {/* Sprout-styled circular send: matches prototype's ScreenChat composer */}
+        <Pressable
+          onPress={onSubmit}
+          disabled={!canSend}
+          hitSlop={6}
+          className="items-center justify-center"
+          style={{
+            width: 40,
+            height: 40,
+            borderRadius: 20,
+            backgroundColor: canSend ? LEAF : CREAM2,
+          }}
+        >
+          <SendIcon color={canSend ? PAPER : INK_SUBTLE} />
         </Pressable>
       </View>
     </KeyboardAvoidingView>
@@ -189,32 +335,21 @@ export default function ChatScreen() {
   const { userId } = useAuth();
   const isOnline = usePresence(otherUserId ?? null, userId);
 
-  const headerTitle = otherName ?? 'Chat';
-  const initials = getInitials(otherName ?? null);
+  const headerName = otherName && otherName.length > 0 ? otherName : 'Chat';
 
   return (
-    <SafeAreaView className="flex-1 bg-page" edges={['top']}>
-      <NavHeader
-        back
-        onBack={() => router.back()}
-        title={headerTitle}
-        right={
-          <View className="w-8 h-8 rounded-2xl bg-accent-soft items-center justify-center">
-            <Text className="text-xs font-bold text-accent">{initials}</Text>
-            {isOnline && (
-              <View className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-[5px] bg-green-500 border-2 border-page" />
-            )}
-          </View>
-        }
-      />
-      <ScreenSuspense>
-        <ChatBody
-          matchId={matchId}
-          userId={userId}
-          otherUserId={otherUserId ?? null}
-          otherName={otherName}
-        />
-      </ScreenSuspense>
+    <SafeAreaView className="flex-1" edges={['top']} style={{ backgroundColor: PAPER }}>
+      <ChatHeader name={headerName} isOnline={isOnline} />
+      <View style={{ flex: 1, backgroundColor: CREAM }}>
+        <ScreenSuspense>
+          <ChatBody
+            matchId={matchId}
+            userId={userId}
+            otherUserId={otherUserId ?? null}
+            otherName={otherName}
+          />
+        </ScreenSuspense>
+      </View>
     </SafeAreaView>
   );
 }

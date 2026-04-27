@@ -1,16 +1,21 @@
 import React, { useMemo } from 'react';
-import { SectionList, StyleSheet } from 'react-native';
+import { FlatList, ScrollView as RNScrollView, StyleSheet } from 'react-native';
 import { router } from 'expo-router';
 
 import { useAuth } from '@/context/auth';
 import { useGetApiConversationsSuspense } from '@/lib/api/generated/messages/messages';
 import type { Conversation } from '@/lib/api/generated/model';
 import { FaceAvatar } from '@/components/ui/FaceAvatar';
-import { LargeHeader } from '@/components/ui/LargeHeader';
 import ScreenSuspense from '@/components/ui/ScreenSuspense';
-import { colors } from '@/constants/theme';
 import { useMessagesListPresence } from '@/hooks/use-messages-list-presence';
 import { View, Text, Pressable, SafeAreaView } from '@/lib/tw';
+
+const LEAF = '#5A8C3A';
+const LEAF_BRIGHT = '#6FA947';
+const PAPER = '#FBF8F1';
+const INK = '#1F1B16';
+const INK_SUBTLE = '#8B8170';
+const LINE2 = 'rgba(31,27,22,0.06)';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -26,54 +31,137 @@ function relativeTime(isoString: string): string {
   return new Date(isoString).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 }
 
+// ── SectionLabel ──────────────────────────────────────────────────────────────
+
+function SectionLabel({ children }: { children: string }) {
+  return (
+    <Text
+      style={{
+        fontSize: 10.5,
+        letterSpacing: 1.5,
+        textTransform: 'uppercase',
+        color: INK_SUBTLE,
+        fontWeight: '700',
+        paddingHorizontal: 16,
+        paddingTop: 14,
+        paddingBottom: 6,
+      }}
+    >
+      {children}
+    </Text>
+  );
+}
+
+// ── SayHelloItem ──────────────────────────────────────────────────────────────
+
+type SayHelloItemProps = {
+  convo: Conversation;
+  onPress: () => void;
+};
+
+function SayHelloItem({ convo, onPress }: SayHelloItemProps) {
+  const name = convo.other.chosenName ?? '';
+  return (
+    <Pressable onPress={onPress} className="items-center" style={{ width: 70, gap: 6 }}>
+      <View style={{ position: 'relative' }}>
+        <FaceAvatar name={name} size={62} />
+        <View
+          style={{
+            position: 'absolute',
+            top: -2,
+            right: -2,
+            width: 14,
+            height: 14,
+            borderRadius: 7,
+            backgroundColor: LEAF,
+            borderWidth: 2,
+            borderColor: PAPER,
+          }}
+        />
+      </View>
+      <Text style={{ fontSize: 12.5, fontWeight: '500', color: INK }} numberOfLines={1}>
+        {name}
+      </Text>
+    </Pressable>
+  );
+}
+
 // ── ConvoRow ──────────────────────────────────────────────────────────────────
 
 type ConvoRowProps = {
   convo: Conversation;
   userId: string;
-  onlineIds: Set<string>;
+  isOnline: boolean;
   onPress: () => void;
 };
 
-function ConvoRow({ convo, userId, onlineIds, onPress }: ConvoRowProps) {
+function ConvoRow({ convo, userId, isOnline, onPress }: ConvoRowProps) {
   const { other, lastMessage } = convo;
   const isUnread = lastMessage != null && lastMessage.senderId !== userId && !lastMessage.isRead;
-  const isOnline = onlineIds.has(other.id);
+  const name = other.chosenName ?? 'Someone';
 
   return (
-    <Pressable className="flex-row items-center px-4 py-3 bg-white" onPress={onPress}>
-      <View className="relative mr-3">
-        <FaceAvatar name={other.chosenName ?? ''} size={48} />
-        {isUnread && (
-          <View className="absolute bottom-0 right-0 w-3 h-3 rounded-[6px] bg-accent border-2 border-white" />
-        )}
+    <Pressable
+      onPress={onPress}
+      className="flex-row items-center"
+      style={{
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        gap: 12,
+        borderBottomWidth: StyleSheet.hairlineWidth,
+        borderBottomColor: LINE2,
+      }}
+    >
+      <View style={{ position: 'relative' }}>
+        <FaceAvatar name={name} size={50} />
         {isOnline && (
-          <View className="absolute top-0 right-0 w-3 h-3 rounded-[6px] bg-green-500 border-2 border-white" />
+          <View
+            style={{
+              position: 'absolute',
+              bottom: 1,
+              right: 1,
+              width: 12,
+              height: 12,
+              borderRadius: 6,
+              backgroundColor: LEAF_BRIGHT,
+              borderWidth: 2,
+              borderColor: PAPER,
+            }}
+          />
         )}
       </View>
-      <View className="flex-1">
-        <View className="flex-row justify-between items-center mb-0.5">
+      <View style={{ flex: 1, minWidth: 0 }}>
+        <View className="flex-row items-baseline" style={{ justifyContent: 'space-between' }}>
           <Text
-            className={`flex-1 text-sm text-fg mr-2 ${isUnread ? 'font-bold' : 'font-medium'}`}
+            style={{ fontSize: 15, fontWeight: '600', color: INK, flexShrink: 1 }}
             numberOfLines={1}
           >
-            {other.chosenName ?? 'Someone'}
+            {name}
           </Text>
           {lastMessage != null && (
-            <Text className="text-xs text-fg-ghost">{relativeTime(lastMessage.createdAt)}</Text>
+            <Text style={{ fontSize: 12, color: INK_SUBTLE, marginLeft: 8 }}>
+              {relativeTime(lastMessage.createdAt)}
+            </Text>
           )}
         </View>
-        {lastMessage != null ? (
+        <View className="flex-row items-center" style={{ gap: 6, marginTop: 2 }}>
           <Text
-            className={`text-sm ${isUnread ? 'text-fg font-medium' : 'text-fg-muted'}`}
+            style={{
+              flex: 1,
+              fontSize: 13.5,
+              color: isUnread ? INK : INK_SUBTLE,
+              fontWeight: isUnread ? '600' : '400',
+            }}
             numberOfLines={1}
           >
-            {lastMessage.senderId === userId ? 'You: ' : ''}
-            {lastMessage.body}
+            {lastMessage != null
+              ? `${lastMessage.senderId === userId ? 'You: ' : ''}${lastMessage.body}`
+              : 'New match — say hello!'}
           </Text>
-        ) : (
-          <Text className="text-sm text-fg-ghost italic">New match — say hello!</Text>
-        )}
+          {isUnread && (
+            <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: LEAF }} />
+          )}
+        </View>
       </View>
     </Pressable>
   );
@@ -83,22 +171,32 @@ function ConvoRow({ convo, userId, onlineIds, onPress }: ConvoRowProps) {
 
 function SkeletonRow() {
   return (
-    <View className="flex-row items-center px-4 py-3 bg-white gap-3">
-      <View className="w-12 h-12 rounded-3xl bg-separator" />
-      <View className="flex-1 gap-2">
-        <View className="h-3.5 rounded-[7px] bg-separator w-[70%]" />
-        <View className="h-3.5 rounded-[7px] bg-separator w-[45%]" />
+    <View
+      className="flex-row items-center"
+      style={{ paddingHorizontal: 16, paddingVertical: 12, gap: 12 }}
+    >
+      <View style={{ width: 50, height: 50, borderRadius: 25, backgroundColor: LINE2 }} />
+      <View style={{ flex: 1, gap: 6 }}>
+        <View style={{ height: 12, borderRadius: 6, backgroundColor: LINE2, width: '60%' }} />
+        <View style={{ height: 12, borderRadius: 6, backgroundColor: LINE2, width: '40%' }} />
       </View>
     </View>
   );
 }
 
-// ── MessagesContent ───────────────────────────────────────────────────────────
+// ── Header ────────────────────────────────────────────────────────────────────
 
-type Section = {
-  title: string;
-  data: Conversation[];
-};
+function Header() {
+  return (
+    <View style={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 6 }}>
+      <Text style={{ fontFamily: 'DMSerifDisplay', fontSize: 28, letterSpacing: -0.5, color: INK }}>
+        Messages
+      </Text>
+    </View>
+  );
+}
+
+// ── MessagesContent ───────────────────────────────────────────────────────────
 
 type ContentProps = {
   userId: string;
@@ -108,63 +206,75 @@ type ContentProps = {
 function MessagesContent({ userId, onlineIds }: ContentProps) {
   const { data: convos, refetch, isRefetching } = useGetApiConversationsSuspense();
 
-  const sections: Section[] = useMemo(() => {
-    const active = convos.filter((c) => c.lastMessage != null);
-    const starters = convos.filter((c) => c.lastMessage == null);
-    const result: Section[] = [];
-    if (active.length > 0) result.push({ title: 'Conversations', data: active });
-    if (starters.length > 0) result.push({ title: 'New Matches', data: starters });
-    return result;
+  const { sayHello, conversations } = useMemo(() => {
+    return {
+      sayHello: convos.filter((c) => c.lastMessage == null),
+      conversations: convos.filter((c) => c.lastMessage != null),
+    };
   }, [convos]);
 
+  function openChat(convo: Conversation) {
+    router.push({
+      pathname: '/(tabs)/messages/[matchId]',
+      params: {
+        matchId: convo.matchId,
+        otherName: convo.other.chosenName ?? '',
+        otherUserId: convo.other.id,
+      },
+    } as never);
+  }
+
+  const ListHeader = (
+    <>
+      <Header />
+      {sayHello.length > 0 && (
+        <>
+          <SectionLabel>Say hello</SectionLabel>
+          <RNScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{
+              paddingHorizontal: 16,
+              paddingTop: 6,
+              paddingBottom: 14,
+              gap: 14,
+            }}
+          >
+            {sayHello.map((c) => (
+              <SayHelloItem key={c.matchId} convo={c} onPress={() => openChat(c)} />
+            ))}
+          </RNScrollView>
+        </>
+      )}
+      {conversations.length > 0 && <SectionLabel>Conversations</SectionLabel>}
+    </>
+  );
+
   return (
-    <SectionList
-      sections={sections}
+    <FlatList
+      data={conversations}
       keyExtractor={(item) => item.matchId}
       onRefresh={refetch}
       refreshing={isRefetching}
-      ListHeaderComponent={<LargeHeader title="Messages" />}
+      ListHeaderComponent={ListHeader}
       ListEmptyComponent={
-        <View className="flex-1 items-center justify-center p-10 pt-20">
-          <Text className="text-sm text-fg-muted text-center leading-[22px]">
-            No conversations yet. Start one from your Matches.
-          </Text>
-        </View>
+        sayHello.length === 0 ? (
+          <View className="items-center justify-center" style={{ padding: 40, paddingTop: 80 }}>
+            <Text style={{ fontSize: 14, color: INK_SUBTLE, textAlign: 'center', lineHeight: 22 }}>
+              No conversations yet. Start one from your Matches.
+            </Text>
+          </View>
+        ) : null
       }
-      renderSectionHeader={({ section }) => (
-        <View className="px-4 pt-5 pb-1.5 bg-page">
-          <Text className="text-xs font-bold tracking-[0.8px] text-fg-subtle uppercase">
-            {section.title}
-          </Text>
-        </View>
-      )}
       renderItem={({ item }) => (
         <ConvoRow
           convo={item}
           userId={userId}
-          onlineIds={onlineIds}
-          onPress={() => {
-            router.push({
-              pathname: '/(tabs)/messages/[matchId]',
-              params: {
-                matchId: item.matchId,
-                otherName: item.other.chosenName ?? '',
-                otherUserId: item.other.id,
-              },
-            } as never);
-          }}
+          isOnline={onlineIds.has(item.other.id)}
+          onPress={() => openChat(item)}
         />
       )}
-      ItemSeparatorComponent={() => (
-        <View
-          style={{
-            height: StyleSheet.hairlineWidth,
-            backgroundColor: colors.divider,
-            marginLeft: 76,
-          }}
-        />
-      )}
-      contentContainerStyle={{ flexGrow: 1 }}
+      contentContainerStyle={{ flexGrow: 1, paddingBottom: 100 }}
     />
   );
 }
@@ -176,11 +286,11 @@ export default function MessagesScreen() {
   const onlineIds = useMessagesListPresence(userId);
 
   return (
-    <SafeAreaView className="flex-1 bg-page" edges={['top']}>
+    <SafeAreaView className="flex-1 bg-background" edges={['top']}>
       <ScreenSuspense
         fallback={
           <>
-            <LargeHeader title="Messages" />
+            <Header />
             <SkeletonRow />
             <SkeletonRow />
             <SkeletonRow />
