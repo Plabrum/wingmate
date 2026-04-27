@@ -7,7 +7,7 @@ module.exports = {
     version,
     orientation: 'portrait',
     icon: './assets/images/icon.png',
-    scheme: 'orbit',
+    scheme: 'pear',
     userInterfaceStyle: 'light',
     newArchEnabled: true,
     ios: {

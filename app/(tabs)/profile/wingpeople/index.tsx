@@ -448,7 +448,7 @@ export default function WingpeopleScreen() {
       const isAvailable = await SMS.isAvailableAsync();
       if (isAvailable) {
         const daterName = profile?.chosenName ?? 'Someone';
-        const appUrl = 'https://apps.apple.com/app/wyng/id6744145981';
+        const appUrl = 'https://apps.apple.com/app/pear/id6744145981';
         await SMS.sendSMSAsync(
           [e164],
           `${daterName} invited you to be their wingperson on Pear! Download the app: ${appUrl}`
