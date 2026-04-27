@@ -9,7 +9,7 @@ import { View, Text, Pressable, ScrollView, TextInput, SafeAreaView } from '@/li
 import { NavHeader } from '@/components/ui/NavHeader';
 import { PhotoRect } from '@/components/ui/PhotoRect';
 import { Pill } from '@/components/ui/Pill';
-import { PurpleButton } from '@/components/ui/PurpleButton';
+import { Sprout } from '@/components/ui/Sprout';
 import { useGetApiProfilesUserIdSuspense } from '@/lib/api/generated/profiles/profiles';
 import type { WingProfile } from '@/lib/api/generated/model';
 import { useGetApiWingPoolSuspense } from '@/lib/api/generated/wing-pool/wing-pool';
@@ -91,8 +91,12 @@ function NoteModal({
               textAlignVertical="top"
             />
             <View className="mt-4 gap-[10px]">
-              <PurpleButton label="Skip & Send" onPress={() => handleSend(false)} outline />
-              <PurpleButton label="Add Note & Send" onPress={() => handleSend(true)} />
+              <Sprout block variant="secondary" onPress={() => handleSend(false)}>
+                Skip & Send
+              </Sprout>
+              <Sprout block onPress={() => handleSend(true)}>
+                Add Note & Send
+              </Sprout>
             </View>
           </View>
         </KeyboardAvoidingView>

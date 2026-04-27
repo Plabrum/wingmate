@@ -25,7 +25,7 @@ import { useUploadProfilePhoto } from '@/hooks/use-upload-profile-photo';
 import { View, Text, Pressable, ScrollView, SafeAreaView, TextInput } from '@/lib/tw';
 import { NavHeader } from '@/components/ui/NavHeader';
 import { PhotoRect } from '@/components/ui/PhotoRect';
-import { PurpleButton } from '@/components/ui/PurpleButton';
+import { Sprout } from '@/components/ui/Sprout';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import ScreenSuspense from '@/components/ui/ScreenSuspense';
 
@@ -84,11 +84,9 @@ function ResponseModal({
               autoFocus
             />
             <View className="mt-4">
-              <PurpleButton
-                label="Send Comment"
-                onPress={handleSubmit}
-                disabled={!message.trim()}
-              />
+              <Sprout block onPress={handleSubmit} disabled={!message.trim()}>
+                Send Comment
+              </Sprout>
             </View>
           </View>
         </KeyboardAvoidingView>

@@ -14,7 +14,7 @@ import {
 } from '@/lib/api/generated/profiles/profiles';
 
 import { Pill } from '@/components/ui/Pill';
-import { PurpleButton } from '@/components/ui/PurpleButton';
+import { Sprout } from '@/components/ui/Sprout';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 
 type DatingStatus = 'open' | 'break' | 'winging';
@@ -168,11 +168,13 @@ export function AboutMeTab({ form, data }: Props) {
       )}
 
       <View className="mt-7">
-        <PurpleButton
-          label="Edit Profile"
+        <Sprout
+          block
+          variant="secondary"
           onPress={() => router.push('/(tabs)/profile/edit' as any)}
-          outline
-        />
+        >
+          Edit Profile
+        </Sprout>
       </View>
     </ScrollView>
   );

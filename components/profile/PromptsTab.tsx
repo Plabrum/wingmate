@@ -21,7 +21,6 @@ import { FaceAvatar } from '@/components/ui/FaceAvatar';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { ScrollView, Text, View, Pressable } from '@/lib/tw';
 import { AddPromptModal } from './AddPromptModal';
-import { getInitials } from './profile-helpers';
 
 // ── Approved responses carousel ───────────────────────────────────────────────
 
@@ -63,7 +62,7 @@ function ApprovedResponsesCarousel({ responses }: { responses: ApprovedResponse[
           >
             <View className="flex-row gap-2.5">
               <FaceAvatar
-                initials={getInitials(r.author?.chosenName)}
+                name={r.author?.chosenName ?? ''}
                 size={28}
                 photoUri={r.author?.avatarUrl ?? null}
               />
@@ -219,7 +218,7 @@ export function PromptsTab({ form, onRefresh }: Props) {
                   pendingR.map((r) => (
                     <View key={r.id} className="flex-row gap-2.5 mt-3">
                       <FaceAvatar
-                        initials={getInitials(r.author?.chosenName)}
+                        name={r.author?.chosenName ?? ''}
                         size={28}
                         photoUri={r.author?.avatarUrl ?? null}
                       />

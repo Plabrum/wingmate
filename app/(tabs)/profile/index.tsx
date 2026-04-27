@@ -25,14 +25,13 @@ import { LargeHeader } from '@/components/ui/LargeHeader';
 import { TextTabBar } from '@/components/ui/TextTabBar';
 import { WingStack } from '@/components/ui/WingStack';
 import { FaceAvatar } from '@/components/ui/FaceAvatar';
-import { PurpleButton } from '@/components/ui/PurpleButton';
+import { Sprout } from '@/components/ui/Sprout';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import ScreenSuspense from '@/components/ui/ScreenSuspense';
 
 import { AboutMeTab } from '@/components/profile/AboutMeTab';
 import { PhotosTab } from '@/components/profile/PhotosTab';
 import { PromptsTab } from '@/components/profile/PromptsTab';
-import { getInitials } from '@/components/profile/profile-helpers';
 
 // ── Log out button ────────────────────────────────────────────────────────────
 
@@ -107,7 +106,7 @@ function AvatarPicker({ name, avatarUrl, size, userId }: AvatarPickerProps) {
 
   return (
     <Pressable onPress={handlePick} className="relative" style={{ width: size, height: size }}>
-      <FaceAvatar initials={getInitials(name)} size={size} photoUri={avatarUrl} />
+      <FaceAvatar name={name ?? ''} size={size} photoUri={avatarUrl} />
       {uploading ? (
         <View
           className="absolute inset-0 items-center justify-center rounded-full bg-black/40"
@@ -145,11 +144,9 @@ function WingerView({
       <Text className="text-2xl font-bold text-fg mt-4 font-serif">{name ?? 'Winger'}</Text>
       <Text className="text-sm text-fg-muted mt-1">Winger</Text>
       <View className="mt-8 w-full">
-        <PurpleButton
-          label="Wingpeople & Invitations"
-          onPress={() => router.push('/(tabs)/wingpeople' as any)}
-          outline
-        />
+        <Sprout block variant="secondary" onPress={() => router.push('/(tabs)/wingpeople' as any)}>
+          Wingpeople & Invitations
+        </Sprout>
       </View>
     </View>
   );
@@ -248,7 +245,7 @@ function ProfileScreenInner() {
 
   // ── Dater view ────────────────────────────────────────────────────────────
   const wingItems = wingpeople.map((w) => ({
-    initials: getInitials(w.winger?.chosenName ?? null),
+    name: w.winger?.chosenName ?? '',
     photoUri: w.winger?.avatarUrl ?? null,
   }));
 

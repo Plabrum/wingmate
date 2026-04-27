@@ -5,7 +5,6 @@ import { router } from 'expo-router';
 import { useAuth } from '@/context/auth';
 import { useGetApiConversationsSuspense } from '@/lib/api/generated/messages/messages';
 import type { Conversation } from '@/lib/api/generated/model';
-import { getInitials } from '@/components/profile/profile-helpers';
 import { FaceAvatar } from '@/components/ui/FaceAvatar';
 import { LargeHeader } from '@/components/ui/LargeHeader';
 import ScreenSuspense from '@/components/ui/ScreenSuspense';
@@ -39,13 +38,12 @@ type ConvoRowProps = {
 function ConvoRow({ convo, userId, onlineIds, onPress }: ConvoRowProps) {
   const { other, lastMessage } = convo;
   const isUnread = lastMessage != null && lastMessage.senderId !== userId && !lastMessage.isRead;
-  const initials = getInitials(other.chosenName);
   const isOnline = onlineIds.has(other.id);
 
   return (
     <Pressable className="flex-row items-center px-4 py-3 bg-white" onPress={onPress}>
       <View className="relative mr-3">
-        <FaceAvatar initials={initials} size={48} />
+        <FaceAvatar name={other.chosenName ?? ''} size={48} />
         {isUnread && (
           <View className="absolute bottom-0 right-0 w-3 h-3 rounded-[6px] bg-accent border-2 border-white" />
         )}

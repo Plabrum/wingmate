@@ -17,8 +17,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { colors } from '@/constants/theme';
 import { NavHeader } from '@/components/ui/NavHeader';
 import { FaceAvatar } from '@/components/ui/FaceAvatar';
-import { PurpleButton } from '@/components/ui/PurpleButton';
-import { getInitials } from '@/components/profile/profile-helpers';
+import { Sprout } from '@/components/ui/Sprout';
 import { View, Text, TextInput, ScrollView, SafeAreaView, Pressable } from '@/lib/tw';
 import { useGetApiProfilesMeSuspense } from '@/lib/api/generated/profiles/profiles';
 import {
@@ -158,11 +157,7 @@ function WingpeopleContent({ onOpenInvite }: ContentProps) {
               onLongPress={() => handleRemove(w.id)}
               delayLongPress={500}
             >
-              <FaceAvatar
-                initials={getInitials(name)}
-                size={40}
-                photoUri={w.winger?.avatarUrl ?? null}
-              />
+              <FaceAvatar name={name} size={40} photoUri={w.winger?.avatarUrl ?? null} />
               <View className="flex-1">
                 <Text className="text-sm font-semibold text-fg">{name}</Text>
                 <Text className="text-xs text-fg-muted mt-0.5">
@@ -189,7 +184,7 @@ function WingpeopleContent({ onOpenInvite }: ContentProps) {
                   borderBottomColor: colors.divider,
                 }}
               >
-                <FaceAvatar initials={getInitials(displayName)} size={40} />
+                <FaceAvatar name={displayName} size={40} />
                 <View className="flex-1">
                   <Text className="text-sm font-semibold text-fg">{displayName}</Text>
                   <Text className="text-xs text-fg-muted mt-0.5">Invite pending</Text>
@@ -225,7 +220,7 @@ function WingpeopleContent({ onOpenInvite }: ContentProps) {
                 borderBottomColor: colors.divider,
               }}
             >
-              <FaceAvatar initials={getInitials(name)} size={40} />
+              <FaceAvatar name={name} size={40} />
               <Text className="flex-1 text-sm font-semibold text-fg">{name}</Text>
               <Pressable
                 className="px-[14px] py-2 rounded-full bg-surface"
@@ -264,11 +259,7 @@ function WingpeopleContent({ onOpenInvite }: ContentProps) {
                 borderBottomColor: colors.divider,
               }}
             >
-              <FaceAvatar
-                initials={getInitials(name)}
-                size={40}
-                photoUri={wf.dater?.avatarUrl ?? null}
-              />
+              <FaceAvatar name={name} size={40} photoUri={wf.dater?.avatarUrl ?? null} />
               <Text className="flex-1 text-sm font-semibold text-fg">{name}</Text>
               <Pressable
                 className="px-[14px] py-2 rounded-full bg-accent-muted"
@@ -418,12 +409,14 @@ export default function WingpeopleScreen() {
               />
 
               <View className="mt-5">
-                <PurpleButton
-                  label="Send Invite"
+                <Sprout
+                  block
                   onPress={onSendInvite}
                   loading={isSubmitting}
                   disabled={!isValid || isSubmitting}
-                />
+                >
+                  Send Invite
+                </Sprout>
               </View>
             </View>
           </KeyboardAvoidingView>

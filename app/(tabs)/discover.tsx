@@ -28,7 +28,7 @@ import { LargeHeader } from '@/components/ui/LargeHeader';
 import { TextTabBar } from '@/components/ui/TextTabBar';
 import { PhotoRect } from '@/components/ui/PhotoRect';
 import { Pill } from '@/components/ui/Pill';
-import { PurpleButton } from '@/components/ui/PurpleButton';
+import { Sprout } from '@/components/ui/Sprout';
 import { WingStack } from '@/components/ui/WingStack';
 import { colors } from '@/constants/theme';
 import ScreenSuspense from '@/components/ui/ScreenSuspense';
@@ -86,11 +86,9 @@ function DiscoverPausedScreen({
         <Text className="text-sm text-fg-muted text-center" style={{ lineHeight: 22 }}>
           Your profile is hidden while you{"'"}re on a break. Take all the time you need.
         </Text>
-        <PurpleButton
-          label="Resume Discover"
-          onPress={handleSubmit(resume)}
-          loading={isSubmitting}
-        />
+        <Sprout onPress={handleSubmit(resume)} loading={isSubmitting}>
+          Resume Discover
+        </Sprout>
       </View>
     </SafeAreaView>
   );
@@ -100,12 +98,12 @@ function DiscoverPausedScreen({
 
 function WingNoteSection({ card }: { card: DiscoverProfile }) {
   const [expanded, setExpanded] = useState(false);
-  const initial = card.suggesterName ? card.suggesterName[0].toUpperCase() : '?';
+  const suggesterName = card.suggesterName ?? '?';
 
   return (
     <View className="bg-accent-muted rounded-xl p-3 mb-4 gap-[6px]">
       <View className="flex-row items-center gap-2">
-        <WingStack items={[{ initials: initial }]} />
+        <WingStack items={[{ name: suggesterName }]} />
         <Text className="text-sm font-semibold text-fg flex-1">
           {card.suggesterName} thinks you{"'"}d get along
         </Text>
@@ -174,8 +172,12 @@ function MatchOverlay({ card, onDismiss }: { card: DiscoverProfile; onDismiss: (
           <Text className="text-4xl font-serif font-bold text-white">It{"'"}s a Match!</Text>
           <Text className="text-xl text-white/85 mb-2">{card.chosenName}</Text>
           <View className="w-full gap-3">
-            <PurpleButton label="Send a Message" onPress={onDismiss} />
-            <PurpleButton label="Keep Swiping" onPress={onDismiss} outline />
+            <Sprout block onPress={onDismiss}>
+              Send a Message
+            </Sprout>
+            <Sprout block variant="secondary" onPress={onDismiss}>
+              Keep Swiping
+            </Sprout>
           </View>
         </View>
       </ModalView>

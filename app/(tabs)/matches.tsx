@@ -11,11 +11,10 @@ import {
 } from '@/lib/api/generated/matches/matches';
 import type { MatchSummary } from '@/lib/api/generated/model';
 import { postApiPromptResponses } from '@/lib/api/generated/prompts/prompts';
-import { getInitials } from '@/components/profile/profile-helpers';
 import { LargeHeader } from '@/components/ui/LargeHeader';
 import { PhotoRect } from '@/components/ui/PhotoRect';
 import { Pill } from '@/components/ui/Pill';
-import { PurpleButton } from '@/components/ui/PurpleButton';
+import { Sprout } from '@/components/ui/Sprout';
 import { WingStack } from '@/components/ui/WingStack';
 import { colors } from '@/constants/theme';
 
@@ -102,7 +101,7 @@ function SheetBody({ match }: { match: MatchSummary }) {
       {wingNote != null && (
         <View className="mx-5 mt-4 bg-accent-muted rounded-xl p-[14px]">
           <View className="flex-row items-center gap-2 mb-[6px]">
-            <WingStack items={[{ initials: getInitials(wingNote.winger?.chosenName) }]} />
+            <WingStack items={[{ name: wingNote.winger?.chosenName ?? '' }]} />
             <Text className="text-sm font-semibold text-accent">
               {wingNote.winger?.chosenName ?? 'Your wing'} introduced you
             </Text>
@@ -281,13 +280,15 @@ function MatchSheet({ match, visible, onClose }: MatchSheetProps) {
 
           {/* CTA */}
           <View className="mx-5 mt-6">
-            <PurpleButton
-              label={matchHasMessages ? 'Open Conversation' : 'Start Conversation'}
+            <Sprout
+              block
               onPress={() => {
                 onClose();
                 router.push(`/(tabs)/messages/${match.matchId}` as never);
               }}
-            />
+            >
+              {matchHasMessages ? 'Open Conversation' : 'Start Conversation'}
+            </Sprout>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
