@@ -1,10 +1,24 @@
 import React, { Suspense, useCallback, useState } from 'react';
-import { ActivityIndicator } from 'react-native';
+import { ActivityIndicator, Dimensions, Platform, StyleSheet } from 'react-native';
+import { router } from 'expo-router';
 import { useForm } from 'react-hook-form';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner-native';
+import Animated, {
+  Extrapolation,
+  interpolate,
+  runOnJS,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withTiming,
+  type SharedValue,
+} from 'react-native-reanimated';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { Image } from 'expo-image';
+import Svg, { Path } from 'react-native-svg';
 
-import { View, Text, ScrollView, SafeAreaView, Pressable, Modal, ModalView } from '@/lib/tw';
+import { View, Text, ScrollView, SafeAreaView, Pressable } from '@/lib/tw';
 import { useAuth } from '@/context/auth';
 import { useDiscover, type PoolFetcher, type LikeResult } from '@/hooks/use-discover';
 import type { Enums } from '@/types/database';
@@ -14,27 +28,34 @@ import {
   useGetApiLikesYouCountSuspense,
   useGetApiLikesYouSuspense,
 } from '@/lib/api/generated/likes-you/likes-you';
-import {
-  getGetApiWingerTabsQueryKey,
-  useGetApiWingerTabsSuspense,
-} from '@/lib/api/generated/winger-tabs/winger-tabs';
-import type { DiscoverProfile, WingerTab } from '@/lib/api/generated/model';
+import type { DiscoverProfile } from '@/lib/api/generated/model';
 import {
   useGetApiDatingProfilesMeSuspense,
   patchApiDatingProfilesMe,
   getGetApiDatingProfilesMeQueryKey,
 } from '@/lib/api/generated/profiles/profiles';
 import { LargeHeader } from '@/components/ui/LargeHeader';
-import { TextTabBar } from '@/components/ui/TextTabBar';
-import { PhotoRect } from '@/components/ui/PhotoRect';
 import { Pill } from '@/components/ui/Pill';
 import { Sprout } from '@/components/ui/Sprout';
 import { WingStack } from '@/components/ui/WingStack';
-import { colors } from '@/constants/theme';
+import { PearMark } from '@/components/ui/PearMark';
 import ScreenSuspense from '@/components/ui/ScreenSuspense';
 import { cardButtonShadow } from '@/lib/styles';
 
 const PAGE_SIZE = 20;
+const SWIPE_THRESHOLD = 110;
+const SCREEN_WIDTH = Dimensions.get('window').width;
+
+const LEAF = '#5A8C3A';
+const LEAF_SOFT = '#E5EFD8';
+const INK = '#1F1B16';
+const INK_MUTED = '#4A4338';
+const INK_SUBTLE = '#8B8170';
+const PAPER = '#FBF8F1';
+const LINE = 'rgba(31,27,22,0.10)';
+const PASS_RED = '#C44';
+
+type Filter = 'likes' | 'handpicked';
 
 // ── DiscoverPausedScreen ──────────────────────────────────────────────────────
 
@@ -52,13 +73,13 @@ function DiscoverPausedScreen({
 
   if (status === 'winging') {
     return (
-      <SafeAreaView className="flex-1 bg-page">
+      <SafeAreaView className="flex-1 bg-background">
         <LargeHeader title="Discover" />
         <View className="flex-1 justify-center items-center p-6">
-          <Text className="text-2xl font-bold font-serif text-fg text-center">
+          <Text className="text-2xl font-bold font-serif text-foreground text-center">
             Nothing to see here...
           </Text>
-          <Text className="text-sm text-fg-muted text-center mt-2" style={{ lineHeight: 22 }}>
+          <Text className="text-sm text-foreground-muted text-center mt-2 leading-[22px]">
             you{"'"}re just winging!
           </Text>
         </View>
@@ -77,13 +98,13 @@ function DiscoverPausedScreen({
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-page">
+    <SafeAreaView className="flex-1 bg-background">
       <LargeHeader title="Discover" />
       <View className="flex-1 justify-center items-center p-6 gap-4">
-        <Text className="text-2xl font-bold font-serif text-fg text-center">
+        <Text className="text-2xl font-bold font-serif text-foreground text-center">
           You{"'"}re on a break
         </Text>
-        <Text className="text-sm text-fg-muted text-center" style={{ lineHeight: 22 }}>
+        <Text className="text-sm text-foreground-muted text-center leading-[22px]">
           Your profile is hidden while you{"'"}re on a break. Take all the time you need.
         </Text>
         <Sprout onPress={handleSubmit(resume)} loading={isSubmitting}>
@@ -94,167 +115,724 @@ function DiscoverPausedScreen({
   );
 }
 
-// ── WingNoteSection ───────────────────────────────────────────────────────────
+// ── Icons ─────────────────────────────────────────────────────────────────────
 
-function WingNoteSection({ card }: { card: DiscoverProfile }) {
-  const [expanded, setExpanded] = useState(false);
-  const suggesterName = card.suggesterName ?? '?';
-
+function HeartIcon({ size = 14, color }: { size?: number; color: string }) {
   return (
-    <View className="bg-accent-muted rounded-xl p-3 mb-4 gap-[6px]">
-      <View className="flex-row items-center gap-2">
-        <WingStack items={[{ name: suggesterName }]} />
-        <Text className="text-sm font-semibold text-fg flex-1">
-          {card.suggesterName} thinks you{"'"}d get along
-        </Text>
-      </View>
-      <Text
-        className="text-sm text-fg-muted"
-        style={{ lineHeight: 20 }}
-        numberOfLines={expanded ? undefined : 2}
-      >
-        {card.wingNote}
-      </Text>
-      {!expanded && (
-        <Pressable onPress={() => setExpanded(true)}>
-          <Text className="text-sm text-accent font-medium mt-[2px]">Read more</Text>
-        </Pressable>
-      )}
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill={color}>
+      <Path d="M20.84 4.6a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.07a5.5 5.5 0 0 0-7.78 7.78l1.06 1.07L12 21.23l7.78-7.78 1.06-1.07a5.5 5.5 0 0 0 0-7.78z" />
+    </Svg>
+  );
+}
+
+function XIcon({ size = 24, color }: { size?: number; color: string }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M6 6l12 12M18 6L6 18"
+        stroke={color}
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
+function HeartFilledIcon({ size = 24, color }: { size?: number; color: string }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill={color}>
+      <Path d="M20.84 4.6a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.07a5.5 5.5 0 0 0-7.78 7.78l1.06 1.07L12 21.23l7.78-7.78 1.06-1.07a5.5 5.5 0 0 0 0-7.78z" />
+    </Svg>
+  );
+}
+
+// ── DiscoverFilters ───────────────────────────────────────────────────────────
+
+type FilterDef = {
+  key: Filter;
+  label: string;
+  tone: 'ink' | 'leaf';
+  icon: (color: string) => React.ReactElement;
+};
+
+const FILTERS: FilterDef[] = [
+  {
+    key: 'likes',
+    label: 'Likes you',
+    tone: 'ink',
+    icon: (color) => <HeartIcon size={12} color={color} />,
+  },
+  {
+    key: 'handpicked',
+    label: 'Hand-picked',
+    tone: 'leaf',
+    icon: (color) => <PearMark size={13} color={color} variant="flat" />,
+  },
+];
+
+function DiscoverFilters({
+  active,
+  onToggle,
+  counts,
+}: {
+  active: Filter[];
+  onToggle: (key: Filter) => void;
+  counts: Partial<Record<Filter, number>>;
+}) {
+  return (
+    <View className="flex-row items-center flex-wrap px-4 pt-1 pb-3 gap-2">
+      <Text className="text-[13px] text-foreground-muted font-medium mr-1">For you</Text>
+      <Text className="text-foreground-subtle text-xs">·</Text>
+      {FILTERS.map((f) => {
+        const on = active.includes(f.key);
+        const activeBg = f.tone === 'leaf' ? LEAF : INK;
+        const activeFg = PAPER;
+        const fg = on ? activeFg : INK;
+        const count = counts[f.key];
+        return (
+          <Pressable
+            key={f.key}
+            onPress={() => onToggle(f.key)}
+            className="flex-row items-center justify-center"
+            style={{
+              height: 32,
+              paddingLeft: 8,
+              paddingRight: 12,
+              borderRadius: 18,
+              borderWidth: 1,
+              borderColor: on ? activeBg : LINE,
+              backgroundColor: on ? activeBg : PAPER,
+              gap: 5,
+            }}
+          >
+            {f.icon(fg)}
+            <Text style={{ color: fg, fontSize: 12.5, fontWeight: '600' }}>{f.label}</Text>
+            {count != null && (
+              <View
+                style={{
+                  backgroundColor: on ? 'rgba(255,255,255,0.22)' : '#EDE6D6',
+                  borderRadius: 8,
+                  height: 16,
+                  minWidth: 16,
+                  paddingHorizontal: 6,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginLeft: 2,
+                }}
+              >
+                <Text
+                  style={{
+                    color: on ? activeFg : INK_SUBTLE,
+                    fontSize: 10.5,
+                    fontWeight: '700',
+                  }}
+                >
+                  {count}
+                </Text>
+              </View>
+            )}
+          </Pressable>
+        );
+      })}
     </View>
   );
 }
 
-// ── CardView ──────────────────────────────────────────────────────────────────
+// ── WingCredential ────────────────────────────────────────────────────────────
 
-function CardView({ card }: { card: DiscoverProfile }) {
+function WingCredential({ suggesterName, note }: { suggesterName: string; note: string | null }) {
   return (
-    <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-      <View className="px-4">
-        <PhotoRect uri={card.firstPhoto} ratio={1} />
-      </View>
-      <View className="p-4">
-        <Text className="text-3xl font-serif font-bold text-fg">
-          {card.chosenName}, {card.age}
+    <View
+      style={{
+        backgroundColor: LEAF_SOFT,
+        borderWidth: 1,
+        borderColor: 'rgba(90,140,58,0.15)',
+        borderRadius: 14,
+        padding: 12,
+      }}
+      className="flex-row gap-3 items-start"
+    >
+      <WingStack items={[{ name: suggesterName }]} size={30} />
+      <View className="flex-1 min-w-0">
+        <Text
+          style={{
+            fontSize: 10.5,
+            color: LEAF,
+            fontWeight: '700',
+            letterSpacing: 1.2,
+            textTransform: 'uppercase',
+            marginBottom: 3,
+          }}
+        >
+          Hand-picked
         </Text>
-        <Text className="text-sm text-fg-muted mt-1 mb-3">{card.city}</Text>
-        {card.wingNote != null && <WingNoteSection card={card} />}
-        {card.interests.length > 0 && (
-          <View className="flex-row flex-wrap gap-2 mb-4">
-            {card.interests.map((interest) => (
-              <Pill key={interest} label={interest} />
-            ))}
-          </View>
-        )}
-        {card.bio != null && (
-          <Text className="text-sm text-fg-muted" style={{ lineHeight: 22 }}>
-            {card.bio}
+        {note != null ? (
+          <Text style={{ fontSize: 13, color: INK, lineHeight: 18 }}>
+            “{note}”{' '}
+            <Text style={{ color: INK_SUBTLE, fontStyle: 'italic' }}>— {suggesterName}</Text>
+          </Text>
+        ) : (
+          <Text style={{ fontSize: 13, color: INK, lineHeight: 18 }}>
+            <Text style={{ fontWeight: '700' }}>Hand-picked</Text> by {suggesterName}
           </Text>
         )}
       </View>
-    </ScrollView>
+    </View>
+  );
+}
+
+// ── Stamp ─────────────────────────────────────────────────────────────────────
+
+function PassStamp({ swipeX }: { swipeX: SharedValue<number> }) {
+  const style = useAnimatedStyle(() => ({
+    opacity: interpolate(swipeX.value, [-SWIPE_THRESHOLD, -20, 0], [1, 0, 0], Extrapolation.CLAMP),
+  }));
+  return (
+    <Animated.View
+      style={[
+        {
+          position: 'absolute',
+          top: 24,
+          right: 18,
+          transform: [{ rotate: '14deg' }],
+          borderWidth: 3,
+          borderColor: PASS_RED,
+          paddingVertical: 4,
+          paddingHorizontal: 12,
+          borderRadius: 8,
+          backgroundColor: 'rgba(255,255,255,0.85)',
+        },
+        style,
+      ]}
+    >
+      <Text style={{ color: PASS_RED, fontSize: 18, fontWeight: '700', letterSpacing: 2 }}>
+        PASS
+      </Text>
+    </Animated.View>
+  );
+}
+
+function LikeStamp({ swipeX }: { swipeX: SharedValue<number> }) {
+  const style = useAnimatedStyle(() => ({
+    opacity: interpolate(swipeX.value, [0, 20, SWIPE_THRESHOLD], [0, 0, 1], Extrapolation.CLAMP),
+  }));
+  return (
+    <Animated.View
+      style={[
+        {
+          position: 'absolute',
+          top: 24,
+          left: 18,
+          transform: [{ rotate: '-14deg' }],
+          borderWidth: 3,
+          borderColor: LEAF,
+          paddingVertical: 4,
+          paddingHorizontal: 12,
+          borderRadius: 8,
+          backgroundColor: 'rgba(255,255,255,0.85)',
+        },
+        style,
+      ]}
+    >
+      <Text style={{ color: LEAF, fontSize: 18, fontWeight: '700', letterSpacing: 2 }}>LIKE</Text>
+    </Animated.View>
+  );
+}
+
+// ── DiscoverCard ──────────────────────────────────────────────────────────────
+
+function DiscoverCard({
+  card,
+  onLike,
+  onPass,
+}: {
+  card: DiscoverProfile;
+  onLike: () => void;
+  onPass: () => void;
+}) {
+  const swipeX = useSharedValue(0);
+
+  const finishSwipe = useCallback(
+    (direction: 'like' | 'pass') => {
+      swipeX.value = withTiming(0, { duration: 0 });
+      if (direction === 'like') onLike();
+      else onPass();
+    },
+    [swipeX, onLike, onPass]
+  );
+
+  const pan = Gesture.Pan()
+    .activeOffsetX([-10, 10])
+    .onUpdate((e) => {
+      swipeX.value = e.translationX;
+    })
+    .onEnd((e) => {
+      if (e.translationX > SWIPE_THRESHOLD) {
+        swipeX.value = withTiming(SCREEN_WIDTH, { duration: 180 }, () => {
+          runOnJS(finishSwipe)('like');
+        });
+      } else if (e.translationX < -SWIPE_THRESHOLD) {
+        swipeX.value = withTiming(-SCREEN_WIDTH, { duration: 180 }, () => {
+          runOnJS(finishSwipe)('pass');
+        });
+      } else {
+        swipeX.value = withSpring(0, { damping: 18, stiffness: 200 });
+      }
+    });
+
+  const cardStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: swipeX.value }, { rotate: `${swipeX.value * 0.04}deg` }],
+  }));
+
+  return (
+    <GestureDetector gesture={pan}>
+      <Animated.View
+        style={[
+          {
+            flex: 1,
+            borderRadius: 22,
+            overflow: 'hidden',
+            backgroundColor: PAPER,
+            borderWidth: 1,
+            borderColor: LINE,
+            ...Platform.select({
+              ios: {
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 12 },
+                shadowOpacity: 0.1,
+                shadowRadius: 24,
+              },
+              android: { elevation: 6 },
+            }),
+          },
+          cardStyle,
+        ]}
+      >
+        {/* Photo region */}
+        <View style={{ flex: 6, position: 'relative' }}>
+          {card.firstPhoto ? (
+            <Image
+              source={{ uri: card.firstPhoto }}
+              style={StyleSheet.absoluteFillObject}
+              contentFit="cover"
+              transition={200}
+            />
+          ) : (
+            <View style={[StyleSheet.absoluteFillObject, { backgroundColor: '#ebebf0' }]} />
+          )}
+
+          <PassStamp swipeX={swipeX} />
+          <LikeStamp swipeX={swipeX} />
+
+          {/* Photo dots */}
+          <View
+            style={{
+              position: 'absolute',
+              top: 10,
+              left: 16,
+              right: 16,
+              flexDirection: 'row',
+              gap: 4,
+            }}
+          >
+            {[0, 1, 2, 3].map((i) => (
+              <View
+                key={i}
+                style={{
+                  flex: 1,
+                  height: 3,
+                  borderRadius: 2,
+                  backgroundColor: i === 0 ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.4)',
+                }}
+              />
+            ))}
+          </View>
+
+          {/* Gradient overlay via stacked semi-transparent layer */}
+          <View
+            pointerEvents="none"
+            style={{
+              position: 'absolute',
+              left: 0,
+              right: 0,
+              bottom: 0,
+              height: '50%',
+              backgroundColor: 'rgba(0,0,0,0.25)',
+            }}
+          />
+
+          <View style={{ position: 'absolute', left: 16, right: 16, bottom: 14 }}>
+            <View className="flex-row items-baseline gap-2">
+              <Text
+                style={{
+                  fontFamily: 'DMSerifDisplay',
+                  fontSize: 30,
+                  color: '#fff',
+                  letterSpacing: -0.5,
+                }}
+              >
+                {card.chosenName}
+              </Text>
+              <Text style={{ fontSize: 22, color: 'rgba(255,255,255,0.9)' }}>{card.age}</Text>
+            </View>
+            {card.city != null && (
+              <Text style={{ fontSize: 13, color: 'rgba(255,255,255,0.85)', marginTop: 4 }}>
+                {card.city}
+              </Text>
+            )}
+          </View>
+        </View>
+
+        {/* Info region */}
+        <View style={{ flex: 4 }}>
+          <ScrollView
+            className="flex-1"
+            contentContainerStyle={{ padding: 16, paddingBottom: 84, gap: 10 }}
+            showsVerticalScrollIndicator={false}
+          >
+            {card.wingNote != null && card.suggesterName != null && (
+              <WingCredential suggesterName={card.suggesterName} note={card.wingNote} />
+            )}
+            {card.bio != null && (
+              <Text style={{ fontSize: 14, color: INK_MUTED, lineHeight: 20 }}>{card.bio}</Text>
+            )}
+            {card.interests.length > 0 && (
+              <View className="flex-row flex-wrap gap-1.5">
+                {card.interests.map((interest) => (
+                  <Pill key={interest} label={interest} tone="cream" size="sm" />
+                ))}
+              </View>
+            )}
+          </ScrollView>
+
+          {/* Action buttons */}
+          <View
+            pointerEvents="box-none"
+            style={{
+              position: 'absolute',
+              bottom: 14,
+              left: 0,
+              right: 0,
+              flexDirection: 'row',
+              justifyContent: 'center',
+              alignItems: 'center',
+              gap: 18,
+            }}
+          >
+            <Pressable
+              onPress={onPass}
+              style={[
+                {
+                  width: 60,
+                  height: 60,
+                  borderRadius: 30,
+                  backgroundColor: PAPER,
+                  borderWidth: 1,
+                  borderColor: LINE,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                },
+                cardButtonShadow,
+              ]}
+            >
+              <XIcon size={24} color={INK_MUTED} />
+            </Pressable>
+            <Pressable
+              onPress={onLike}
+              style={[
+                {
+                  width: 60,
+                  height: 60,
+                  borderRadius: 30,
+                  backgroundColor: LEAF,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                },
+                cardButtonShadow,
+              ]}
+            >
+              <HeartFilledIcon size={24} color={PAPER} />
+            </Pressable>
+          </View>
+        </View>
+      </Animated.View>
+    </GestureDetector>
   );
 }
 
 // ── MatchOverlay ──────────────────────────────────────────────────────────────
 
-function MatchOverlay({ card, onDismiss }: { card: DiscoverProfile; onDismiss: () => void }) {
+function MatchOverlay({
+  card,
+  onClose,
+  onMessage,
+}: {
+  card: DiscoverProfile;
+  onClose: () => void;
+  onMessage: () => void;
+}) {
   return (
-    <Modal visible animationType="fade" transparent>
-      <ModalView backgroundColor="rgba(0,0,0,0.9)" className="justify-center items-center p-6">
-        <View className="w-[80%] mb-8">
-          <PhotoRect
-            uri={card.firstPhoto}
-            ratio={4 / 5}
-            style={{ borderRadius: 16, overflow: 'hidden' }}
-          />
+    <View
+      style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        zIndex: 50,
+        backgroundColor: '#F5E9D9',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingHorizontal: 28,
+      }}
+    >
+      <View style={{ position: 'absolute', top: 56, right: 20 }}>
+        <Pressable
+          onPress={onClose}
+          style={{
+            width: 38,
+            height: 38,
+            borderRadius: 19,
+            backgroundColor: PAPER,
+            borderWidth: 1,
+            borderColor: LINE,
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <XIcon size={18} color={INK} />
+        </Pressable>
+      </View>
+
+      <Text
+        style={{
+          fontSize: 11,
+          letterSpacing: 2,
+          textTransform: 'uppercase',
+          color: LEAF,
+          marginBottom: 8,
+          fontWeight: '600',
+        }}
+      >
+        Mutual taste detected
+      </Text>
+      <Text
+        style={{
+          fontFamily: 'DMSerifDisplay',
+          fontSize: 56,
+          lineHeight: 60,
+          color: INK,
+          letterSpacing: -1.5,
+          textAlign: 'center',
+        }}
+      >
+        It’s a <Text style={{ fontStyle: 'italic', color: LEAF }}>pear</Text>.
+      </Text>
+
+      <View style={{ flexDirection: 'row', marginTop: 36, marginBottom: 20 }}>
+        <View
+          style={{
+            width: 118,
+            height: 152,
+            borderRadius: 20,
+            overflow: 'hidden',
+            transform: [{ rotate: '-4deg' }],
+            borderWidth: 3,
+            borderColor: PAPER,
+            backgroundColor: '#ebebf0',
+          }}
+        >
+          <View style={[StyleSheet.absoluteFillObject, { backgroundColor: '#D9C9B3' }]} />
         </View>
-        <View className="items-center gap-3 w-full">
-          <Text className="text-4xl font-serif font-bold text-white">It{"'"}s a Match!</Text>
-          <Text className="text-xl text-white/85 mb-2">{card.chosenName}</Text>
-          <View className="w-full gap-3">
-            <Sprout block onPress={onDismiss}>
-              Send a Message
-            </Sprout>
-            <Sprout block variant="secondary" onPress={onDismiss}>
-              Keep Swiping
-            </Sprout>
-          </View>
+        <View
+          style={{
+            width: 118,
+            height: 152,
+            borderRadius: 20,
+            overflow: 'hidden',
+            transform: [{ rotate: '4deg' }, { translateX: -14 }],
+            borderWidth: 3,
+            borderColor: PAPER,
+            backgroundColor: '#ebebf0',
+          }}
+        >
+          {card.firstPhoto ? (
+            <Image
+              source={{ uri: card.firstPhoto }}
+              style={StyleSheet.absoluteFillObject}
+              contentFit="cover"
+            />
+          ) : (
+            <View style={[StyleSheet.absoluteFillObject, { backgroundColor: '#C9B8A0' }]} />
+          )}
         </View>
-      </ModalView>
-    </Modal>
+      </View>
+
+      <Text
+        style={{
+          fontSize: 15,
+          color: INK_MUTED,
+          textAlign: 'center',
+          maxWidth: 280,
+          lineHeight: 22,
+          marginBottom: 24,
+        }}
+      >
+        You and {card.chosenName} both swiped right.
+        {card.suggesterName != null ? ` ${card.suggesterName} called it.` : ''}
+      </Text>
+
+      <View style={{ width: '100%', maxWidth: 320, gap: 10 }}>
+        <Sprout block size="lg" onPress={onMessage}>
+          Send a message
+        </Sprout>
+        <Sprout block size="lg" variant="secondary" onPress={onClose}>
+          Keep swiping
+        </Sprout>
+      </View>
+    </View>
   );
 }
 
-// ── EmptyState ────────────────────────────────────────────────────────────────
+// ── Empty states ──────────────────────────────────────────────────────────────
 
-function EmptyState({ tabIndex, wingerName }: { tabIndex: number; wingerName?: string }) {
-  if (tabIndex === 0) {
-    return (
-      <View className="flex-1 justify-center items-center p-6 gap-4">
-        <Text className="text-base text-fg-muted text-center" style={{ lineHeight: 24 }}>
-          No one has liked you yet — check back soon.
+function FilterEmptyState({ onClear }: { onClear: () => void }) {
+  return (
+    <View
+      style={{
+        flex: 1,
+        borderRadius: 22,
+        backgroundColor: PAPER,
+        borderWidth: 1,
+        borderColor: LINE,
+        borderStyle: 'dashed',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 32,
+        gap: 16,
+      }}
+    >
+      <Text
+        style={{
+          fontFamily: 'DMSerifDisplay',
+          fontSize: 24,
+          lineHeight: 26,
+          color: INK,
+          letterSpacing: -0.4,
+        }}
+      >
+        Empty basket.
+      </Text>
+      <Text
+        style={{
+          fontSize: 14,
+          color: INK_MUTED,
+          lineHeight: 21,
+          textAlign: 'center',
+          maxWidth: 280,
+        }}
+      >
+        No one in your deck matches every filter you have on right now. Try fewer.
+      </Text>
+      <Sprout variant="secondary" onPress={onClear}>
+        Clear filters
+      </Sprout>
+    </View>
+  );
+}
+
+function WingEmptyState({ onInvite }: { onInvite: () => void }) {
+  return (
+    <View
+      style={{
+        flex: 1,
+        borderRadius: 22,
+        backgroundColor: PAPER,
+        borderWidth: 1,
+        borderColor: LINE,
+        borderStyle: 'dashed',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 32,
+        gap: 16,
+      }}
+    >
+      <View
+        style={{
+          width: 96,
+          height: 96,
+          borderRadius: 48,
+          backgroundColor: LEAF_SOFT,
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <PearMark size={56} />
+      </View>
+      <View className="items-center">
+        <Text
+          style={{
+            fontFamily: 'DMSerifDisplay',
+            fontSize: 26,
+            lineHeight: 28,
+            color: INK,
+            letterSpacing: -0.4,
+            textAlign: 'center',
+          }}
+        >
+          A pear takes two.
+        </Text>
+        <Text
+          style={{
+            fontSize: 14,
+            color: INK_MUTED,
+            lineHeight: 21,
+            textAlign: 'center',
+            marginTop: 10,
+            maxWidth: 280,
+          }}
+        >
+          Hand-picked profiles come from friends who know you. Invite someone to start scouting.
         </Text>
       </View>
-    );
-  }
-
-  const copy = wingerName
-    ? `No picks from ${wingerName} yet. Ask them to swipe for you.`
-    : "You're all caught up. Check back soon for new profiles.";
-
-  return (
-    <View className="flex-1 justify-center items-center p-6 gap-4">
-      <Text className="text-base text-fg-muted text-center" style={{ lineHeight: 24 }}>
-        {copy}
-      </Text>
+      <View style={{ width: '100%', maxWidth: 240, gap: 8 }}>
+        <Sprout block onPress={onInvite}>
+          Invite a wingperson
+        </Sprout>
+      </View>
     </View>
   );
 }
 
 // ── PoolView ──────────────────────────────────────────────────────────────────
-// Shared swipe surface. Receives an already-fetched initial pool and a paginating
-// fetcher; the per-tab wrappers below choose which generated suspense hook supplies them.
 
 type PoolViewProps = {
   userId: string;
   initialPool: DiscoverProfile[];
   fetchPool: PoolFetcher;
-  activeTabIndex: number;
-  wingerTabs: WingerTab[];
-  onDecrement: ((recipientId: string) => void) | null;
+  emptyState: React.ReactNode;
+  onDecrementLikes: ((recipientId: string) => void) | null;
 };
 
-function PoolView({
-  userId,
-  initialPool,
-  fetchPool,
-  activeTabIndex,
-  wingerTabs,
-  onDecrement,
-}: PoolViewProps) {
+function PoolView({ userId, initialPool, fetchPool, emptyState, onDecrementLikes }: PoolViewProps) {
   const queryClient = useQueryClient();
   const { pool, index, like, pass } = useDiscover(fetchPool, userId, initialPool);
   const [matchCard, setMatchCard] = useState<DiscoverProfile | null>(null);
   const card = pool[index] ?? null;
 
   function invalidatePools(decidedCard: DiscoverProfile) {
-    // Mark stale without refetching the active subscription — the next time a tab
-    // remounts (e.g. after a tab switch unmounts DiscoverPool), the cached pool
-    // won't include the just-decided candidate.
     queryClient.invalidateQueries({ queryKey: ['/api/likes-you'], refetchType: 'none' });
     queryClient.invalidateQueries({ queryKey: ['/api/discover'], refetchType: 'none' });
-    // Acting on a winger-suggested card can empty that winger's pending list,
-    // which removes their per-winger Discover tab. Refetch immediately so the
-    // tab bar reflects the new state without requiring a cold restart.
     if (decidedCard.suggestedBy != null) {
-      queryClient.invalidateQueries({ queryKey: getGetApiWingerTabsQueryKey() });
+      queryClient.invalidateQueries({ queryKey: ['/api/winger-tabs'], refetchType: 'none' });
     }
   }
 
   async function handleLike() {
     if (!card) return;
     const decidedCard = card;
-    onDecrement?.(decidedCard.userId);
+    onDecrementLikes?.(decidedCard.userId);
     const result: LikeResult = await like();
     invalidatePools(decidedCard);
     if (result === 'match') {
@@ -267,68 +845,59 @@ function PoolView({
   async function handlePass() {
     if (!card) return;
     const decidedCard = card;
-    onDecrement?.(decidedCard.userId);
+    onDecrementLikes?.(decidedCard.userId);
     await pass();
     invalidatePools(decidedCard);
   }
 
+  if (card == null) {
+    return <View className="flex-1 px-3.5 pb-2">{emptyState}</View>;
+  }
+
   return (
     <>
-      <View className="flex-1">
-        {card != null ? (
-          <CardView card={card} />
-        ) : (
-          <EmptyState tabIndex={activeTabIndex} wingerName={wingerTabs[activeTabIndex - 2]?.name} />
-        )}
+      <View className="flex-1 px-3.5 pb-2">
+        <DiscoverCard card={card} onLike={handleLike} onPass={handlePass} />
       </View>
-
-      {card != null && (
-        <View className="flex-row justify-center items-center gap-[40px] py-5 pb-7">
-          <Pressable
-            className="w-16 h-16 rounded-full justify-center items-center bg-white"
-            style={cardButtonShadow}
-            onPress={handlePass}
-          >
-            <Text className="text-2xl text-fg-muted">✕</Text>
-          </Pressable>
-          <Pressable
-            className="w-16 h-16 rounded-full justify-center items-center bg-accent"
-            style={cardButtonShadow}
-            onPress={handleLike}
-          >
-            <Text className="text-2xl text-white">♥</Text>
-          </Pressable>
-        </View>
+      {matchCard && (
+        <MatchOverlay
+          card={matchCard}
+          onClose={() => setMatchCard(null)}
+          onMessage={() => setMatchCard(null)}
+        />
       )}
-
-      {matchCard && <MatchOverlay card={matchCard} onDismiss={() => setMatchCard(null)} />}
     </>
   );
 }
 
-// ── LikesYouPool / DiscoverFeedPool ───────────────────────────────────────────
-// Each calls exactly one generated suspense hook so React's hook order is stable.
-// DiscoverPool dispatches between them based on the active tab.
+// ── Pool sources ──────────────────────────────────────────────────────────────
 
 function LikesYouPool({
   userId,
-  activeTabIndex,
-  wingerTabs,
-  onDecrement,
+  emptyState,
+  onDecrementLikes,
+  handPickedOnly,
 }: {
   userId: string;
-  activeTabIndex: number;
-  wingerTabs: WingerTab[];
-  onDecrement: ((recipientId: string) => void) | null;
+  emptyState: React.ReactNode;
+  onDecrementLikes: ((recipientId: string) => void) | null;
+  handPickedOnly: boolean;
 }) {
-  const { data: initialPool } = useGetApiLikesYouSuspense({
+  const { data: rawInitialPool } = useGetApiLikesYouSuspense({
     pageSize: PAGE_SIZE,
     pageOffset: 0,
   });
 
+  const initialPool = handPickedOnly
+    ? rawInitialPool.filter((p) => p.suggestedBy != null)
+    : rawInitialPool;
+
   const fetchPool = useCallback<PoolFetcher>(
-    (_uid, pageSize, offset) => getApiLikesYou({ pageSize, pageOffset: offset }),
-    []
+    async (_uid, pageSize, offset) => {
+      const data = await getApiLikesYou({ pageSize, pageOffset: offset });
+      return handPickedOnly ? data.filter((p) => p.suggestedBy != null) : data;
+    },
+    [handPickedOnly]
   );
 
   return (
@@ -336,49 +905,31 @@ function LikesYouPool({
       userId={userId}
       initialPool={initialPool}
       fetchPool={fetchPool}
-      activeTabIndex={activeTabIndex}
-      wingerTabs={wingerTabs}
-      onDecrement={onDecrement}
+      emptyState={emptyState}
+      onDecrementLikes={onDecrementLikes}
     />
   );
 }
 
 function DiscoverFeedPool({
   userId,
-  activeTabIndex,
-  wingerTabs,
-  tabs,
-  onDecrement,
+  emptyState,
+  handPickedOnly,
 }: {
   userId: string;
-  activeTabIndex: number;
-  wingerTabs: WingerTab[];
-  tabs: string[];
-  onDecrement: ((recipientId: string) => void) | null;
+  emptyState: React.ReactNode;
+  handPickedOnly: boolean;
 }) {
-  const isForYou = activeTabIndex === 1;
-  const isAll = activeTabIndex === tabs.length - 1;
-  const wingerId =
-    !isAll && !isForYou && activeTabIndex >= 2
-      ? (wingerTabs[activeTabIndex - 2]?.id ?? null)
-      : null;
-
   const { data: initialPool } = useGetApiDiscoverSuspense({
-    filterWingerId: wingerId ?? undefined,
     pageSize: PAGE_SIZE,
     pageOffset: 0,
-    wingerOnly: isForYou,
+    wingerOnly: handPickedOnly,
   });
 
   const fetchPool = useCallback<PoolFetcher>(
     (_uid, pageSize, offset) =>
-      getApiDiscover({
-        filterWingerId: wingerId ?? undefined,
-        pageSize,
-        pageOffset: offset,
-        wingerOnly: isForYou,
-      }),
-    [wingerId, isForYou]
+      getApiDiscover({ pageSize, pageOffset: offset, wingerOnly: handPickedOnly }),
+    [handPickedOnly]
   );
 
   return (
@@ -386,45 +937,8 @@ function DiscoverFeedPool({
       userId={userId}
       initialPool={initialPool}
       fetchPool={fetchPool}
-      activeTabIndex={activeTabIndex}
-      wingerTabs={wingerTabs}
-      onDecrement={onDecrement}
-    />
-  );
-}
-
-type DiscoverPoolProps = {
-  userId: string;
-  activeTabIndex: number;
-  wingerTabs: WingerTab[];
-  tabs: string[];
-  onDecrement: ((recipientId: string) => void) | null;
-};
-
-function DiscoverPool({
-  userId,
-  activeTabIndex,
-  wingerTabs,
-  tabs,
-  onDecrement,
-}: DiscoverPoolProps) {
-  if (activeTabIndex === 0) {
-    return (
-      <LikesYouPool
-        userId={userId}
-        activeTabIndex={activeTabIndex}
-        wingerTabs={wingerTabs}
-        onDecrement={onDecrement}
-      />
-    );
-  }
-  return (
-    <DiscoverFeedPool
-      userId={userId}
-      activeTabIndex={activeTabIndex}
-      wingerTabs={wingerTabs}
-      tabs={tabs}
-      onDecrement={onDecrement}
+      emptyState={emptyState}
+      onDecrementLikes={null}
     />
   );
 }
@@ -432,52 +946,70 @@ function DiscoverPool({
 // ── DiscoverContent ───────────────────────────────────────────────────────────
 
 function DiscoverContent({ userId }: { userId: string }) {
-  const { data: wingerTabs } = useGetApiWingerTabsSuspense();
   const { data: likesYouCountResponse } = useGetApiLikesYouCountSuspense();
   const initialLikesYouCount = likesYouCountResponse.count;
-  const [activeTabIndex, setActiveTabIndex] = useState(0);
+  const [activeFilters, setActiveFilters] = useState<Filter[]>([]);
   const [decidedLikesYou, setDecidedLikesYou] = useState<ReadonlySet<string>>(() => new Set());
 
   const likesYouCount = Math.max(0, initialLikesYouCount - decidedLikesYou.size);
-  // tabs: [Likes You, For You, ...wingers, All]
-  const tabs = ['Likes You', 'For You', ...wingerTabs.map((w: WingerTab) => w.name), 'All'];
+
+  const toggleFilter = (key: Filter) => {
+    setActiveFilters((prev) =>
+      prev.includes(key) ? prev.filter((f) => f !== key) : [...prev, key]
+    );
+  };
+  const clearFilters = () => setActiveFilters([]);
+
+  const wantsLikes = activeFilters.includes('likes');
+  const wantsHandPicked = activeFilters.includes('handpicked');
+  const filterKey = `${wantsLikes ? 1 : 0}-${wantsHandPicked ? 1 : 0}`;
+
+  const emptyState =
+    wantsHandPicked && !wantsLikes ? (
+      <WingEmptyState onInvite={() => router.push('/(tabs)/profile/wingpeople')} />
+    ) : (
+      <FilterEmptyState onClear={clearFilters} />
+    );
 
   return (
-    <SafeAreaView className="flex-1 bg-page">
+    <SafeAreaView className="flex-1 bg-background">
       <LargeHeader title="Discover" />
-      <TextTabBar
-        tabs={tabs}
-        active={activeTabIndex}
-        setActive={setActiveTabIndex}
-        badges={{ 0: likesYouCount }}
+      <DiscoverFilters
+        active={activeFilters}
+        onToggle={toggleFilter}
+        counts={{ likes: likesYouCount }}
       />
 
-      {/* Inner Suspense keeps the tab bar visible while the pool loads */}
       <Suspense
         fallback={
           <View className="flex-1 justify-center items-center p-6 gap-4">
-            <ActivityIndicator size="large" color={colors.purple} />
+            <ActivityIndicator size="large" color={LEAF} />
           </View>
         }
       >
-        <DiscoverPool
-          key={activeTabIndex}
-          userId={userId}
-          activeTabIndex={activeTabIndex}
-          wingerTabs={wingerTabs}
-          tabs={tabs}
-          onDecrement={
-            activeTabIndex === 0
-              ? (recipientId: string) =>
-                  setDecidedLikesYou((prev) => {
-                    if (prev.has(recipientId)) return prev;
-                    const next = new Set(prev);
-                    next.add(recipientId);
-                    return next;
-                  })
-              : null
-          }
-        />
+        {wantsLikes ? (
+          <LikesYouPool
+            key={`likes-${filterKey}`}
+            userId={userId}
+            emptyState={emptyState}
+            onDecrementLikes={(recipientId: string) =>
+              setDecidedLikesYou((prev) => {
+                if (prev.has(recipientId)) return prev;
+                const next = new Set(prev);
+                next.add(recipientId);
+                return next;
+              })
+            }
+            handPickedOnly={wantsHandPicked}
+          />
+        ) : (
+          <DiscoverFeedPool
+            key={`feed-${filterKey}`}
+            userId={userId}
+            emptyState={emptyState}
+            handPickedOnly={wantsHandPicked}
+          />
+        )}
       </Suspense>
     </SafeAreaView>
   );
