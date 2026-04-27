@@ -2,10 +2,7 @@ import { Tabs } from 'expo-router';
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 
-import { HapticTab } from '@/components/haptic-tab';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { BottomTabBar } from '@/components/ui/BottomTabBar';
 import { useSession } from '@/context/auth';
 import {
   getApiDatingProfilesMe,
@@ -15,7 +12,6 @@ import {
 } from '@/lib/api/generated/profiles/profiles';
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
   const { session } = useSession();
 
   const { data: profile } = useQuery({
@@ -38,53 +34,14 @@ export default function TabLayout() {
 
   return (
     <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        headerShown: false,
-        tabBarButton: HapticTab,
-      }}
+      screenOptions={{ headerShown: false }}
+      tabBar={(props) => <BottomTabBar {...props} role={isWinger ? 'winger' : 'dater'} />}
     >
-      <Tabs.Screen
-        name="discover"
-        options={{
-          title: 'Discover',
-          href: daterHref,
-          tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="person.crop.square.fill" color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="matches"
-        options={{
-          title: 'Matches',
-          href: daterHref,
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="heart.fill" color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="messages"
-        options={{
-          title: 'Messages',
-          href: daterHref,
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="bubble.left.fill" color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="wingpeople"
-        options={{
-          title: 'Wingpeople',
-          href: wingerHref,
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="person.2.fill" color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="profile"
-        options={{
-          title: 'Profile',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="person.fill" color={color} />,
-        }}
-      />
+      <Tabs.Screen name="discover" options={{ title: 'Discover', href: daterHref }} />
+      <Tabs.Screen name="matches" options={{ title: 'Matches', href: daterHref }} />
+      <Tabs.Screen name="messages" options={{ title: 'Messages', href: daterHref }} />
+      <Tabs.Screen name="wingpeople" options={{ title: 'Wingpeople', href: wingerHref }} />
+      <Tabs.Screen name="profile" options={{ title: 'Profile' }} />
     </Tabs>
   );
 }
