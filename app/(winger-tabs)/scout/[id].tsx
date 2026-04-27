@@ -122,7 +122,7 @@ function EmptyState({ daterName }: { daterName: string }) {
 
 function WingSwipeContent() {
   const router = useRouter();
-  const { daterId } = useLocalSearchParams<{ daterId: string }>();
+  const { id: daterId } = useLocalSearchParams<{ id: string }>();
 
   const { data: daterContext } = useGetApiProfilesUserIdSuspense(daterId);
   const { data: initialPool } = useGetApiWingPoolSuspense({

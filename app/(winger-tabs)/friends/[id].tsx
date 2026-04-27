@@ -160,7 +160,7 @@ function FriendDetailContent() {
             <Sprout
               block
               size="md"
-              onPress={() => router.push(`/(tabs)/wingpeople/wingswipe?daterId=${daterId}` as any)}
+              onPress={() => router.push(`/(winger-tabs)/scout/${daterId}` as any)}
             >
               Scout for {firstName}
             </Sprout>

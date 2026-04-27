@@ -12,8 +12,7 @@ function ScoutContent() {
   const { data } = useGetApiWingpeopleSuspense();
   const { wingingFor, weeklyCounts } = data;
 
-  const goScout = (daterId: string) =>
-    router.push(`/(tabs)/wingpeople/wingswipe?daterId=${daterId}` as any);
+  const goScout = (daterId: string) => router.push(`/(winger-tabs)/scout/${daterId}` as any);
 
   return (
     <ScrollView contentContainerClassName="pb-32">
