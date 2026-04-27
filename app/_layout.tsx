@@ -29,6 +29,7 @@ import {
 import { queryClient } from '@/lib/queryClient';
 import { registerPushToken } from '@/lib/push';
 import ScreenSuspense from '@/components/ui/ScreenSuspense';
+import Splash from '@/components/ui/Splash';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -70,12 +71,12 @@ function AuthenticatedNavigator({ userId }: { userId: string }) {
 function RootNavigator() {
   const { session, loading } = useSession();
 
-  if (loading) return null;
+  if (loading) return <Splash />;
 
   if (!session) return <Redirect href="/(auth)/login" />;
 
   return (
-    <ScreenSuspense>
+    <ScreenSuspense fallback={<Splash />}>
       <AuthenticatedNavigator userId={session.user.id} />
     </ScreenSuspense>
   );
