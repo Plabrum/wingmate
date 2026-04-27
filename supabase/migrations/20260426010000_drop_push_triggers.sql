@@ -16,5 +16,6 @@ drop function if exists public.notify_wing_invite();
 drop function if exists public.notify_wing_suggestion();
 drop function if exists public.notify_photo_suggestion();
 
-alter database postgres reset "app.supabase_url";
-alter database postgres reset "app.service_role_key";
+-- app.supabase_url and app.service_role_key were set by the old push trigger
+-- migration. ALTER DATABASE requires superuser; drop them manually via the
+-- Supabase dashboard SQL editor if desired (not required for correctness).
