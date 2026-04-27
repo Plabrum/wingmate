@@ -61,18 +61,6 @@ export async function fetchDiscoverPool(
           ),
         ),
     ),
-    notExists(
-      db
-        .select({ one: sql`1` })
-        .from(decisions)
-        .where(
-          and(
-            eq(decisions.actorId, datingProfiles.userId),
-            eq(decisions.recipientId, viewerId),
-            eq(decisions.decision, 'approved'),
-          ),
-        ),
-    ),
   ];
 
   if (filterWingerId) {
