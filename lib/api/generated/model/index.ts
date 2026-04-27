@@ -5,6 +5,8 @@
  * OpenAPI spec version: 1.0.0
  */
 
+export * from './activityKind';
+export * from './activityRow';
 export * from './actSuggestionRequest';
 export * from './actSuggestionRequestDecision';
 export * from './actSuggestionResponse';
@@ -37,6 +39,7 @@ export * from './discoverResponse';
 export * from './getApiDiscoverParams';
 export * from './getApiLikesYouParams';
 export * from './getApiMatchesMatchIdMessagesParams';
+export * from './getApiWingerActivityParams';
 export * from './getApiWingPoolParams';
 export * from './incomingInvitation';
 export * from './inviteWingpersonRequest';
@@ -108,6 +111,7 @@ export * from './updateDatingProfileRequestReligiousPreference';
 export * from './updateProfileRequest';
 export * from './updateProfileRequestGender';
 export * from './updateProfileRequestRole';
+export * from './wingerActivityResponse';
 export * from './wingerSummary';
 export * from './wingerTab';
 export * from './wingerTabsResponse';

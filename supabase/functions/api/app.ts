@@ -13,6 +13,7 @@ import { mountMessages } from './domains/messages/route.ts';
 import { mountPhotos } from './domains/photos/route.ts';
 import { mountProfiles } from './domains/profiles/route.ts';
 import { mountPrompts } from './domains/prompts/route.ts';
+import { mountWingerActivity } from './domains/winger-activity/route.ts';
 import { mountWingerTabs } from './domains/winger-tabs/route.ts';
 import { mountWingPool } from './domains/wing-pool/route.ts';
 import type { AppEnv } from './types.ts';
@@ -47,6 +48,7 @@ export function createApp() {
   mountDiscover(app);
   mountLikesYou(app);
   mountWingerTabs(app);
+  mountWingerActivity(app);
   mountWingPool(app);
   mountDecisions(app);
   mountProfiles(app);

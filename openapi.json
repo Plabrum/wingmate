@@ -238,6 +238,59 @@
           "$ref": "#/components/schemas/WingerTab"
         }
       },
+      "ActivityKind": {
+        "type": "string",
+        "enum": ["match", "pass", "sent", "reply"]
+      },
+      "ActivityRow": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/ActivityKind"
+          },
+          "daterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "daterName": {
+            "type": "string"
+          },
+          "recipientName": {
+            "type": "string",
+            "nullable": true
+          },
+          "promptQuestion": {
+            "type": "string",
+            "nullable": true
+          },
+          "message": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "daterId",
+          "daterName",
+          "recipientName",
+          "promptQuestion",
+          "message",
+          "createdAt"
+        ]
+      },
+      "WingerActivityResponse": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/ActivityRow"
+        }
+      },
       "WingProfile": {
         "type": "object",
         "properties": {
@@ -2095,6 +2148,44 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/WingerTabsResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated"
+          }
+        }
+      }
+    },
+    "/api/winger-activity": {
+      "get": {
+        "tags": ["winger-activity"],
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 50
+            },
+            "required": false,
+            "name": "limit",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Recent winger activity: suggestion outcomes and authored prompt replies, newest first",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WingerActivityResponse"
                 }
               }
             }
