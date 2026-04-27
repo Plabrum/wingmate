@@ -16,11 +16,6 @@ import {
 } from '@/lib/api/generated/profiles/profiles';
 import { useGetApiWingpeopleSuspense } from '@/lib/api/generated/contacts/contacts';
 
-const INK = '#1F1B16';
-const INK2 = '#4A4338';
-const INK3 = '#8B8170';
-const PAPER = '#FBF8F1';
-
 function MeContent() {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -50,7 +45,7 @@ function MeContent() {
   return (
     <ScrollView contentContainerClassName="pb-32">
       <View className="px-4 pt-2 pb-1 flex-row items-center justify-between">
-        <Text className="font-serif" style={{ fontSize: 28, color: INK, letterSpacing: -0.5 }}>
+        <Text className="font-serif text-ink" style={{ fontSize: 28, letterSpacing: -0.5 }}>
           Me
         </Text>
         <Pressable
@@ -59,9 +54,7 @@ function MeContent() {
           style={{ borderWidth: 1, borderColor: 'rgba(31,27,22,0.10)' }}
           hitSlop={6}
         >
-          <Text className="text-xs font-semibold" style={{ color: INK2 }}>
-            Switch to dater mode
-          </Text>
+          <Text className="text-xs font-semibold text-ink-mid">Switch to dater mode</Text>
         </Pressable>
       </View>
 
@@ -72,36 +65,36 @@ function MeContent() {
           photoUri={profile?.avatarUrl ?? null}
         />
         <View style={{ flex: 1 }}>
-          <Text className="font-serif" style={{ fontSize: 22, color: INK, letterSpacing: -0.4 }}>
+          <Text className="font-serif text-ink" style={{ fontSize: 22, letterSpacing: -0.4 }}>
             {profile?.chosenName ?? 'Winger'}
           </Text>
-          <Text className="text-sm mt-0.5" style={{ color: INK3 }}>
-            {subtitle}
-          </Text>
+          <Text className="text-sm mt-0.5 text-ink-dim">{subtitle}</Text>
         </View>
         <Pressable
           onPress={() => router.push('/(tabs)/profile/settings' as any)}
           hitSlop={8}
           className="px-2 py-2"
         >
-          <Text style={{ color: INK2, fontSize: 18 }}>⚙</Text>
+          <Text className="text-ink-mid" style={{ fontSize: 18 }}>
+            ⚙
+          </Text>
         </Pressable>
       </View>
 
       <View className="px-4">
         <View
+          className="bg-ink"
           style={{
-            backgroundColor: INK,
             borderRadius: 20,
             padding: 18,
           }}
         >
           <Text
+            className="text-surface"
             style={{
               fontSize: 10,
               letterSpacing: 1.6,
               textTransform: 'uppercase',
-              color: PAPER,
               opacity: 0.7,
               marginBottom: 8,
             }}
@@ -109,12 +102,12 @@ function MeContent() {
             Your wing card
           </Text>
           <Text
-            className="font-serif"
-            style={{ fontSize: 28, lineHeight: 32, letterSpacing: -0.5, color: PAPER }}
+            className="font-serif text-surface"
+            style={{ fontSize: 28, lineHeight: 32, letterSpacing: -0.5 }}
           >
             {wingingForCount} {wingingForCount === 1 ? 'friend trusts' : 'friends trust'} your taste
           </Text>
-          <Text style={{ fontSize: 12.5, color: PAPER, opacity: 0.7, marginTop: 6 }}>
+          <Text className="text-surface" style={{ fontSize: 12.5, opacity: 0.7, marginTop: 6 }}>
             Send picks from Scout. Track replies in Activity.
           </Text>
         </View>
@@ -129,10 +122,8 @@ function MeContent() {
           className="bg-white rounded-xl px-3.5 py-3 flex-row items-center"
           style={{ borderWidth: 1, borderColor: 'rgba(31,27,22,0.06)', gap: 10 }}
         >
-          <Text className="flex-1 text-sm" style={{ color: INK }}>
-            Account & notifications
-          </Text>
-          <Text style={{ color: INK3 }}>›</Text>
+          <Text className="flex-1 text-sm text-ink">Account & notifications</Text>
+          <Text className="text-ink-dim">›</Text>
         </Pressable>
       </View>
 
@@ -146,7 +137,7 @@ function MeContent() {
 
       {profile?.role === 'winger' ? (
         <View className="px-4 mt-6">
-          <Text className="text-sm mb-2" style={{ color: INK3 }}>
+          <Text className="text-sm mb-2 text-ink-dim">
             Want to date too? Spin up your own profile.
           </Text>
           <Sprout block variant="secondary" onPress={handleSwitchToDater}>

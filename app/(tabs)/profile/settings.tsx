@@ -12,9 +12,7 @@ import { useGetApiWingpeopleSuspense } from '@/lib/api/generated/contacts/contac
 import { View, Text, ScrollView, Pressable, SafeAreaView } from '@/lib/tw';
 import ScreenSuspense from '@/components/ui/ScreenSuspense';
 
-const PAPER = '#FBF8F1';
 const INK = '#1F1B16';
-const INK2 = '#4A4338';
 const INK3 = '#8B8170';
 const LINE = 'rgba(31,27,22,0.10)';
 const DANGER = '#A33';
@@ -56,11 +54,11 @@ function SectionLabel({ children }: { children: string }) {
   if (!children) return <View style={{ height: 8 }} />;
   return (
     <Text
+      className="text-ink-dim"
       style={{
         fontSize: 11,
         letterSpacing: 1.2,
         textTransform: 'uppercase',
-        color: INK3,
         fontWeight: '600',
         paddingHorizontal: 24,
         paddingTop: 18,
@@ -104,7 +102,11 @@ function Row({ label, detail, danger, last, onPress }: RowProps) {
       >
         {label}
       </Text>
-      {detail ? <Text style={{ color: INK3, fontSize: 14, marginRight: 8 }}>{detail}</Text> : null}
+      {detail ? (
+        <Text className="text-ink-dim" style={{ fontSize: 14, marginRight: 8 }}>
+          {detail}
+        </Text>
+      ) : null}
       {!danger ? <ChevronRightIcon /> : null}
     </Pressable>
   );
@@ -117,8 +119,8 @@ function Section({ title, children }: { title: string; children: React.ReactNode
     <View style={{ marginBottom: 22 }}>
       <SectionLabel>{title}</SectionLabel>
       <View
+        className="bg-surface"
         style={{
-          backgroundColor: PAPER,
           borderRadius: 18,
           marginHorizontal: 16,
           overflow: 'hidden',
@@ -160,7 +162,7 @@ function SettingsScreenInner() {
   };
 
   return (
-    <SafeAreaView className="flex-1" edges={['top']} style={{ backgroundColor: '#F5F1E8' }}>
+    <SafeAreaView className="flex-1 bg-canvas" edges={['top']}>
       <View
         className="flex-row items-center"
         style={{ paddingHorizontal: 12, paddingTop: 8, paddingBottom: 8, gap: 4 }}
@@ -172,7 +174,7 @@ function SettingsScreenInner() {
         >
           <BackIcon />
         </Pressable>
-        <Text className="font-serif" style={{ fontSize: 26, color: INK, letterSpacing: -0.4 }}>
+        <Text className="font-serif text-ink" style={{ fontSize: 26, letterSpacing: -0.4 }}>
           Settings
         </Text>
       </View>
@@ -218,8 +220,8 @@ function SettingsScreenInner() {
         </Section>
 
         <Text
+          className="text-ink-mid"
           style={{
-            color: INK2,
             opacity: 0.5,
             fontSize: 11,
             textAlign: 'center',

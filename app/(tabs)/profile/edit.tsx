@@ -19,8 +19,6 @@ import { createForm, RootError, SubmitButton, useFormSubmit } from '@/lib/forms'
 import ScreenSuspense from '@/components/ui/ScreenSuspense';
 
 const INK = '#1F1B16';
-const INK3 = '#8B8170';
-const LEAF = '#5A8C3A';
 
 function BackIcon({ color = INK }: { color?: string }) {
   return (
@@ -45,10 +43,7 @@ function EditHeader({ onBack, right }: { onBack: () => void; right?: React.React
       <Pressable onPress={onBack} hitSlop={12} style={{ padding: 8, marginLeft: -4 }}>
         <BackIcon />
       </Pressable>
-      <Text
-        className="font-serif"
-        style={{ fontSize: 26, color: INK, letterSpacing: -0.4, flex: 1 }}
-      >
+      <Text className="font-serif text-ink" style={{ fontSize: 26, letterSpacing: -0.4, flex: 1 }}>
         Edit profile
       </Text>
       {right}
@@ -101,11 +96,11 @@ const editForm = createForm(editSchema);
 function SectionLabel({ label }: { label: string }) {
   return (
     <Text
+      className="text-ink-dim"
       style={{
         fontSize: 10.5,
         letterSpacing: 1.4,
         textTransform: 'uppercase',
-        color: INK3,
         fontWeight: '600',
         marginTop: 20,
         marginBottom: 10,
@@ -127,8 +122,8 @@ function HeaderSave() {
       style={{ paddingHorizontal: 8 }}
     >
       <Text
-        className={cn(disabled && 'opacity-40')}
-        style={{ fontSize: 14, fontWeight: '600', color: LEAF }}
+        className={cn('text-purple', disabled && 'opacity-40')}
+        style={{ fontSize: 14, fontWeight: '600' }}
       >
         {isSubmitting ? 'Saving…' : 'Save'}
       </Text>
@@ -146,11 +141,7 @@ function EditProfileForm({
   const queryClient = useQueryClient();
 
   return (
-    <SafeAreaView
-      className="flex-1"
-      edges={['top', 'bottom']}
-      style={{ backgroundColor: '#F5F1E8' }}
-    >
+    <SafeAreaView className="flex-1 bg-canvas" edges={['top', 'bottom']}>
       <editForm.Form
         defaultValues={{
           bio: data.bio ?? '',
@@ -258,11 +249,7 @@ function EditProfileScreenInner() {
 
   if (!datingProfile) {
     return (
-      <SafeAreaView
-        className="flex-1"
-        edges={['top', 'bottom']}
-        style={{ backgroundColor: '#F5F1E8' }}
-      >
+      <SafeAreaView className="flex-1 bg-canvas" edges={['top', 'bottom']}>
         <EditHeader onBack={() => router.back()} />
       </SafeAreaView>
     );

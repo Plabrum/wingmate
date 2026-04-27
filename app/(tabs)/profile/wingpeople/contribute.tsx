@@ -21,10 +21,7 @@ import { Sprout } from '@/components/ui/Sprout';
 import ScreenSuspense from '@/components/ui/ScreenSuspense';
 
 const INK = '#1F1B16';
-const INK2 = '#4A4338';
 const INK3 = '#8B8170';
-const PAPER = '#FBF8F1';
-const CREAM = '#F5F1E8';
 const LINE = 'rgba(31,27,22,0.10)';
 const LEAF = '#5A8C3A';
 const LEAF_SOFT = 'rgba(90,140,58,0.12)';
@@ -85,11 +82,11 @@ function CheckIcon({ size = 14, color = LEAF }: { size?: number; color?: string 
 function SectionLabel({ children }: { children: string }) {
   return (
     <Text
+      className="text-ink-dim"
       style={{
         fontSize: 11,
         letterSpacing: 1.2,
         textTransform: 'uppercase',
-        color: INK3,
         fontWeight: '600',
         paddingTop: 18,
         paddingBottom: 10,
@@ -133,8 +130,8 @@ function ResponseModal({
           style={{ position: 'absolute', bottom: 0, left: 0, right: 0 }}
         >
           <View
+            className="bg-canvas"
             style={{
-              backgroundColor: CREAM,
               borderTopLeftRadius: 24,
               borderTopRightRadius: 24,
               paddingHorizontal: 20,
@@ -153,9 +150,9 @@ function ResponseModal({
               }}
             />
             <Text
+              className="text-ink-dim"
               style={{
                 fontSize: 10,
-                color: INK3,
                 letterSpacing: 1.4,
                 textTransform: 'uppercase',
                 fontWeight: '600',
@@ -164,10 +161,9 @@ function ResponseModal({
               Prompt
             </Text>
             <Text
-              className="font-serif"
+              className="font-serif text-ink"
               style={{
                 fontSize: 19,
-                color: INK,
                 lineHeight: 24,
                 letterSpacing: -0.2,
                 marginTop: 4,
@@ -178,6 +174,7 @@ function ResponseModal({
               {promptQuestion}
             </Text>
             <TextInput
+              className="bg-surface text-ink"
               style={{
                 width: '100%',
                 minHeight: 100,
@@ -185,9 +182,7 @@ function ResponseModal({
                 borderColor: LINE,
                 borderRadius: 14,
                 padding: 12,
-                backgroundColor: PAPER,
                 fontSize: 14,
-                color: INK,
                 textAlignVertical: 'top',
               }}
               placeholder={`Why ${daterFirstName || 'they'} should answer this…`}
@@ -289,8 +284,8 @@ function ContributeContent() {
           <BackIcon />
         </Pressable>
         <Text
-          className="font-serif"
-          style={{ fontSize: 22, color: INK, letterSpacing: -0.3, flex: 1 }}
+          className="font-serif text-ink"
+          style={{ fontSize: 22, letterSpacing: -0.3, flex: 1 }}
         >
           {firstName}
           {"'"}s profile
@@ -319,7 +314,8 @@ function ContributeContent() {
                 }}
               >
                 <Text
-                  style={{ fontSize: 10.5, color: INK2, fontWeight: '600', letterSpacing: 0.4 }}
+                  className="text-ink-mid"
+                  style={{ fontSize: 10.5, fontWeight: '600', letterSpacing: 0.4 }}
                 >
                   Pending
                 </Text>
@@ -351,10 +347,10 @@ function ContributeContent() {
               <>
                 <CameraIcon size={20} color={LEAF} />
                 <Text
+                  className="text-purple"
                   style={{
                     fontSize: 10.5,
                     fontWeight: '600',
-                    color: LEAF,
                     textAlign: 'center',
                   }}
                 >
@@ -367,7 +363,7 @@ function ContributeContent() {
 
         <SectionLabel>Prompts</SectionLabel>
         {prompts.length === 0 ? (
-          <Text style={{ fontSize: 13, color: INK3, paddingVertical: 8 }}>
+          <Text className="text-ink-dim" style={{ fontSize: 13, paddingVertical: 8 }}>
             {firstName} hasn{"'"}t added any prompts yet.
           </Text>
         ) : (
@@ -378,8 +374,8 @@ function ContributeContent() {
               return (
                 <View
                   key={prompt.id}
+                  className="bg-surface"
                   style={{
-                    backgroundColor: PAPER,
                     borderWidth: 1,
                     borderColor: LINE,
                     borderRadius: 16,
@@ -387,10 +383,10 @@ function ContributeContent() {
                   }}
                 >
                   <Text
+                    className="text-ink-dim"
                     style={{
                       fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
                       fontSize: 10,
-                      color: INK3,
                       textTransform: 'uppercase',
                       letterSpacing: 1.4,
                     }}
@@ -398,10 +394,9 @@ function ContributeContent() {
                     {question}
                   </Text>
                   <Text
-                    className="font-serif"
+                    className="font-serif text-ink"
                     style={{
                       fontSize: 17,
-                      color: INK,
                       lineHeight: 22,
                       marginTop: 4,
                       marginBottom: 8,
@@ -413,7 +408,7 @@ function ContributeContent() {
                   {responded ? (
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                       <CheckIcon size={14} color={LEAF} />
-                      <Text style={{ fontSize: 12, fontWeight: '600', color: LEAF }}>
+                      <Text className="text-purple" style={{ fontSize: 12, fontWeight: '600' }}>
                         Comment sent — {firstName} will review
                       </Text>
                     </View>
@@ -422,7 +417,7 @@ function ContributeContent() {
                       onPress={() => setRespondingToPrompt({ id: prompt.id, question })}
                       hitSlop={6}
                     >
-                      <Text style={{ fontSize: 12.5, fontWeight: '600', color: LEAF }}>
+                      <Text className="text-purple" style={{ fontSize: 12.5, fontWeight: '600' }}>
                         Add comment →
                       </Text>
                     </Pressable>
@@ -449,7 +444,7 @@ function ContributeContent() {
 
 export default function ContributeScreen() {
   return (
-    <SafeAreaView className="flex-1" edges={['top']} style={{ backgroundColor: CREAM }}>
+    <SafeAreaView className="flex-1 bg-canvas" edges={['top']}>
       <ScreenSuspense>
         <ContributeContent />
       </ScreenSuspense>

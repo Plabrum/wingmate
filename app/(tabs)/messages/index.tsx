@@ -10,8 +10,6 @@ import ScreenSuspense from '@/components/ui/ScreenSuspense';
 import { useMessagesListPresence } from '@/hooks/use-messages-list-presence';
 import { View, Text, Pressable, SafeAreaView } from '@/lib/tw';
 
-const LEAF = '#5A8C3A';
-const LEAF_BRIGHT = '#6FA947';
 const PAPER = '#FBF8F1';
 const INK = '#1F1B16';
 const INK_SUBTLE = '#8B8170';
@@ -36,11 +34,11 @@ function relativeTime(isoString: string): string {
 function SectionLabel({ children }: { children: string }) {
   return (
     <Text
+      className="text-ink-dim"
       style={{
         fontSize: 10.5,
         letterSpacing: 1.5,
         textTransform: 'uppercase',
-        color: INK_SUBTLE,
         fontWeight: '700',
         paddingHorizontal: 16,
         paddingTop: 14,
@@ -66,6 +64,7 @@ function SayHelloItem({ convo, onPress }: SayHelloItemProps) {
       <View style={{ position: 'relative' }}>
         <FaceAvatar name={name} size={62} />
         <View
+          className="bg-purple"
           style={{
             position: 'absolute',
             top: -2,
@@ -73,13 +72,12 @@ function SayHelloItem({ convo, onPress }: SayHelloItemProps) {
             width: 14,
             height: 14,
             borderRadius: 7,
-            backgroundColor: LEAF,
             borderWidth: 2,
             borderColor: PAPER,
           }}
         />
       </View>
-      <Text style={{ fontSize: 12.5, fontWeight: '500', color: INK }} numberOfLines={1}>
+      <Text className="text-ink" style={{ fontSize: 12.5, fontWeight: '500' }} numberOfLines={1}>
         {name}
       </Text>
     </Pressable>
@@ -116,6 +114,7 @@ function ConvoRow({ convo, userId, isOnline, onPress }: ConvoRowProps) {
         <FaceAvatar name={name} size={50} />
         {isOnline && (
           <View
+            className="bg-green"
             style={{
               position: 'absolute',
               bottom: 1,
@@ -123,7 +122,6 @@ function ConvoRow({ convo, userId, isOnline, onPress }: ConvoRowProps) {
               width: 12,
               height: 12,
               borderRadius: 6,
-              backgroundColor: LEAF_BRIGHT,
               borderWidth: 2,
               borderColor: PAPER,
             }}
@@ -133,13 +131,14 @@ function ConvoRow({ convo, userId, isOnline, onPress }: ConvoRowProps) {
       <View style={{ flex: 1, minWidth: 0 }}>
         <View className="flex-row items-baseline" style={{ justifyContent: 'space-between' }}>
           <Text
-            style={{ fontSize: 15, fontWeight: '600', color: INK, flexShrink: 1 }}
+            className="text-ink"
+            style={{ fontSize: 15, fontWeight: '600', flexShrink: 1 }}
             numberOfLines={1}
           >
             {name}
           </Text>
           {lastMessage != null && (
-            <Text style={{ fontSize: 12, color: INK_SUBTLE, marginLeft: 8 }}>
+            <Text className="text-ink-dim" style={{ fontSize: 12, marginLeft: 8 }}>
               {relativeTime(lastMessage.createdAt)}
             </Text>
           )}
@@ -159,7 +158,7 @@ function ConvoRow({ convo, userId, isOnline, onPress }: ConvoRowProps) {
               : 'New match — say hello!'}
           </Text>
           {isUnread && (
-            <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: LEAF }} />
+            <View className="bg-purple" style={{ width: 8, height: 8, borderRadius: 4 }} />
           )}
         </View>
       </View>
@@ -189,7 +188,10 @@ function SkeletonRow() {
 function Header() {
   return (
     <View style={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 6 }}>
-      <Text style={{ fontFamily: 'DMSerifDisplay', fontSize: 28, letterSpacing: -0.5, color: INK }}>
+      <Text
+        className="text-ink"
+        style={{ fontFamily: 'DMSerifDisplay', fontSize: 28, letterSpacing: -0.5 }}
+      >
         Messages
       </Text>
     </View>
@@ -260,7 +262,10 @@ function MessagesContent({ userId, onlineIds }: ContentProps) {
       ListEmptyComponent={
         sayHello.length === 0 ? (
           <View className="items-center justify-center" style={{ padding: 40, paddingTop: 80 }}>
-            <Text style={{ fontSize: 14, color: INK_SUBTLE, textAlign: 'center', lineHeight: 22 }}>
+            <Text
+              className="text-ink-dim"
+              style={{ fontSize: 14, textAlign: 'center', lineHeight: 22 }}
+            >
               No conversations yet. Start one from your Matches.
             </Text>
           </View>

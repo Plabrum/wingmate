@@ -13,9 +13,7 @@ import ScreenSuspense from '@/components/ui/ScreenSuspense';
 import { View, Text, TextInput, Pressable, SafeAreaView } from '@/lib/tw';
 
 const LEAF = '#5A8C3A';
-const LEAF_BRIGHT = '#6FA947';
 const PAPER = '#FBF8F1';
-const CREAM = '#F5F1E8';
 const CREAM2 = '#EDE6D6';
 const INK = '#1F1B16';
 const INK_SUBTLE = '#8B8170';
@@ -68,12 +66,11 @@ type ChatHeaderProps = {
 function ChatHeader({ name, isOnline }: ChatHeaderProps) {
   return (
     <View
-      className="flex-row items-center"
+      className="flex-row items-center bg-surface"
       style={{
         paddingHorizontal: 16,
         paddingVertical: 8,
         gap: 10,
-        backgroundColor: PAPER,
         borderBottomWidth: StyleSheet.hairlineWidth,
         borderBottomColor: LINE,
       }}
@@ -89,6 +86,7 @@ function ChatHeader({ name, isOnline }: ChatHeaderProps) {
         <FaceAvatar name={name} size={36} />
         {isOnline && (
           <View
+            className="bg-green"
             style={{
               position: 'absolute',
               bottom: -1,
@@ -96,7 +94,6 @@ function ChatHeader({ name, isOnline }: ChatHeaderProps) {
               width: 10,
               height: 10,
               borderRadius: 5,
-              backgroundColor: LEAF_BRIGHT,
               borderWidth: 2,
               borderColor: PAPER,
             }}
@@ -104,10 +101,10 @@ function ChatHeader({ name, isOnline }: ChatHeaderProps) {
         )}
       </View>
       <View style={{ flex: 1 }}>
-        <Text style={{ fontSize: 15, fontWeight: '600', color: INK }} numberOfLines={1}>
+        <Text className="text-ink" style={{ fontSize: 15, fontWeight: '600' }} numberOfLines={1}>
           {name}
         </Text>
-        <Text style={{ fontSize: 11.5, color: INK_SUBTLE }} numberOfLines={1}>
+        <Text className="text-ink-dim" style={{ fontSize: 11.5 }} numberOfLines={1}>
           {isOnline ? 'online' : 'offline'}
         </Text>
       </View>
@@ -161,9 +158,9 @@ function MessageBubble({ body, isMine, createdAt, isOptimistic }: MessageBubbleP
       </Pressable>
       {showTime && (
         <Text
+          className="text-ink-dim"
           style={{
             fontSize: 10.5,
-            color: INK_SUBTLE,
             paddingHorizontal: 8,
             paddingTop: 3,
             textAlign: isMine ? 'right' : 'left',
@@ -231,7 +228,7 @@ function ChatBody({ matchId, userId, otherUserId, otherName }: ChatBodyProps) {
         onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: false })}
         ListEmptyComponent={
           <View className="flex-1 items-center justify-center" style={{ padding: 40 }}>
-            <Text style={{ fontSize: 14, color: INK_SUBTLE, textAlign: 'center' }}>
+            <Text className="text-ink-dim" style={{ fontSize: 14, textAlign: 'center' }}>
               Say hello to {otherName ?? 'your match'}!
             </Text>
           </View>
@@ -248,28 +245,27 @@ function ChatBody({ matchId, userId, otherUserId, otherName }: ChatBodyProps) {
 
       {isOtherTyping && (
         <View style={{ paddingHorizontal: 16, paddingBottom: 4 }}>
-          <Text style={{ fontSize: 11.5, color: INK_SUBTLE, fontStyle: 'italic' }}>
+          <Text className="text-ink-dim" style={{ fontSize: 11.5, fontStyle: 'italic' }}>
             {otherName ? `${otherName} is typing…` : 'typing…'}
           </Text>
         </View>
       )}
 
       <View
-        className="flex-row items-center"
+        className="flex-row items-center bg-surface"
         style={{
           paddingHorizontal: 12,
           paddingTop: 10,
           paddingBottom: 12,
           gap: 8,
-          backgroundColor: PAPER,
           borderTopWidth: StyleSheet.hairlineWidth,
           borderTopColor: LINE,
         }}
       >
         <View
+          className="bg-canvas"
           style={{
             flex: 1,
-            backgroundColor: CREAM,
             borderRadius: 20,
             paddingHorizontal: 14,
             paddingVertical: 4,
@@ -282,10 +278,10 @@ function ChatBody({ matchId, userId, otherUserId, otherName }: ChatBodyProps) {
             name="message"
             render={({ field: { value, onChange } }) => (
               <TextInput
+                className="text-ink"
                 style={{
                   fontSize: 14.5,
                   lineHeight: 20,
-                  color: INK,
                   maxHeight: 120,
                 }}
                 value={value}
@@ -338,9 +334,9 @@ export default function ChatScreen() {
   const headerName = otherName && otherName.length > 0 ? otherName : 'Chat';
 
   return (
-    <SafeAreaView className="flex-1" edges={['top']} style={{ backgroundColor: PAPER }}>
+    <SafeAreaView className="flex-1 bg-surface" edges={['top']}>
       <ChatHeader name={headerName} isOnline={isOnline} />
-      <View style={{ flex: 1, backgroundColor: CREAM }}>
+      <View className="flex-1 bg-canvas">
         <ScreenSuspense>
           <ChatBody
             matchId={matchId}

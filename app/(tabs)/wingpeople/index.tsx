@@ -400,7 +400,7 @@ export default function WingpeopleScreen() {
                       autoFocus
                     />
                     {error && (
-                      <Text className="text-[#B91C1C] text-sm mt-1.5">{error.message}</Text>
+                      <Text className="text-destructive text-sm mt-1.5">{error.message}</Text>
                     )}
                   </>
                 )}

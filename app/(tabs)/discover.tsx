@@ -256,9 +256,9 @@ function WingCredential({ suggesterName, note }: { suggesterName: string; note: 
       <WingStack items={[{ name: suggesterName }]} size={30} />
       <View className="flex-1 min-w-0">
         <Text
+          className="text-purple"
           style={{
             fontSize: 10.5,
-            color: LEAF,
             fontWeight: '700',
             letterSpacing: 1.2,
             textTransform: 'uppercase',
@@ -268,12 +268,14 @@ function WingCredential({ suggesterName, note }: { suggesterName: string; note: 
           Hand-picked
         </Text>
         {note != null ? (
-          <Text style={{ fontSize: 13, color: INK, lineHeight: 18 }}>
+          <Text className="text-ink" style={{ fontSize: 13, lineHeight: 18 }}>
             “{note}”{' '}
-            <Text style={{ color: INK_SUBTLE, fontStyle: 'italic' }}>— {suggesterName}</Text>
+            <Text className="text-ink-dim" style={{ fontStyle: 'italic' }}>
+              — {suggesterName}
+            </Text>
           </Text>
         ) : (
-          <Text style={{ fontSize: 13, color: INK, lineHeight: 18 }}>
+          <Text className="text-ink" style={{ fontSize: 13, lineHeight: 18 }}>
             <Text style={{ fontWeight: '700' }}>Hand-picked</Text> by {suggesterName}
           </Text>
         )}
@@ -335,7 +337,9 @@ function LikeStamp({ swipeX }: { swipeX: SharedValue<number> }) {
         style,
       ]}
     >
-      <Text style={{ color: LEAF, fontSize: 18, fontWeight: '700', letterSpacing: 2 }}>LIKE</Text>
+      <Text className="text-purple" style={{ fontSize: 18, fontWeight: '700', letterSpacing: 2 }}>
+        LIKE
+      </Text>
     </Animated.View>
   );
 }
@@ -465,10 +469,10 @@ function DiscoverCard({
           <View style={{ position: 'absolute', left: 16, right: 16, bottom: 14 }}>
             <View className="flex-row items-baseline gap-2">
               <Text
+                className="text-surface"
                 style={{
                   fontFamily: 'DMSerifDisplay',
                   fontSize: 30,
-                  color: '#fff',
                   letterSpacing: -0.5,
                 }}
               >
@@ -495,7 +499,9 @@ function DiscoverCard({
               <WingCredential suggesterName={card.suggesterName} note={card.wingNote} />
             )}
             {card.bio != null && (
-              <Text style={{ fontSize: 14, color: INK_MUTED, lineHeight: 20 }}>{card.bio}</Text>
+              <Text className="text-ink-mid" style={{ fontSize: 14, lineHeight: 20 }}>
+                {card.bio}
+              </Text>
             )}
             {card.interests.length > 0 && (
               <View className="flex-row flex-wrap gap-1.5">
@@ -606,11 +612,11 @@ function MatchOverlay({
       </View>
 
       <Text
+        className="text-purple"
         style={{
           fontSize: 11,
           letterSpacing: 2,
           textTransform: 'uppercase',
-          color: LEAF,
           marginBottom: 8,
           fontWeight: '600',
         }}
@@ -618,16 +624,20 @@ function MatchOverlay({
         Mutual taste detected
       </Text>
       <Text
+        className="text-ink"
         style={{
           fontFamily: 'DMSerifDisplay',
           fontSize: 56,
           lineHeight: 60,
-          color: INK,
           letterSpacing: -1.5,
           textAlign: 'center',
         }}
       >
-        It’s a <Text style={{ fontStyle: 'italic', color: LEAF }}>pear</Text>.
+        It’s a{' '}
+        <Text className="text-purple" style={{ fontStyle: 'italic' }}>
+          pear
+        </Text>
+        .
       </Text>
 
       <View style={{ flexDirection: 'row', marginTop: 36, marginBottom: 20 }}>
@@ -670,9 +680,9 @@ function MatchOverlay({
       </View>
 
       <Text
+        className="text-ink-mid"
         style={{
           fontSize: 15,
-          color: INK_MUTED,
           textAlign: 'center',
           maxWidth: 280,
           lineHeight: 22,
@@ -714,20 +724,20 @@ function FilterEmptyState({ onClear }: { onClear: () => void }) {
       }}
     >
       <Text
+        className="text-ink"
         style={{
           fontFamily: 'DMSerifDisplay',
           fontSize: 24,
           lineHeight: 26,
-          color: INK,
           letterSpacing: -0.4,
         }}
       >
         Empty basket.
       </Text>
       <Text
+        className="text-ink-mid"
         style={{
           fontSize: 14,
-          color: INK_MUTED,
           lineHeight: 21,
           textAlign: 'center',
           maxWidth: 280,
@@ -772,11 +782,11 @@ function WingEmptyState({ onInvite }: { onInvite: () => void }) {
       </View>
       <View className="items-center">
         <Text
+          className="text-ink"
           style={{
             fontFamily: 'DMSerifDisplay',
             fontSize: 26,
             lineHeight: 28,
-            color: INK,
             letterSpacing: -0.4,
             textAlign: 'center',
           }}
@@ -784,9 +794,9 @@ function WingEmptyState({ onInvite }: { onInvite: () => void }) {
           A pear takes two.
         </Text>
         <Text
+          className="text-ink-mid"
           style={{
             fontSize: 14,
-            color: INK_MUTED,
             lineHeight: 21,
             textAlign: 'center',
             marginTop: 10,

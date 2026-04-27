@@ -16,12 +16,8 @@ import { Pill } from '@/components/ui/Pill';
 import { Sprout } from '@/components/ui/Sprout';
 
 const INK = '#1F1B16';
-const INK2 = '#4A4338';
-const INK3 = '#8B8170';
-const PAPER = '#FBF8F1';
 const LINE = 'rgba(31,27,22,0.10)';
 const LEAF = '#5A8C3A';
-const LEAF_SOFT = '#E5EDD7';
 
 type DatingStatus = 'open' | 'break' | 'winging';
 
@@ -39,11 +35,11 @@ interface Props {
 function FieldLabel({ children }: { children: string }) {
   return (
     <Text
+      className="text-ink-dim"
       style={{
         fontSize: 10.5,
         letterSpacing: 1.4,
         textTransform: 'uppercase',
-        color: INK3,
         fontWeight: '600',
         marginBottom: 6,
       }}
@@ -56,8 +52,8 @@ function FieldLabel({ children }: { children: string }) {
 function Card({ children }: { children: React.ReactNode }) {
   return (
     <View
+      className="bg-surface"
       style={{
-        backgroundColor: PAPER,
         borderRadius: 18,
         borderWidth: 1,
         borderColor: LINE,
@@ -126,7 +122,9 @@ export function AboutMeTab({ form, data }: Props) {
                   >
                     {opt.label}
                   </Text>
-                  <Text style={{ fontSize: 12, color: INK3, marginTop: 1 }}>{opt.sub}</Text>
+                  <Text className="text-ink-dim" style={{ fontSize: 12, marginTop: 1 }}>
+                    {opt.sub}
+                  </Text>
                 </View>
                 <View
                   style={{
@@ -153,16 +151,16 @@ export function AboutMeTab({ form, data }: Props) {
 
       {datingStatus !== 'open' ? (
         <View
+          className="bg-purple-pale"
           style={{
             flexDirection: 'row',
             alignItems: 'flex-start',
             gap: 8,
-            backgroundColor: LEAF_SOFT,
             borderRadius: 12,
             padding: 12,
           }}
         >
-          <Text style={{ flex: 1, fontSize: 13, color: LEAF, lineHeight: 18 }}>
+          <Text className="text-purple" style={{ flex: 1, fontSize: 13, lineHeight: 18 }}>
             Your profile is hidden from Discover while you{"'"}re{' '}
             {datingStatus === 'break' ? 'on a break' : 'just winging'}.
           </Text>
@@ -173,7 +171,9 @@ export function AboutMeTab({ form, data }: Props) {
       {data.bio ? (
         <View>
           <FieldLabel>Bio</FieldLabel>
-          <Text style={{ fontSize: 14.5, lineHeight: 22, color: INK2 }}>{data.bio}</Text>
+          <Text className="text-ink-mid" style={{ fontSize: 14.5, lineHeight: 22 }}>
+            {data.bio}
+          </Text>
         </View>
       ) : null}
 
@@ -185,7 +185,9 @@ export function AboutMeTab({ form, data }: Props) {
         </View>
         <View style={{ flex: 1 }}>
           <FieldLabel>Age range</FieldLabel>
-          <Text style={{ fontSize: 14, fontWeight: '500', color: INK }}>{ageText}</Text>
+          <Text className="text-ink" style={{ fontSize: 14, fontWeight: '500' }}>
+            {ageText}
+          </Text>
         </View>
       </View>
 
@@ -193,11 +195,15 @@ export function AboutMeTab({ form, data }: Props) {
       <View style={{ flexDirection: 'row', gap: 12 }}>
         <View style={{ flex: 1 }}>
           <FieldLabel>City</FieldLabel>
-          <Text style={{ fontSize: 14, fontWeight: '500', color: INK }}>{data.city}</Text>
+          <Text className="text-ink" style={{ fontSize: 14, fontWeight: '500' }}>
+            {data.city}
+          </Text>
         </View>
         <View style={{ flex: 1 }}>
           <FieldLabel>Religion</FieldLabel>
-          <Text style={{ fontSize: 14, fontWeight: '500', color: INK }}>{data.religion}</Text>
+          <Text className="text-ink" style={{ fontSize: 14, fontWeight: '500' }}>
+            {data.religion}
+          </Text>
         </View>
       </View>
 

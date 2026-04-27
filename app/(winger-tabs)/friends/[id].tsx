@@ -146,16 +146,11 @@ function FriendDetailContent() {
         <View className="px-5 pt-2 pb-3 flex-row items-center" style={{ gap: 14 }}>
           <FaceAvatar name={daterName} size={64} photoUri={data?.avatarUrl ?? null} />
           <View style={{ flex: 1 }}>
-            <Text
-              className="font-serif"
-              style={{ fontSize: 22, color: '#1F1B16', letterSpacing: -0.3 }}
-            >
+            <Text className="font-serif text-ink" style={{ fontSize: 22, letterSpacing: -0.3 }}>
               {daterName}
             </Text>
             {data?.datingProfile?.city ? (
-              <Text className="text-xs mt-0.5" style={{ color: '#8B8170' }}>
-                {data.datingProfile.city}
-              </Text>
+              <Text className="text-xs mt-0.5 text-ink-dim">{data.datingProfile.city}</Text>
             ) : null}
           </View>
         </View>

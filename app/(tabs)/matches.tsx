@@ -23,7 +23,6 @@ import { cardButtonShadow } from '@/lib/styles';
 const LEAF = '#5A8C3A';
 const LEAF_SOFT = '#E5EFD8';
 const INK = '#1F1B16';
-const INK_MUTED = '#4A4338';
 const INK_SUBTLE = '#8B8170';
 const PAPER = '#FBF8F1';
 const CREAM = '#F5F1E8';
@@ -144,8 +143,8 @@ function MatchCard({ match, onPress }: MatchCardProps) {
           }}
         >
           <Text
+            className="text-surface"
             style={{
-              color: PAPER,
               fontSize: 10,
               fontWeight: '700',
               letterSpacing: 1,
@@ -160,10 +159,10 @@ function MatchCard({ match, onPress }: MatchCardProps) {
       <View style={{ position: 'absolute', left: 12, right: 12, bottom: 10 }}>
         <View className="flex-row items-baseline">
           <Text
+            className="text-surface"
             style={{
               fontFamily: 'DMSerifDisplay',
               fontSize: 19,
-              color: '#fff',
               letterSpacing: -0.3,
             }}
             numberOfLines={1}
@@ -214,9 +213,9 @@ function PromptCard({
     >
       {question != null && (
         <Text
+          className="text-ink-dim"
           style={{
             fontSize: 10.5,
-            color: INK_SUBTLE,
             textTransform: 'uppercase',
             letterSpacing: 1.4,
             marginBottom: 4,
@@ -227,10 +226,10 @@ function PromptCard({
         </Text>
       )}
       <Text
+        className="text-ink"
         style={{
           fontFamily: 'DMSerifDisplay',
           fontSize: 19,
-          color: INK,
           lineHeight: 24,
           letterSpacing: -0.3,
         }}
@@ -242,17 +241,18 @@ function PromptCard({
         {state.sent ? (
           <View className="flex-row items-center gap-1.5">
             <CheckIcon size={14} color={LEAF} />
-            <Text style={{ color: LEAF, fontSize: 12.5, fontWeight: '600' }}>Reply sent</Text>
+            <Text className="text-purple" style={{ fontSize: 12.5, fontWeight: '600' }}>
+              Reply sent
+            </Text>
           </View>
         ) : state.open ? (
           <View className="gap-2">
             <TextInput
+              className="bg-canvas text-ink"
               style={{
-                backgroundColor: CREAM,
                 borderRadius: 12,
                 padding: 12,
                 fontSize: 14,
-                color: INK,
                 minHeight: 72,
                 textAlignVertical: 'top',
               }}
@@ -265,7 +265,9 @@ function PromptCard({
               editable={!state.sending}
             />
             {state.error != null && (
-              <Text style={{ color: '#B91C1C', fontSize: 12 }}>{state.error}</Text>
+              <Text className="text-destructive" style={{ fontSize: 12 }}>
+                {state.error}
+              </Text>
             )}
             <Pressable
               onPress={onSend}
@@ -281,13 +283,15 @@ function PromptCard({
               {state.sending ? (
                 <ActivityIndicator size="small" color={PAPER} />
               ) : (
-                <Text style={{ color: PAPER, fontWeight: '600', fontSize: 13 }}>Send</Text>
+                <Text className="text-surface" style={{ fontWeight: '600', fontSize: 13 }}>
+                  Send
+                </Text>
               )}
             </Pressable>
           </View>
         ) : (
           <Pressable onPress={onOpen} hitSlop={6}>
-            <Text style={{ color: LEAF, fontSize: 13, fontWeight: '600' }}>
+            <Text className="text-purple" style={{ fontSize: 13, fontWeight: '600' }}>
               Reply to this prompt →
             </Text>
           </Pressable>
@@ -349,9 +353,9 @@ function SheetBody({ match }: { match: MatchSummary }) {
           <FaceAvatar name={wingNote.winger?.chosenName ?? 'Wing'} size={28} />
           <View style={{ flex: 1, minWidth: 0 }}>
             <Text
+              className="text-purple"
               style={{
                 fontSize: 11,
-                color: LEAF,
                 fontWeight: '700',
                 textTransform: 'uppercase',
                 letterSpacing: 0.4,
@@ -359,7 +363,7 @@ function SheetBody({ match }: { match: MatchSummary }) {
             >
               {wingNote.winger?.chosenName ?? 'Your wing'} says
             </Text>
-            <Text style={{ fontSize: 13, color: INK, lineHeight: 18, marginTop: 2 }}>
+            <Text className="text-ink" style={{ fontSize: 13, lineHeight: 18, marginTop: 2 }}>
               “{wingNote.note}”
             </Text>
           </View>
@@ -450,10 +454,10 @@ function MatchSheet({ match, visible, onClose }: MatchSheetProps) {
             <View style={{ flex: 1, minWidth: 0 }}>
               <View className="flex-row items-baseline">
                 <Text
+                  className="text-ink"
                   style={{
                     fontFamily: 'DMSerifDisplay',
                     fontSize: 32,
-                    color: INK,
                     letterSpacing: -0.5,
                   }}
                   numberOfLines={1}
@@ -462,9 +466,9 @@ function MatchSheet({ match, visible, onClose }: MatchSheetProps) {
                 </Text>
                 {other.age != null && (
                   <Text
+                    className="text-ink-mid"
                     style={{
                       fontSize: 22,
-                      color: INK_MUTED,
                       marginLeft: 8,
                       fontWeight: '400',
                     }}
@@ -474,7 +478,7 @@ function MatchSheet({ match, visible, onClose }: MatchSheetProps) {
                 )}
               </View>
               {subtitleParts.length > 0 && (
-                <Text style={{ fontSize: 13, color: INK_SUBTLE, marginTop: 2 }}>
+                <Text className="text-ink-dim" style={{ fontSize: 13, marginTop: 2 }}>
                   {subtitleParts.join(' · ')}
                 </Text>
               )}
@@ -525,7 +529,9 @@ function MatchSheet({ match, visible, onClose }: MatchSheetProps) {
           {/* Bio + interests */}
           <View style={{ paddingHorizontal: 20, paddingTop: 20, gap: 16 }}>
             {other.bio != null && other.bio.length > 0 && (
-              <Text style={{ fontSize: 15, color: INK_MUTED, lineHeight: 22 }}>{other.bio}</Text>
+              <Text className="text-ink-mid" style={{ fontSize: 15, lineHeight: 22 }}>
+                {other.bio}
+              </Text>
             )}
             {interests.length > 0 && (
               <View className="flex-row flex-wrap gap-1.5">
@@ -603,7 +609,7 @@ function MatchesList() {
               }
             />
             <View style={{ paddingHorizontal: 20, paddingBottom: 8 }}>
-              <Text style={{ fontSize: 13, color: INK_SUBTLE }}>
+              <Text className="text-ink-dim" style={{ fontSize: 13 }}>
                 People who said yes. Pick one to nudge.
               </Text>
             </View>
@@ -612,10 +618,10 @@ function MatchesList() {
         ListEmptyComponent={
           <View className="flex-1 items-center justify-center p-8">
             <Text
+              className="text-ink"
               style={{
                 fontFamily: 'DMSerifDisplay',
                 fontSize: 22,
-                color: INK,
                 letterSpacing: -0.4,
                 textAlign: 'center',
               }}
@@ -623,9 +629,9 @@ function MatchesList() {
               No matches yet.
             </Text>
             <Text
+              className="text-ink-mid"
               style={{
                 fontSize: 14,
-                color: INK_MUTED,
                 lineHeight: 21,
                 marginTop: 8,
                 textAlign: 'center',

@@ -32,8 +32,6 @@ import { PromptsTab } from '@/components/profile/PromptsTab';
 
 const INK = '#1F1B16';
 const INK2 = '#4A4338';
-const INK3 = '#8B8170';
-const PAPER = '#FBF8F1';
 
 function computeAge(dob: string): number | null {
   const d = new Date(dob);
@@ -87,7 +85,9 @@ function SettingsButton() {
       hitSlop={8}
     >
       <SettingsIcon />
-      <Text style={{ fontSize: 13, fontWeight: '600', color: INK2 }}>Settings</Text>
+      <Text className="text-ink-mid" style={{ fontSize: 13, fontWeight: '600' }}>
+        Settings
+      </Text>
     </Pressable>
   );
 }
@@ -126,14 +126,13 @@ function AvatarPicker({ name, avatarUrl, size, userId }: AvatarPickerProps) {
     <Pressable onPress={handlePick} className="relative" style={{ width: size, height: size }}>
       <FaceAvatar name={name ?? ''} size={size} photoUri={avatarUrl} />
       <View
-        className="absolute items-center justify-center"
+        className="absolute items-center justify-center bg-surface"
         style={{
           right: -2,
           bottom: -2,
           width: badge,
           height: badge,
           borderRadius: badge / 2,
-          backgroundColor: PAPER,
           borderWidth: 1.5,
           borderColor: '#F5F1E8',
           opacity: uploading ? 0.5 : 1,
@@ -153,7 +152,7 @@ function ProfileHeader() {
       className="flex-row items-center justify-between"
       style={{ paddingHorizontal: 16, paddingTop: 6, paddingBottom: 8 }}
     >
-      <Text className="font-serif" style={{ fontSize: 28, color: INK, letterSpacing: -0.5 }}>
+      <Text className="font-serif text-ink" style={{ fontSize: 28, letterSpacing: -0.5 }}>
         Profile
       </Text>
       <SettingsButton />
@@ -179,27 +178,31 @@ function WingerView({
     <View className="flex-1 items-center justify-center" style={{ paddingHorizontal: 32 }}>
       <AvatarPicker name={name} avatarUrl={avatarUrl} size={84} userId={userId} />
       <Text
-        className="font-serif"
-        style={{ fontSize: 26, color: INK, letterSpacing: -0.4, marginTop: 16 }}
+        className="font-serif text-ink"
+        style={{ fontSize: 26, letterSpacing: -0.4, marginTop: 16 }}
       >
         {name ?? 'Winger'}
       </Text>
-      <Text style={{ fontSize: 13, color: INK3, marginTop: 4 }}>Winger</Text>
+      <Text className="text-ink-dim" style={{ fontSize: 13, marginTop: 4 }}>
+        Winger
+      </Text>
 
       {banner ? (
         <View
+          className="bg-surface"
           style={{
             marginTop: 28,
             padding: 16,
-            backgroundColor: PAPER,
             borderRadius: 18,
             borderWidth: 1,
             borderColor: 'rgba(31,27,22,0.10)',
             width: '100%',
           }}
         >
-          <Text style={{ fontSize: 14, fontWeight: '600', color: INK }}>{banner.title}</Text>
-          <Text style={{ fontSize: 12.5, color: INK3, marginTop: 4, lineHeight: 18 }}>
+          <Text className="text-ink" style={{ fontSize: 14, fontWeight: '600' }}>
+            {banner.title}
+          </Text>
+          <Text className="text-ink-dim" style={{ fontSize: 12.5, marginTop: 4, lineHeight: 18 }}>
             {banner.sub}
           </Text>
           <View style={{ marginTop: 12 }}>
@@ -265,7 +268,7 @@ function ProfileScreenInner() {
     };
 
     return (
-      <SafeAreaView className="flex-1" edges={['top']} style={{ backgroundColor: '#F5F1E8' }}>
+      <SafeAreaView className="flex-1 bg-canvas" edges={['top']}>
         <ProfileHeader />
         <WingerView
           name={profile.chosenName}
@@ -299,7 +302,7 @@ function ProfileScreenInner() {
     };
 
     return (
-      <SafeAreaView className="flex-1" edges={['top']} style={{ backgroundColor: '#F5F1E8' }}>
+      <SafeAreaView className="flex-1 bg-canvas" edges={['top']}>
         <ProfileHeader />
         <WingerView
           name={profile?.chosenName ?? null}
@@ -330,7 +333,7 @@ function ProfileScreenInner() {
   const ageText = age != null ? `, ${age}` : '';
 
   return (
-    <SafeAreaView className="flex-1" edges={['top']} style={{ backgroundColor: '#F5F1E8' }}>
+    <SafeAreaView className="flex-1 bg-canvas" edges={['top']}>
       <ProfileHeader />
 
       <View
@@ -345,14 +348,16 @@ function ProfileScreenInner() {
         />
         <View style={{ flex: 1 }}>
           <Text
-            className="font-serif"
-            style={{ fontSize: 24, color: INK, letterSpacing: -0.4 }}
+            className="font-serif text-ink"
+            style={{ fontSize: 24, letterSpacing: -0.4 }}
             numberOfLines={1}
           >
             {(profile?.chosenName ?? '') + ageText}
           </Text>
           {datingProfile.city ? (
-            <Text style={{ fontSize: 13, color: INK3, marginTop: 2 }}>{datingProfile.city}</Text>
+            <Text className="text-ink-dim" style={{ fontSize: 13, marginTop: 2 }}>
+              {datingProfile.city}
+            </Text>
           ) : null}
           <Pressable
             onPress={() => router.push('/(tabs)/profile/wingpeople' as any)}
@@ -362,7 +367,9 @@ function ProfileScreenInner() {
             {wingItems.length > 0 ? (
               <WingStack items={wingItems} size={26} max={3} label={wingLabel} />
             ) : (
-              <Text style={{ fontSize: 12.5, fontWeight: '500', color: INK3 }}>{wingLabel}</Text>
+              <Text className="text-ink-dim" style={{ fontSize: 12.5, fontWeight: '500' }}>
+                {wingLabel}
+              </Text>
             )}
           </Pressable>
         </View>

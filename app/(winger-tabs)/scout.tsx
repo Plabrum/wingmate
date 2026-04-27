@@ -7,10 +7,6 @@ import { FaceAvatar } from '@/components/ui/FaceAvatar';
 import ScreenSuspense from '@/components/ui/ScreenSuspense';
 import { useGetApiWingpeopleSuspense } from '@/lib/api/generated/contacts/contacts';
 
-const INK = '#1F1B16';
-const INK2 = '#4A4338';
-const INK3 = '#8B8170';
-
 function ScoutContent() {
   const router = useRouter();
   const { data } = useGetApiWingpeopleSuspense();
@@ -22,11 +18,11 @@ function ScoutContent() {
   return (
     <ScrollView contentContainerClassName="pb-32">
       <View className="px-4 pt-2 pb-1">
-        <Text className="font-serif" style={{ fontSize: 28, color: INK, letterSpacing: -0.5 }}>
+        <Text className="font-serif text-ink" style={{ fontSize: 28, letterSpacing: -0.5 }}>
           Scout
         </Text>
       </View>
-      <Text className="px-4 pb-3 text-sm" style={{ color: INK3 }}>
+      <Text className="px-4 pb-3 text-sm text-ink-dim">
         Find people for someone you wing for. Pick the friend you have in mind.
       </Text>
 
@@ -35,10 +31,10 @@ function ScoutContent() {
           className="mx-4 p-4 rounded-2xl"
           style={{ borderWidth: 1, borderColor: colors.divider, borderStyle: 'dashed' }}
         >
-          <Text className="text-xs uppercase mb-1" style={{ color: INK3, letterSpacing: 1.4 }}>
+          <Text className="text-xs uppercase mb-1 text-ink-dim" style={{ letterSpacing: 1.4 }}>
             No friends yet
           </Text>
-          <Text className="text-sm leading-5" style={{ color: INK2 }}>
+          <Text className="text-sm leading-5 text-ink-mid">
             When a dater invites you to wing for them, you can scout for them here.
           </Text>
         </View>
@@ -61,14 +57,14 @@ function ScoutContent() {
                 <View className="flex-row items-center" style={{ gap: 12 }}>
                   <FaceAvatar name={name} size={44} photoUri={wf.dater?.avatarUrl ?? null} />
                   <View className="flex-1">
-                    <Text className="text-base font-semibold" style={{ color: INK }}>
-                      {name}
-                    </Text>
-                    <Text className="text-xs mt-0.5" style={{ color: INK3 }}>
+                    <Text className="text-base font-semibold text-ink">{name}</Text>
+                    <Text className="text-xs mt-0.5 text-ink-dim">
                       {sent} pick{sent !== 1 ? 's' : ''} this week
                     </Text>
                   </View>
-                  <Text style={{ color: INK3, fontSize: 22 }}>›</Text>
+                  <Text className="text-ink-dim" style={{ fontSize: 22 }}>
+                    ›
+                  </Text>
                 </View>
               </Pressable>
             );
@@ -80,10 +76,10 @@ function ScoutContent() {
         className="mx-4 mt-6 p-4 rounded-2xl"
         style={{ borderWidth: 1, borderColor: colors.divider, borderStyle: 'dashed' }}
       >
-        <Text className="text-xs uppercase mb-1.5" style={{ color: INK3, letterSpacing: 1.4 }}>
+        <Text className="text-xs uppercase mb-1.5 text-ink-dim" style={{ letterSpacing: 1.4 }}>
           Tip
         </Text>
-        <Text className="text-sm leading-5" style={{ color: INK2 }}>
+        <Text className="text-sm leading-5 text-ink-mid">
           Your suggestions arrive in your friend{"'"}s hand-picked pile. They still choose. You{"'"}
           re a scout, not a matchmaker.
         </Text>

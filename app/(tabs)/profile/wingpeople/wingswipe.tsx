@@ -21,9 +21,7 @@ const INK = '#1F1B16';
 const INK2 = '#4A4338';
 const INK3 = '#8B8170';
 const PAPER = '#FBF8F1';
-const CREAM = '#F5F1E8';
 const LINE = 'rgba(31,27,22,0.10)';
-const LEAF = '#5A8C3A';
 
 // ── Icons ────────────────────────────────────────────────────────────────────
 
@@ -79,12 +77,12 @@ function WingCardEditorial({
 }) {
   return (
     <View
+      className="bg-canvas"
       style={{
         width: '100%',
         height: '100%',
         borderRadius: 22,
         overflow: 'hidden',
-        backgroundColor: CREAM,
         borderWidth: 1,
         borderColor: LINE,
         ...Platform.select({
@@ -109,9 +107,9 @@ function WingCardEditorial({
         }}
       >
         <Text
+          className="text-ink-dim"
           style={{
             fontSize: 10,
-            color: INK3,
             letterSpacing: 2,
             textTransform: 'uppercase',
             fontWeight: '600',
@@ -120,9 +118,9 @@ function WingCardEditorial({
           {daterFirstName ? `For ${daterFirstName}` : 'Wing pick'}
         </Text>
         <Text
+          className="text-purple"
           style={{
             fontSize: 10,
-            color: LEAF,
             letterSpacing: 1.5,
             textTransform: 'uppercase',
             fontWeight: '600',
@@ -134,30 +132,30 @@ function WingCardEditorial({
 
       <View style={{ paddingHorizontal: 18 }}>
         <Text
-          className="font-serif"
+          className="font-serif text-ink"
           style={{
             fontSize: 44,
             lineHeight: 44,
             letterSpacing: -1,
-            color: INK,
           }}
         >
           {card.chosenName},
         </Text>
         <Text
-          className="font-serif"
+          className="font-serif text-purple"
           style={{
             fontSize: 44,
             lineHeight: 44,
             letterSpacing: -1,
-            color: LEAF,
             fontStyle: 'italic',
           }}
         >
           {card.age}
         </Text>
         {card.city != null && (
-          <Text style={{ fontSize: 13, color: INK2, marginTop: 6 }}>{card.city}</Text>
+          <Text className="text-ink-mid" style={{ fontSize: 13, marginTop: 6 }}>
+            {card.city}
+          </Text>
         )}
       </View>
 
@@ -185,7 +183,9 @@ function WingCardEditorial({
           </View>
           <View style={{ flex: 1, gap: 8 }}>
             {card.bio != null && (
-              <Text style={{ fontSize: 12.5, color: INK2, lineHeight: 18 }}>{card.bio}</Text>
+              <Text className="text-ink-mid" style={{ fontSize: 12.5, lineHeight: 18 }}>
+                {card.bio}
+              </Text>
             )}
             {card.interests.length > 0 && (
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4 }}>
@@ -241,8 +241,8 @@ function NoteModal({
           style={{ position: 'absolute', bottom: 0, left: 0, right: 0 }}
         >
           <View
+            className="bg-canvas"
             style={{
-              backgroundColor: CREAM,
               borderTopLeftRadius: 24,
               borderTopRightRadius: 24,
               paddingHorizontal: 20,
@@ -261,16 +261,17 @@ function NoteModal({
               }}
             />
             <Text
-              className="font-serif"
-              style={{ fontSize: 24, color: INK, letterSpacing: -0.4, lineHeight: 28 }}
+              className="font-serif text-ink"
+              style={{ fontSize: 24, letterSpacing: -0.4, lineHeight: 28 }}
             >
               Add a note for {daterFirstName || 'them'}?
             </Text>
-            <Text style={{ fontSize: 13, color: INK3, marginTop: 6, marginBottom: 14 }}>
+            <Text className="text-ink-dim" style={{ fontSize: 13, marginTop: 6, marginBottom: 14 }}>
               Why is {subjectName} a good pick? {daterFirstName || 'They'} will see this with the
               suggestion.
             </Text>
             <TextInput
+              className="bg-surface text-ink"
               style={{
                 width: '100%',
                 minHeight: 90,
@@ -278,9 +279,7 @@ function NoteModal({
                 borderColor: LINE,
                 borderRadius: 14,
                 padding: 12,
-                backgroundColor: PAPER,
                 fontSize: 14,
-                color: INK,
                 textAlignVertical: 'top',
               }}
               placeholder={`e.g. they're obsessed with that pottery studio…`}
@@ -314,13 +313,14 @@ function EmptyState({ daterFirstName }: { daterFirstName: string }) {
   return (
     <View className="flex-1 items-center justify-center" style={{ padding: 24 }}>
       <Text
-        className="font-serif"
-        style={{ fontSize: 24, color: INK, letterSpacing: -0.3, textAlign: 'center' }}
+        className="font-serif text-ink"
+        style={{ fontSize: 24, letterSpacing: -0.3, textAlign: 'center' }}
       >
         {`That's everyone for now.`}
       </Text>
       <Text
-        style={{ fontSize: 13, color: INK3, marginTop: 8, textAlign: 'center', lineHeight: 20 }}
+        className="text-ink-dim"
+        style={{ fontSize: 13, marginTop: 8, textAlign: 'center', lineHeight: 20 }}
       >
         {`You've gone through ${daterFirstName || 'their'}'s pool. Check back soon for new picks.`}
       </Text>
@@ -378,10 +378,10 @@ function WingSwipeContent() {
         </Pressable>
         <FaceAvatar name={daterName || '?'} size={32} photoUri={daterContext?.avatarUrl ?? null} />
         <View style={{ flex: 1 }}>
-          <Text style={{ fontSize: 14, fontWeight: '600', color: INK }}>
+          <Text className="text-ink" style={{ fontSize: 14, fontWeight: '600' }}>
             Swiping for {firstName || 'them'}
           </Text>
-          <Text style={{ fontSize: 11.5, color: INK3, marginTop: 1 }}>
+          <Text className="text-ink-dim" style={{ fontSize: 11.5, marginTop: 1 }}>
             Suggestions go to {firstName || 'them'} for review
           </Text>
         </View>
@@ -413,12 +413,12 @@ function WingSwipeContent() {
         >
           <Pressable
             onPress={decline}
+            className="bg-surface"
             style={[
               {
                 width: 60,
                 height: 60,
                 borderRadius: 30,
-                backgroundColor: PAPER,
                 borderWidth: 1,
                 borderColor: LINE,
                 alignItems: 'center',
@@ -431,12 +431,12 @@ function WingSwipeContent() {
           </Pressable>
           <Pressable
             onPress={() => setNoteVisible(true)}
+            className="bg-purple"
             style={[
               {
                 width: 60,
                 height: 60,
                 borderRadius: 30,
-                backgroundColor: LEAF,
                 alignItems: 'center',
                 justifyContent: 'center',
               },
@@ -463,7 +463,7 @@ function WingSwipeContent() {
 
 export default function WingSwipeScreen() {
   return (
-    <SafeAreaView className="flex-1" edges={['top']} style={{ backgroundColor: CREAM }}>
+    <SafeAreaView className="flex-1 bg-canvas" edges={['top']}>
       <ScreenSuspense>
         <WingSwipeContent />
       </ScreenSuspense>

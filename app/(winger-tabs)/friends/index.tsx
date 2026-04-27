@@ -15,9 +15,6 @@ import {
   usePostApiWingpeopleIdDecline,
 } from '@/lib/api/generated/contacts/contacts';
 
-const INK = '#1F1B16';
-const INK3 = '#8B8170';
-
 function SectionHeader({ title }: { title: string }) {
   return (
     <Text className="text-xs font-semibold uppercase tracking-[0.6px] px-5 pt-6 pb-2 text-fg-muted">
@@ -59,11 +56,11 @@ function FriendsContent() {
   return (
     <ScrollView contentContainerClassName="pb-32">
       <View className="px-4 pt-2 pb-1 flex-row items-center justify-between">
-        <Text className="font-serif" style={{ fontSize: 28, color: INK, letterSpacing: -0.5 }}>
+        <Text className="font-serif text-ink" style={{ fontSize: 28, letterSpacing: -0.5 }}>
           Friends
         </Text>
       </View>
-      <Text className="px-4 pb-1 text-sm" style={{ color: INK3 }}>
+      <Text className="px-4 pb-1 text-sm text-ink-dim">
         {wingingFor.length === 0
           ? 'Once a friend invites you, they appear here.'
           : `${wingingFor.length} ${wingingFor.length === 1 ? 'person trusts' : 'people trust'} your taste.`}
@@ -83,12 +80,8 @@ function FriendsContent() {
                 >
                   <FaceAvatar name={name} size={42} />
                   <View className="flex-1">
-                    <Text className="text-sm font-semibold" style={{ color: INK }}>
-                      {name} invited you
-                    </Text>
-                    <Text className="text-xs mt-0.5" style={{ color: INK3 }}>
-                      Wing for them
-                    </Text>
+                    <Text className="text-sm font-semibold text-ink">{name} invited you</Text>
+                    <Text className="text-xs mt-0.5 text-ink-dim">Wing for them</Text>
                   </View>
                   <Sprout size="sm" variant="secondary" onPress={() => handleDecline(inv.id)}>
                     Decline
@@ -106,7 +99,7 @@ function FriendsContent() {
       <SectionHeader title={`You wing for · ${wingingFor.length}`} />
 
       {wingingFor.length === 0 ? (
-        <Text className="text-sm px-5 py-3 leading-5" style={{ color: INK3 }}>
+        <Text className="text-sm px-5 py-3 leading-5 text-ink-dim">
           No one has invited you to wing for them yet.
         </Text>
       ) : (
@@ -128,12 +121,12 @@ function FriendsContent() {
                   <FaceAvatar name={name} size={48} photoUri={wf.dater?.avatarUrl ?? null} />
                   <View className="flex-1">
                     <Text
-                      className="font-serif"
-                      style={{ fontSize: 20, color: INK, letterSpacing: -0.3 }}
+                      className="font-serif text-ink"
+                      style={{ fontSize: 20, letterSpacing: -0.3 }}
                     >
                       {name}
                     </Text>
-                    <Text className="text-xs mt-0.5" style={{ color: INK3 }}>
+                    <Text className="text-xs mt-0.5 text-ink-dim">
                       {sent} pick{sent !== 1 ? 's' : ''} this week
                     </Text>
                   </View>

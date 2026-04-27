@@ -22,13 +22,8 @@ import { ScrollView, Text, View, Pressable } from '@/lib/tw';
 import { Sprout } from '@/components/ui/Sprout';
 import { AddPromptModal } from './AddPromptModal';
 
-const INK = '#1F1B16';
-const INK2 = '#4A4338';
-const INK3 = '#8B8170';
-const PAPER = '#FBF8F1';
 const LINE = 'rgba(31,27,22,0.10)';
 const LEAF = '#5A8C3A';
-const DANGER = '#A33';
 
 // screen width minus paddings: outer padding 16 + inner card padding 14
 const SLIDE_WIDTH = Dimensions.get('window').width - 16 * 2 - 14 * 2;
@@ -62,11 +57,11 @@ function ChevronIcon({ up, color = LEAF }: { up: boolean; color?: string }) {
 function FieldLabel({ children }: { children: string }) {
   return (
     <Text
+      className="text-ink-dim"
       style={{
         fontSize: 10.5,
         letterSpacing: 1.4,
         textTransform: 'uppercase',
-        color: INK3,
         fontWeight: '600',
         marginBottom: 6,
       }}
@@ -116,10 +111,15 @@ function ApprovedResponsesCarousel({ responses }: { responses: ApprovedResponse[
               photoUri={r.author?.avatarUrl ?? null}
             />
             <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: 11.5, fontWeight: '600', color: INK3, marginBottom: 2 }}>
+              <Text
+                className="text-ink-dim"
+                style={{ fontSize: 11.5, fontWeight: '600', marginBottom: 2 }}
+              >
                 {r.author?.chosenName ?? 'Wingperson'}
               </Text>
-              <Text style={{ fontSize: 14, color: INK2, lineHeight: 20 }}>{r.message}</Text>
+              <Text className="text-ink-mid" style={{ fontSize: 14, lineHeight: 20 }}>
+                {r.message}
+              </Text>
             </View>
           </View>
         ))}
@@ -230,8 +230,8 @@ export function PromptsTab({ form, onRefresh }: Props) {
     >
       {prompts.length === 0 ? (
         <View
+          className="bg-surface"
           style={{
-            backgroundColor: PAPER,
             borderRadius: 18,
             borderWidth: 1,
             borderColor: LINE,
@@ -239,8 +239,13 @@ export function PromptsTab({ form, onRefresh }: Props) {
             alignItems: 'center',
           }}
         >
-          <Text style={{ fontSize: 14, fontWeight: '600', color: INK }}>No prompts yet.</Text>
-          <Text style={{ fontSize: 13, color: INK3, marginTop: 6, textAlign: 'center' }}>
+          <Text className="text-ink" style={{ fontSize: 14, fontWeight: '600' }}>
+            No prompts yet.
+          </Text>
+          <Text
+            className="text-ink-dim"
+            style={{ fontSize: 13, marginTop: 6, textAlign: 'center' }}
+          >
             Add one to give people something to connect with.
           </Text>
         </View>
@@ -254,8 +259,8 @@ export function PromptsTab({ form, onRefresh }: Props) {
         return (
           <View
             key={prompt.id}
+            className="bg-surface"
             style={{
-              backgroundColor: PAPER,
               borderRadius: 18,
               borderWidth: 1,
               borderColor: LINE,
@@ -264,10 +269,9 @@ export function PromptsTab({ form, onRefresh }: Props) {
           >
             <FieldLabel>{prompt.template.question}</FieldLabel>
             <Text
-              className="font-serif"
+              className="font-serif text-ink"
               style={{
                 fontSize: 18,
-                color: INK,
                 lineHeight: 24,
                 fontStyle: 'italic',
               }}
@@ -290,7 +294,10 @@ export function PromptsTab({ form, onRefresh }: Props) {
                     borderTopColor: LINE,
                   }}
                 >
-                  <Text style={{ flex: 1, fontSize: 13, fontWeight: '600', color: LEAF }}>
+                  <Text
+                    className="text-purple"
+                    style={{ flex: 1, fontSize: 13, fontWeight: '600' }}
+                  >
                     {pendingR.length} wingperson comment{pendingR.length > 1 ? 's' : ''} waiting
                   </Text>
                   <ChevronIcon up={isExpanded} />
@@ -304,7 +311,7 @@ export function PromptsTab({ form, onRefresh }: Props) {
                           photoUri={r.author?.avatarUrl ?? null}
                         />
                         <View style={{ flex: 1 }}>
-                          <Text style={{ fontSize: 14, color: INK2, lineHeight: 20 }}>
+                          <Text className="text-ink-mid" style={{ fontSize: 14, lineHeight: 20 }}>
                             {r.message}
                           </Text>
                           <View style={{ flexDirection: 'row', gap: 8, marginTop: 8 }}>
@@ -347,7 +354,9 @@ export function PromptsTab({ form, onRefresh }: Props) {
                 borderTopColor: LINE,
               }}
             >
-              <Text style={{ fontSize: 13, fontWeight: '500', color: DANGER }}>Remove prompt</Text>
+              <Text className="text-destructive" style={{ fontSize: 13, fontWeight: '500' }}>
+                Remove prompt
+              </Text>
             </Pressable>
           </View>
         );
@@ -368,7 +377,9 @@ export function PromptsTab({ form, onRefresh }: Props) {
         }}
       >
         <PlusIcon />
-        <Text style={{ fontSize: 14, fontWeight: '600', color: LEAF }}>Add prompt</Text>
+        <Text className="text-purple" style={{ fontSize: 14, fontWeight: '600' }}>
+          Add prompt
+        </Text>
       </Pressable>
 
       <AddPromptModal

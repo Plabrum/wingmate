@@ -17,9 +17,6 @@ import { PhotoRect } from '@/components/ui/PhotoRect';
 import { FaceAvatar } from '@/components/ui/FaceAvatar';
 import { Sprout } from '@/components/ui/Sprout';
 
-const INK = '#1F1B16';
-const INK3 = '#8B8170';
-const PAPER = '#FBF8F1';
 const LINE = 'rgba(31,27,22,0.10)';
 const LEAF = '#5A8C3A';
 
@@ -29,11 +26,11 @@ const PHOTO_COL = (Dimensions.get('window').width - 16 * 2 - PHOTO_GAP * 2) / 3;
 function FieldLabel({ children }: { children: string }) {
   return (
     <Text
+      className="text-ink-dim"
       style={{
         fontSize: 10.5,
         letterSpacing: 1.4,
         textTransform: 'uppercase',
-        color: INK3,
         fontWeight: '600',
         marginBottom: 8,
       }}
@@ -177,8 +174,8 @@ export function PhotosTab({ form, data, onRefresh }: Props) {
             return (
               <View
                 key={photo.id}
+                className="bg-surface"
                 style={{
-                  backgroundColor: PAPER,
                   borderRadius: 18,
                   borderWidth: 1,
                   borderColor: LINE,
@@ -197,11 +194,11 @@ export function PhotosTab({ form, data, onRefresh }: Props) {
                     style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 }}
                   >
                     <FaceAvatar name={photo.suggester?.chosenName ?? ''} size={22} />
-                    <Text style={{ fontSize: 14, fontWeight: '600', color: INK }}>
+                    <Text className="text-ink" style={{ fontSize: 14, fontWeight: '600' }}>
                       From {suggesterName}
                     </Text>
                   </View>
-                  <Text style={{ fontSize: 13, color: INK3, marginBottom: 12 }}>
+                  <Text className="text-ink-dim" style={{ fontSize: 13, marginBottom: 12 }}>
                     Approve to add this to your profile.
                   </Text>
                   <View style={{ flexDirection: 'row', gap: 8 }}>
@@ -245,17 +242,19 @@ export function PhotosTab({ form, data, onRefresh }: Props) {
             />
             {idx === 0 ? (
               <View
+                className="bg-purple"
                 style={{
                   position: 'absolute',
                   top: 6,
                   left: 6,
-                  backgroundColor: LEAF,
                   borderRadius: 8,
                   paddingHorizontal: 6,
                   paddingVertical: 2,
                 }}
               >
-                <Text style={{ color: '#fff', fontSize: 10, fontWeight: '700' }}>Primary</Text>
+                <Text className="text-surface" style={{ fontSize: 10, fontWeight: '700' }}>
+                  Primary
+                </Text>
               </View>
             ) : (
               <Pressable
@@ -315,7 +314,7 @@ export function PhotosTab({ form, data, onRefresh }: Props) {
       </View>
 
       {selfPhotos.length === 0 ? (
-        <Text style={{ fontSize: 13, color: INK3, marginTop: 12 }}>
+        <Text className="text-ink-dim" style={{ fontSize: 13, marginTop: 12 }}>
           Add at least one so people can see you.
         </Text>
       ) : null}

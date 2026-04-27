@@ -30,10 +30,8 @@ import {
 import { formatPhoneInput, toE164 } from '@/lib/phoneUtils';
 
 const INK = '#1F1B16';
-const INK2 = '#4A4338';
 const INK3 = '#8B8170';
 const PAPER = '#FBF8F1';
-const CREAM = '#F5F1E8';
 const LINE = 'rgba(31,27,22,0.10)';
 const LEAF = '#5A8C3A';
 const LEAF_SOFT = 'rgba(90,140,58,0.12)';
@@ -100,11 +98,11 @@ function MoreIcon({ size = 18, color = INK3 }: { size?: number; color?: string }
 function SectionLabel({ children }: { children: string }) {
   return (
     <Text
+      className="text-ink-dim"
       style={{
         fontSize: 11,
         letterSpacing: 1.2,
         textTransform: 'uppercase',
-        color: INK3,
         fontWeight: '600',
         paddingHorizontal: 16,
         paddingTop: 18,
@@ -196,9 +194,9 @@ function WingpeopleContent({ onOpenInvite }: ContentProps) {
 
       {wingpeople.length === 0 ? (
         <Text
+          className="text-ink-dim"
           style={{
             fontSize: 13,
-            color: INK3,
             paddingHorizontal: 16,
             paddingVertical: 12,
             lineHeight: 20,
@@ -216,13 +214,13 @@ function WingpeopleContent({ onOpenInvite }: ContentProps) {
                 key={w.id}
                 onLongPress={() => handleRemove(w.id)}
                 delayLongPress={500}
+                className="bg-surface"
                 style={{
                   flexDirection: 'row',
                   alignItems: 'center',
                   gap: 12,
                   paddingHorizontal: 12,
                   paddingVertical: 10,
-                  backgroundColor: PAPER,
                   borderRadius: 16,
                   borderWidth: 1,
                   borderColor: LINE,
@@ -230,8 +228,10 @@ function WingpeopleContent({ onOpenInvite }: ContentProps) {
               >
                 <FaceAvatar name={name} size={44} photoUri={w.winger?.avatarUrl ?? null} />
                 <View style={{ flex: 1 }}>
-                  <Text style={{ fontSize: 14.5, fontWeight: '600', color: INK }}>{name}</Text>
-                  <Text style={{ fontSize: 12, color: INK3, marginTop: 2 }}>
+                  <Text className="text-ink" style={{ fontSize: 14.5, fontWeight: '600' }}>
+                    {name}
+                  </Text>
+                  <Text className="text-ink-dim" style={{ fontSize: 12, marginTop: 2 }}>
                     {count} pick{count !== 1 ? 's' : ''} this week
                   </Text>
                 </View>
@@ -254,13 +254,13 @@ function WingpeopleContent({ onOpenInvite }: ContentProps) {
               return (
                 <View
                   key={inv.id}
+                  className="bg-surface"
                   style={{
                     flexDirection: 'row',
                     alignItems: 'center',
                     gap: 12,
                     paddingHorizontal: 12,
                     paddingVertical: 10,
-                    backgroundColor: PAPER,
                     borderRadius: 16,
                     borderWidth: 1,
                     borderColor: LINE,
@@ -268,10 +268,12 @@ function WingpeopleContent({ onOpenInvite }: ContentProps) {
                 >
                   <FaceAvatar name={displayName} size={44} />
                   <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 14.5, fontWeight: '600', color: INK }}>
+                    <Text className="text-ink" style={{ fontSize: 14.5, fontWeight: '600' }}>
                       {displayName}
                     </Text>
-                    <Text style={{ fontSize: 12, color: INK3, marginTop: 2 }}>Invite pending</Text>
+                    <Text className="text-ink-dim" style={{ fontSize: 12, marginTop: 2 }}>
+                      Invite pending
+                    </Text>
                   </View>
                   <Sprout size="sm" variant="secondary" onPress={() => handleCancelInvite(inv.id)}>
                     Cancel
@@ -306,10 +308,10 @@ function WingpeopleContent({ onOpenInvite }: ContentProps) {
                 >
                   <FaceAvatar name={name} size={42} />
                   <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 14, fontWeight: '600', color: INK }}>
+                    <Text className="text-ink" style={{ fontSize: 14, fontWeight: '600' }}>
                       {firstName} wants you to wing
                     </Text>
-                    <Text style={{ fontSize: 12, color: INK2, marginTop: 2 }}>
+                    <Text className="text-ink-mid" style={{ fontSize: 12, marginTop: 2 }}>
                       You{"'"}d help curate {firstName}
                       {"'"}s feed.
                     </Text>
@@ -339,8 +341,8 @@ function WingpeopleContent({ onOpenInvite }: ContentProps) {
               return (
                 <View
                   key={wf.id}
+                  className="bg-surface"
                   style={{
-                    backgroundColor: PAPER,
                     borderRadius: 18,
                     borderWidth: 1,
                     borderColor: LINE,
@@ -357,8 +359,10 @@ function WingpeopleContent({ onOpenInvite }: ContentProps) {
                   >
                     <FaceAvatar name={name} size={48} photoUri={wf.dater?.avatarUrl ?? null} />
                     <View style={{ flex: 1 }}>
-                      <Text style={{ fontSize: 15, fontWeight: '600', color: INK }}>{name}</Text>
-                      <Text style={{ fontSize: 12, color: INK3, marginTop: 2 }}>
+                      <Text className="text-ink" style={{ fontSize: 15, fontWeight: '600' }}>
+                        {name}
+                      </Text>
+                      <Text className="text-ink-dim" style={{ fontSize: 12, marginTop: 2 }}>
                         Help {firstName} build their profile and find matches.
                       </Text>
                     </View>
@@ -463,7 +467,7 @@ export default function WingpeopleScreen() {
   });
 
   return (
-    <SafeAreaView className="flex-1" edges={['top']} style={{ backgroundColor: CREAM }}>
+    <SafeAreaView className="flex-1 bg-canvas" edges={['top']}>
       <View
         className="flex-row items-center"
         style={{ paddingHorizontal: 12, paddingTop: 8, paddingBottom: 8, gap: 4 }}
@@ -476,8 +480,8 @@ export default function WingpeopleScreen() {
           <BackIcon />
         </Pressable>
         <Text
-          className="font-serif"
-          style={{ fontSize: 26, color: INK, letterSpacing: -0.4, flex: 1 }}
+          className="font-serif text-ink"
+          style={{ fontSize: 26, letterSpacing: -0.4, flex: 1 }}
         >
           Wingpeople
         </Text>
@@ -510,8 +514,8 @@ export default function WingpeopleScreen() {
             style={{ position: 'absolute', bottom: 0, left: 0, right: 0 }}
           >
             <View
+              className="bg-canvas"
               style={{
-                backgroundColor: CREAM,
                 borderTopLeftRadius: 24,
                 borderTopRightRadius: 24,
                 paddingHorizontal: 20,
@@ -530,12 +534,15 @@ export default function WingpeopleScreen() {
                 }}
               />
               <Text
-                className="font-serif"
-                style={{ fontSize: 24, color: INK, letterSpacing: -0.4, lineHeight: 28 }}
+                className="font-serif text-ink"
+                style={{ fontSize: 24, letterSpacing: -0.4, lineHeight: 28 }}
               >
                 Invite a wingperson
               </Text>
-              <Text style={{ fontSize: 13, color: INK3, marginTop: 6, marginBottom: 14 }}>
+              <Text
+                className="text-ink-dim"
+                style={{ fontSize: 13, marginTop: 6, marginBottom: 14 }}
+              >
                 Enter their phone number — we{"'"}ll text them an invite.
               </Text>
 
@@ -549,6 +556,7 @@ export default function WingpeopleScreen() {
                 render={({ field: { value, onChange }, fieldState: { error } }) => (
                   <>
                     <TextInput
+                      className="bg-surface text-ink"
                       style={{
                         borderWidth: 1,
                         borderColor: LINE,
@@ -556,8 +564,6 @@ export default function WingpeopleScreen() {
                         paddingHorizontal: 14,
                         paddingVertical: 14,
                         fontSize: 14,
-                        color: INK,
-                        backgroundColor: PAPER,
                       }}
                       placeholder="(555) 000-0000"
                       placeholderTextColor={INK3}
@@ -567,7 +573,7 @@ export default function WingpeopleScreen() {
                       autoFocus
                     />
                     {error && (
-                      <Text style={{ color: '#B91C1C', fontSize: 13, marginTop: 6 }}>
+                      <Text className="text-destructive" style={{ fontSize: 13, marginTop: 6 }}>
                         {error.message}
                       </Text>
                     )}
