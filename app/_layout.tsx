@@ -47,7 +47,7 @@ function AuthenticatedNavigator({ userId }: { userId: string }) {
   const dest = needsOnboarding
     ? '/(onboarding)'
     : isWinger
-      ? '/(tabs)/profile'
+      ? '/(winger-tabs)/friends'
       : '/(tabs)/discover';
 
   // Mount-only: check for a pending deep-link invite (external async state)
@@ -55,7 +55,7 @@ function AuthenticatedNavigator({ userId }: { userId: string }) {
     AsyncStorage.getItem('pending_invite').then((val) => {
       if (!val) return;
       AsyncStorage.removeItem('pending_invite');
-      const wingpeoplePath = isWinger ? '/(tabs)/wingpeople/' : '/(tabs)/profile/wingpeople/';
+      const wingpeoplePath = isWinger ? '/(winger-tabs)/friends' : '/(tabs)/profile/wingpeople/';
       router.replace(wingpeoplePath as any);
     });
   }, [userId, isWinger]);
@@ -101,6 +101,7 @@ export default function RootLayout() {
           <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
             <Stack>
               <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+              <Stack.Screen name="(winger-tabs)" options={{ headerShown: false }} />
               <Stack.Screen name="(auth)" options={{ headerShown: false }} />
               <Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
               <Stack.Screen name="invite" options={{ headerShown: false }} />

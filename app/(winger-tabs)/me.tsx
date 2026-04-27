@@ -1,0 +1,169 @@
+import { useRouter } from 'expo-router';
+import { toast } from 'sonner-native';
+import { useQueryClient } from '@tanstack/react-query';
+
+import { View, Text, Pressable, ScrollView, SafeAreaView } from '@/lib/tw';
+import { FaceAvatar } from '@/components/ui/FaceAvatar';
+import { Sprout } from '@/components/ui/Sprout';
+import ScreenSuspense from '@/components/ui/ScreenSuspense';
+import {
+  getGetApiDatingProfilesMeQueryKey,
+  getGetApiProfilesMeQueryKey,
+  patchApiDatingProfilesMe,
+  patchApiProfilesMe,
+  useGetApiDatingProfilesMeSuspense,
+  useGetApiProfilesMeSuspense,
+} from '@/lib/api/generated/profiles/profiles';
+import { useGetApiWingpeopleSuspense } from '@/lib/api/generated/contacts/contacts';
+
+const INK = '#1F1B16';
+const INK2 = '#4A4338';
+const INK3 = '#8B8170';
+const PAPER = '#FBF8F1';
+
+function MeContent() {
+  const router = useRouter();
+  const queryClient = useQueryClient();
+
+  const { data: profile } = useGetApiProfilesMeSuspense();
+  const { data: datingProfile } = useGetApiDatingProfilesMeSuspense();
+  const { data: wingpeopleData } = useGetApiWingpeopleSuspense();
+
+  const wingingForCount = wingpeopleData.wingingFor.length;
+
+  const handleSwitchToDater = async () => {
+    try {
+      if (profile?.role === 'winger') {
+        await patchApiProfilesMe({ role: 'dater' });
+      } else if (datingProfile?.datingStatus === 'winging') {
+        await patchApiDatingProfilesMe({ datingStatus: 'open' });
+      }
+      queryClient.invalidateQueries({ queryKey: getGetApiProfilesMeQueryKey() });
+      queryClient.invalidateQueries({ queryKey: getGetApiDatingProfilesMeQueryKey() });
+    } catch {
+      toast.error("Couldn't switch profile. Try again.");
+    }
+  };
+
+  const subtitle = wingingForCount > 0 ? `Winging for ${wingingForCount}` : 'Winger';
+
+  return (
+    <ScrollView contentContainerClassName="pb-32">
+      <View className="px-4 pt-2 pb-1 flex-row items-center justify-between">
+        <Text className="font-serif" style={{ fontSize: 28, color: INK, letterSpacing: -0.5 }}>
+          Me
+        </Text>
+        <Pressable
+          onPress={handleSwitchToDater}
+          className="px-3 py-1.5 rounded-full bg-surface"
+          style={{ borderWidth: 1, borderColor: 'rgba(31,27,22,0.10)' }}
+          hitSlop={6}
+        >
+          <Text className="text-xs font-semibold" style={{ color: INK2 }}>
+            Switch to dater mode
+          </Text>
+        </Pressable>
+      </View>
+
+      <View className="px-4 pt-3 pb-4 flex-row items-center" style={{ gap: 14 }}>
+        <FaceAvatar
+          name={profile?.chosenName ?? ''}
+          size={64}
+          photoUri={profile?.avatarUrl ?? null}
+        />
+        <View style={{ flex: 1 }}>
+          <Text className="font-serif" style={{ fontSize: 22, color: INK, letterSpacing: -0.4 }}>
+            {profile?.chosenName ?? 'Winger'}
+          </Text>
+          <Text className="text-sm mt-0.5" style={{ color: INK3 }}>
+            {subtitle}
+          </Text>
+        </View>
+        <Pressable
+          onPress={() => router.push('/(tabs)/profile/settings' as any)}
+          hitSlop={8}
+          className="px-2 py-2"
+        >
+          <Text style={{ color: INK2, fontSize: 18 }}>⚙</Text>
+        </Pressable>
+      </View>
+
+      <View className="px-4">
+        <View
+          style={{
+            backgroundColor: INK,
+            borderRadius: 20,
+            padding: 18,
+          }}
+        >
+          <Text
+            style={{
+              fontSize: 10,
+              letterSpacing: 1.6,
+              textTransform: 'uppercase',
+              color: PAPER,
+              opacity: 0.7,
+              marginBottom: 8,
+            }}
+          >
+            Your wing card
+          </Text>
+          <Text
+            className="font-serif"
+            style={{ fontSize: 28, lineHeight: 32, letterSpacing: -0.5, color: PAPER }}
+          >
+            {wingingForCount} {wingingForCount === 1 ? 'friend trusts' : 'friends trust'} your taste
+          </Text>
+          <Text style={{ fontSize: 12.5, color: PAPER, opacity: 0.7, marginTop: 6 }}>
+            Send picks from Scout. Track replies in Activity.
+          </Text>
+        </View>
+      </View>
+
+      <Text className="text-xs font-semibold uppercase tracking-[0.6px] px-5 pt-6 pb-2 text-fg-muted">
+        Settings
+      </Text>
+      <View className="px-4" style={{ gap: 8 }}>
+        <Pressable
+          onPress={() => router.push('/(tabs)/profile/settings' as any)}
+          className="bg-white rounded-xl px-3.5 py-3 flex-row items-center"
+          style={{ borderWidth: 1, borderColor: 'rgba(31,27,22,0.06)', gap: 10 }}
+        >
+          <Text className="flex-1 text-sm" style={{ color: INK }}>
+            Account & notifications
+          </Text>
+          <Text style={{ color: INK3 }}>›</Text>
+        </Pressable>
+      </View>
+
+      {profile?.role !== 'winger' && datingProfile?.datingStatus === 'winging' ? (
+        <View className="px-4 mt-6">
+          <Sprout block variant="secondary" onPress={handleSwitchToDater}>
+            Resume dating
+          </Sprout>
+        </View>
+      ) : null}
+
+      {profile?.role === 'winger' ? (
+        <View className="px-4 mt-6">
+          <Text className="text-sm mb-2" style={{ color: INK3 }}>
+            Want to date too? Spin up your own profile.
+          </Text>
+          <Sprout block variant="secondary" onPress={handleSwitchToDater}>
+            Start dating
+          </Sprout>
+        </View>
+      ) : null}
+    </ScrollView>
+  );
+}
+
+export default function MeScreen() {
+  return (
+    <SafeAreaView className="flex-1 bg-page" edges={['top']}>
+      <ScreenSuspense>
+        <MeContent />
+      </ScreenSuspense>
+    </SafeAreaView>
+  );
+}
