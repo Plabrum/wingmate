@@ -7,58 +7,58 @@ import { Stack, Redirect, router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Toaster } from 'sonner-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 
-import { QueryClientProvider, useSuspenseQuery } from '@tanstack/react-query';
+import { useFonts } from 'expo-font';
+import { DMSerifDisplay_400Regular } from '@expo-google-fonts/dm-serif-display';
+import {
+  Geist_400Regular,
+  Geist_500Medium,
+  Geist_600SemiBold,
+  Geist_700Bold,
+} from '@expo-google-fonts/geist';
+
+import { QueryClientProvider } from '@tanstack/react-query';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { AuthProvider, useSession } from '@/context/auth';
-import { getProfileData } from '@/queries/profiles';
+import {
+  useGetApiProfilesMeSuspense,
+  useGetApiDatingProfilesMeSuspense,
+} from '@/lib/api/generated/profiles/profiles';
 import { queryClient } from '@/lib/queryClient';
 import { registerPushToken } from '@/lib/push';
 import ScreenSuspense from '@/components/ui/ScreenSuspense';
+import Splash from '@/components/ui/Splash';
+
+SplashScreen.preventAutoHideAsync();
 
 export const unstable_settings = {
-  anchor: '(dater-tabs)',
+  anchor: '(tabs)',
 };
 
 function AuthenticatedNavigator({ userId }: { userId: string }) {
-  // select derives a stable string — this component only re-renders when dest
-  // actually changes (e.g. onboarding → discover), not on every profile refetch.
-  const { data: dest } = useSuspenseQuery({
-    queryKey: ['profile', userId],
-    queryFn: () => getProfileData(userId),
-    staleTime: 5 * 60_000,
-    select: ({ profile, datingProfile }): string => {
-      type UserState = 'needs-onboarding' | 'winger' | 'dater';
+  const { data: profile } = useGetApiProfilesMeSuspense();
+  const { data: datingProfile } = useGetApiDatingProfilesMeSuspense();
 
-      const state: UserState =
-        !profile?.chosen_name || (!datingProfile && profile.role !== 'winger')
-          ? 'needs-onboarding'
-          : profile.role === 'winger' || datingProfile?.dating_status === 'winging'
-            ? 'winger'
-            : 'dater';
+  const needsOnboarding = !profile?.chosenName || (!datingProfile && profile.role !== 'winger');
+  const isWinger = profile?.role === 'winger' || datingProfile?.datingStatus === 'winging';
 
-      switch (state) {
-        case 'needs-onboarding':
-          return '/(onboarding)';
-        case 'winger':
-          return '/(winger)';
-        case 'dater':
-          return '/(dater-tabs)/discover';
-      }
-    },
-  });
+  const dest = needsOnboarding
+    ? '/(onboarding)'
+    : isWinger
+      ? '/(winger-tabs)/friends'
+      : '/(tabs)/discover';
 
   // Mount-only: check for a pending deep-link invite (external async state)
   useEffect(() => {
     AsyncStorage.getItem('pending_invite').then((val) => {
       if (!val) return;
       AsyncStorage.removeItem('pending_invite');
-      const wingpeoplePath =
-        dest === '/(winger)' ? '/(winger)/wingpeople/' : '/(dater-tabs)/profile/wingpeople/';
+      const wingpeoplePath = isWinger ? '/(winger-tabs)/friends' : '/(tabs)/profile/wingpeople/';
       router.replace(wingpeoplePath as any);
     });
-  }, [userId, dest]);
+  }, [userId, isWinger]);
 
   // Mount-only: register push token (external device event)
   useEffect(() => {
@@ -71,12 +71,12 @@ function AuthenticatedNavigator({ userId }: { userId: string }) {
 function RootNavigator() {
   const { session, loading } = useSession();
 
-  if (loading) return null;
+  if (loading) return <Splash />;
 
   if (!session) return <Redirect href="/(auth)/login" />;
 
   return (
-    <ScreenSuspense>
+    <ScreenSuspense fallback={<Splash />}>
       <AuthenticatedNavigator userId={session.user.id} />
     </ScreenSuspense>
   );
@@ -84,14 +84,24 @@ function RootNavigator() {
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
+  const [fontsLoaded] = useFonts({
+    DMSerifDisplay: DMSerifDisplay_400Regular,
+    Geist: Geist_400Regular,
+    Geist_500Medium,
+    Geist_600SemiBold,
+    Geist_700Bold,
+  });
+
+  if (!fontsLoaded) return null;
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
             <Stack>
-              <Stack.Screen name="(dater-tabs)" options={{ headerShown: false }} />
-              <Stack.Screen name="(winger)" options={{ headerShown: false }} />
+              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+              <Stack.Screen name="(winger-tabs)" options={{ headerShown: false }} />
               <Stack.Screen name="(auth)" options={{ headerShown: false }} />
               <Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
               <Stack.Screen name="invite" options={{ headerShown: false }} />

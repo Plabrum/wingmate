@@ -27,13 +27,10 @@ function makeServiceRoleJwt(): string {
 
   if (GOTRUE_JWT_KEYS) {
     // Asymmetric ES256 keys (newer Supabase CLI)
-    const jwks: { alg: string; kid?: string; d?: string }[] = JSON.parse(GOTRUE_JWT_KEYS);
+    const jwks: (JsonWebKey & { kid?: string })[] = JSON.parse(GOTRUE_JWT_KEYS);
     const jwk = jwks.find((k) => k.d); // find a private key
     if (!jwk) throw new Error('No private key found in GOTRUE_JWT_KEYS');
-    const privateKey = createPrivateKey({
-      format: 'jwk',
-      key: jwk as Parameters<typeof createPrivateKey>[0] & object,
-    });
+    const privateKey = createPrivateKey({ format: 'jwk', key: jwk });
     return jwt.sign(claims, privateKey, { algorithm: 'ES256', keyid: jwk.kid });
   }
 
@@ -348,13 +345,13 @@ async function seedPerson(
   gender: 'Male' | 'Female',
   photoIndex: number
 ): Promise<void> {
-  const email = `seed.${first.toLowerCase()}.${last.toLowerCase()}@seed.orbit.test`;
+  const email = `seed.${first.toLowerCase()}.${last.toLowerCase()}@seed.pear.test`;
   const label = `[${String(index + 1).padStart(2, '0')}/50] ${first} ${last}`;
 
   // 1. Create auth user
   const { data: authData, error: authError } = await supabase.auth.admin.createUser({
     email,
-    password: 'Orbit123!',
+    password: 'Pear123!',
     email_confirm: true,
     user_metadata: { full_name: `${first} ${last}` },
   });
@@ -447,7 +444,7 @@ async function seedPerson(
 async function seedDecisions(targetId: string, gender: 'Male' | 'Female'): Promise<void> {
   const nameList = gender === 'Female' ? WOMEN : MEN;
   const seedEmails = new Set(
-    nameList.map((p) => `seed.${p.first.toLowerCase()}.${p.last.toLowerCase()}@seed.orbit.test`)
+    nameList.map((p) => `seed.${p.first.toLowerCase()}.${p.last.toLowerCase()}@seed.pear.test`)
   );
 
   const { data, error } = await supabase.auth.admin.listUsers({ perPage: 1000 });
@@ -485,10 +482,7 @@ const SAMPLE_WINGERS = [
 ];
 
 // Two seed daters (by email) that the dev user will wing for.
-const WINGING_FOR_EMAILS = [
-  'seed.emma.sullivan@seed.orbit.test',
-  'seed.liam.murphy@seed.orbit.test',
-];
+const WINGING_FOR_EMAILS = ['seed.emma.sullivan@seed.pear.test', 'seed.liam.murphy@seed.pear.test'];
 
 async function ensureWingerProfile(
   first: string,
@@ -496,7 +490,7 @@ async function ensureWingerProfile(
   gender: 'Male' | 'Female',
   phone: string
 ): Promise<string> {
-  const email = `winger.${first.toLowerCase()}.${last.toLowerCase()}@seed.orbit.test`;
+  const email = `winger.${first.toLowerCase()}.${last.toLowerCase()}@seed.pear.test`;
 
   const { data: listData } = await supabase.auth.admin.listUsers({ perPage: 1000 });
   const existing = listData?.users.find((u) => u.email === email);
@@ -507,7 +501,7 @@ async function ensureWingerProfile(
 
   const { data: authData, error: authError } = await supabase.auth.admin.createUser({
     email,
-    password: 'Orbit123!',
+    password: 'Pear123!',
     email_confirm: true,
   });
   if (authError) throw new Error(`winger ${first} auth error: ${authError.message}`);
@@ -717,7 +711,7 @@ async function getOrCreateUser(
 
   const { data: authData, error: authError } = await supabase.auth.admin.createUser({
     email,
-    password: 'Orbit123!',
+    password: 'Pear123!',
     email_confirm: true,
   });
   if (authError) throw new Error(`${label} auth error: ${authError.message}`);
@@ -725,7 +719,7 @@ async function getOrCreateUser(
 }
 
 async function ensureSamTaylor(): Promise<string> {
-  const email = 'sam.taylor@seed.orbit.test';
+  const email = 'sam.taylor@seed.pear.test';
   const { id: userId, existed } = await getOrCreateUser(email, 'Sam Taylor');
 
   if (existed) {
@@ -793,7 +787,7 @@ async function ensureSamTaylor(): Promise<string> {
 }
 
 async function ensureSamMatch(index: number, m: (typeof SAM_MATCHES)[number]): Promise<void> {
-  const email = `sam.match.${m.first.toLowerCase()}.${m.last.toLowerCase()}@seed.orbit.test`;
+  const email = `sam.match.${m.first.toLowerCase()}.${m.last.toLowerCase()}@seed.pear.test`;
   const label = `${m.first} ${m.last}`;
   const { id: userId, existed } = await getOrCreateUser(email, label);
 

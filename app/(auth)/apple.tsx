@@ -57,8 +57,8 @@ export default function AppleModal() {
       contentContainerClassName="flex-1 p-6 justify-center gap-5"
     >
       <View className="items-center gap-2">
-        <Text className="text-xl font-bold">Welcome to Orbit</Text>
-        <Text className="text-sm text-[#666] text-center">
+        <Text className="text-xl font-bold">Welcome to Pear</Text>
+        <Text className="text-sm text-ink-mid text-center">
           Use your Apple ID to securely sign in. No password required.
         </Text>
       </View>
@@ -72,7 +72,7 @@ export default function AppleModal() {
           onPress={handleSignIn}
         />
       ) : (
-        <Text className="text-center text-[#999] text-sm">
+        <Text className="text-center text-ink-dim text-sm">
           Apple Sign In is only available on iOS.
         </Text>
       )}

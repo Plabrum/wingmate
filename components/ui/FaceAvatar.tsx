@@ -1,31 +1,51 @@
 import { Image } from 'expo-image';
-import { View, Text } from '@/lib/tw';
-import { colors } from '@/constants/theme';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Text, View } from '@/lib/tw';
+import { gradientFor } from './GradientBlock';
 
 type Props = {
-  initials: string;
-  bg?: string;
+  name: string;
   size?: number;
   photoUri?: string | null;
+  /** Width in px of a leaf-coloured ring around the avatar. */
+  ring?: number;
 };
 
-export function FaceAvatar({ initials, bg = colors.purpleSoft, size = 40, photoUri }: Props) {
+const RING_COLOR = '#5A8C3A';
+
+export function FaceAvatar({ name, size = 40, photoUri, ring }: Props) {
+  const ringStyle = ring ? { borderWidth: ring, borderColor: RING_COLOR } : undefined;
+
   if (photoUri) {
     return (
       <Image
         source={{ uri: photoUri }}
-        style={{ width: size, height: size, borderRadius: size / 2 }}
+        style={[{ width: size, height: size, borderRadius: size / 2 }, ringStyle]}
         contentFit="cover"
       />
     );
   }
+
+  const [c1, c2] = gradientFor(name);
+  const initial = String(name).trim().charAt(0).toUpperCase() || 'A';
+  const fontSize = Math.round(size * 0.42);
+
   return (
     <View
-      className="items-center justify-center"
-      style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: bg }}
+      className="items-center justify-center overflow-hidden"
+      style={[{ width: size, height: size, borderRadius: size / 2 }, ringStyle]}
     >
-      <Text className="text-accent font-semibold" style={{ fontSize: Math.round(size * 0.36) }}>
-        {initials.slice(0, 2).toUpperCase()}
+      <LinearGradient
+        colors={[c1, c2]}
+        start={{ x: 0.15, y: 0 }}
+        end={{ x: 0.85, y: 1 }}
+        style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
+      />
+      <Text
+        className="font-serif text-white"
+        style={{ fontSize, lineHeight: fontSize, letterSpacing: -0.5 }}
+      >
+        {initial}
       </Text>
     </View>
   );

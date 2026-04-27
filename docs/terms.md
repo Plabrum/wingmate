@@ -7,7 +7,7 @@ permalink: /terms/
 **Effective Date:** March 7, 2026
 **Last Updated:** March 7, 2026
 
-These Terms of Service ("Terms") govern your use of the Wyng mobile application ("App") operated by Philip Labrum ("we," "us," or "our"), a sole proprietor. By creating an account or using the App, you agree to these Terms. If you do not agree, do not use the App.
+These Terms of Service ("Terms") govern your use of the Pear mobile application ("App") operated by Philip Labrum ("we," "us," or "our"), a sole proprietor. By creating an account or using the App, you agree to these Terms. If you do not agree, do not use the App.
 
 ---
 
@@ -66,7 +66,7 @@ We reserve the right to remove content and suspend or terminate accounts that vi
 
 ## 6. Privacy
 
-Our collection and use of your personal information is described in our [Privacy Policy](/wingmate/privacy-policy). By using the App, you consent to our data practices as described there.
+Our collection and use of your personal information is described in our [Privacy Policy](/pear/privacy-policy). By using the App, you consent to our data practices as described there.
 
 ---
 

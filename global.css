@@ -3,20 +3,71 @@
 @import 'tailwindcss/utilities.css';
 
 @theme inline {
-  /* Foreground */
-  --color-fg: #18181c;
-  --color-fg-muted: #52525e;
-  --color-fg-subtle: #8c8c9e;
-  --color-fg-ghost: #bbbbc8;
+  /* ── Pear redesign — role-based tokens (shadcn-style) ────────────── */
 
-  /* Background */
-  --color-page: #f7f6f3;
-  --color-surface: #f1f0ee;
-  --color-separator: #ebebf0;
+  /* Surfaces */
+  --color-background: #f5f1e8; /* cream */
+  --color-surface: #fbf8f1; /* paper */
+  --color-surface-muted: #ede6d6; /* cream-2 */
 
-  /* Accent (brand purple) */
-  --color-accent: #6654d9;
-  --color-accent-muted: #eeeaff;
-  --color-accent-soft: #d9d4ff;
-  --color-accent-press: #5748c2;
+  /* Foreground / text */
+  --color-foreground: #1f1b16; /* ink */
+  --color-foreground-muted: #4a4338;
+  --color-foreground-subtle: #8b8170;
+
+  /* Primary — pear leaf (CTA) */
+  --color-primary: oklch(0.46 0.1 145);
+  --color-primary-foreground: #fbf8f1;
+  --color-primary-soft: oklch(0.92 0.04 145);
+
+  /* Accent — pear skin */
+  --color-accent: oklch(0.8 0.12 95);
+  --color-accent-foreground: #1f1b16;
+
+  /* Destructive / blush */
+  --color-destructive: oklch(0.82 0.08 35);
+
+  /* Borders / dividers */
+  --color-border: rgba(31, 27, 22, 0.1);
+  --color-border-subtle: rgba(31, 27, 22, 0.06);
+
+  /* Typography */
+  --font-serif: 'DMSerifDisplay', 'Iowan Old Style', Georgia, ui-serif, serif;
+  --font-sans: 'Geist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+
+  /* ── Transitional aliases ────────────────────────────────────────── */
+  /* Existing callsites (bg-fg, bg-page, bg-accent, …) keep working    */
+  /* until Phase B sweeps them. Delete once unused.                    */
+
+  /* Foreground aliases */
+  --color-fg: var(--color-foreground);
+  --color-fg-muted: var(--color-foreground-muted);
+  --color-fg-subtle: var(--color-foreground-subtle);
+  --color-fg-ghost: rgba(31, 27, 22, 0.3);
+  --color-ink: var(--color-foreground);
+  --color-ink-mid: var(--color-foreground-muted);
+  --color-ink-dim: var(--color-foreground-subtle);
+  --color-ink-ghost: rgba(31, 27, 22, 0.3);
+
+  /* Background / surface aliases */
+  --color-page: var(--color-background);
+  --color-canvas: var(--color-background);
+  --color-muted: var(--color-surface-muted);
+
+  /* Brand-color aliases (purple → leaf) */
+  --color-accent-muted: var(--color-primary-soft);
+  --color-accent-soft: var(--color-primary-soft);
+  --color-accent-press: oklch(0.4 0.1 145);
+  --color-purple: var(--color-primary);
+  --color-purple-pale: var(--color-primary-soft);
+  --color-purple-soft: var(--color-primary-soft);
+  --color-lavender: var(--color-primary-soft);
+
+  /* Border aliases */
+  --color-separator: var(--color-border);
+  --color-divider: var(--color-border);
+
+  /* Status aliases */
+  --color-error: var(--color-destructive);
+  --color-green: oklch(0.72 0.16 145);
 }

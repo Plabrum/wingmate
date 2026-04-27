@@ -8,29 +8,68 @@ import {
 } from 'react-native';
 import { toast } from 'sonner-native';
 import type { UseFormReturn } from 'react-hook-form';
+import Svg, { Path } from 'react-native-svg';
 
-import { colors } from '@/constants/theme';
-import type { OwnDatingProfile } from '@/queries/profiles';
+import type { OwnDatingProfileResponse, OwnPromptResponse } from '@/lib/api/generated/model';
 import {
-  approvePromptResponse,
-  rejectPromptResponse,
-  deleteProfilePrompt,
-} from '@/queries/prompts';
+  deleteApiProfilePromptsId,
+  deleteApiPromptResponsesId,
+  postApiPromptResponsesIdApprove,
+} from '@/lib/api/generated/prompts/prompts';
 
 import { FaceAvatar } from '@/components/ui/FaceAvatar';
-import { IconSymbol } from '@/components/ui/icon-symbol';
 import { ScrollView, Text, View, Pressable } from '@/lib/tw';
+import { Sprout } from '@/components/ui/Sprout';
 import { AddPromptModal } from './AddPromptModal';
-import { getInitials } from './profile-helpers';
 
-// ── Approved responses carousel ───────────────────────────────────────────────
+const LINE = 'rgba(31,27,22,0.10)';
+const LEAF = '#5A8C3A';
 
-// screen width minus the two levels of padding: px-5 (20px) on the tab + p-4 (16px) on the card
-const SLIDE_WIDTH = Dimensions.get('window').width - 20 * 2 - 16 * 2;
-const PEEK = 20; // px of next card visible to hint at swiping
-const SNAP_INTERVAL = SLIDE_WIDTH - PEEK + 8; // slide width minus peek + gap between slides
+// screen width minus paddings: outer padding 16 + inner card padding 14
+const SLIDE_WIDTH = Dimensions.get('window').width - 16 * 2 - 14 * 2;
+const PEEK = 20;
+const SNAP_INTERVAL = SLIDE_WIDTH - PEEK + 8;
 
-type ApprovedResponse = OwnDatingProfile['prompts'][number]['responses'][number];
+type ApprovedResponse = OwnPromptResponse;
+
+function PlusIcon({ size = 18, color = LEAF }: { size?: number; color?: string }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path d="M12 5v14M5 12h14" stroke={color} strokeWidth={2} strokeLinecap="round" />
+    </Svg>
+  );
+}
+
+function ChevronIcon({ up, color = LEAF }: { up: boolean; color?: string }) {
+  return (
+    <Svg width={12} height={12} viewBox="0 0 24 24" fill="none">
+      <Path
+        d={up ? 'M6 15l6-6 6 6' : 'M6 9l6 6 6-6'}
+        stroke={color}
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
+function FieldLabel({ children }: { children: string }) {
+  return (
+    <Text
+      className="text-ink-dim"
+      style={{
+        fontSize: 10.5,
+        letterSpacing: 1.4,
+        textTransform: 'uppercase',
+        fontWeight: '600',
+        marginBottom: 6,
+      }}
+    >
+      {children}
+    </Text>
+  );
+}
 
 function ApprovedResponsesCarousel({ responses }: { responses: ApprovedResponse[] }) {
   const [activeIdx, setActiveIdx] = useState(0);
@@ -41,8 +80,12 @@ function ApprovedResponsesCarousel({ responses }: { responses: ApprovedResponse[
 
   return (
     <View
-      className="mt-[14px] pt-3"
-      style={{ borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.divider }}
+      style={{
+        marginTop: 12,
+        paddingTop: 12,
+        borderTopWidth: StyleSheet.hairlineWidth,
+        borderTopColor: LINE,
+      }}
     >
       <ScrollView
         horizontal
@@ -55,30 +98,41 @@ function ApprovedResponsesCarousel({ responses }: { responses: ApprovedResponse[
         {responses.map((r, i) => (
           <View
             key={r.id}
-            className="bg-page rounded-xl p-3"
             style={{
               width: SLIDE_WIDTH - PEEK,
               marginRight: i < responses.length - 1 ? 8 : 0,
+              flexDirection: 'row',
+              gap: 10,
             }}
           >
-            <View className="flex-row gap-2.5">
-              <FaceAvatar
-                initials={getInitials((r as any).author?.chosen_name)}
-                size={28}
-                photoUri={(r as any).author?.avatar_url ?? null}
-              />
-              <View className="flex-1">
-                <Text className="text-xs font-semibold text-fg-muted mb-[3px]">
-                  {(r as any).author?.chosen_name ?? 'Wingperson'}
-                </Text>
-                <Text className="text-sm text-fg leading-5">{r.message}</Text>
-              </View>
+            <FaceAvatar
+              name={r.author?.chosenName ?? ''}
+              size={26}
+              photoUri={r.author?.avatarUrl ?? null}
+            />
+            <View style={{ flex: 1 }}>
+              <Text
+                className="text-ink-dim"
+                style={{ fontSize: 11.5, fontWeight: '600', marginBottom: 2 }}
+              >
+                {r.author?.chosenName ?? 'Wingperson'}
+              </Text>
+              <Text className="text-ink-mid" style={{ fontSize: 14, lineHeight: 20 }}>
+                {r.message}
+              </Text>
             </View>
           </View>
         ))}
       </ScrollView>
-      {responses.length > 1 && (
-        <View className="flex-row justify-center gap-1.5 mt-3">
+      {responses.length > 1 ? (
+        <View
+          style={{
+            flexDirection: 'row',
+            justifyContent: 'center',
+            gap: 6,
+            marginTop: 10,
+          }}
+        >
           {responses.map((_, i) => (
             <View
               key={i}
@@ -86,23 +140,22 @@ function ApprovedResponsesCarousel({ responses }: { responses: ApprovedResponse[
                 width: i === activeIdx ? 14 : 6,
                 height: 6,
                 borderRadius: 3,
-                backgroundColor: i === activeIdx ? colors.purple : colors.inkGhost,
+                backgroundColor: i === activeIdx ? LEAF : 'rgba(31,27,22,0.20)',
               }}
             />
           ))}
         </View>
-      )}
+      ) : null}
     </View>
   );
 }
 
 interface Props {
-  form: UseFormReturn<OwnDatingProfile>;
-  data: OwnDatingProfile;
+  form: UseFormReturn<NonNullable<OwnDatingProfileResponse>>;
   onRefresh: () => void;
 }
 
-export function PromptsTab({ form, data, onRefresh }: Props) {
+export function PromptsTab({ form, onRefresh }: Props) {
   const [modalVisible, setModalVisible] = useState(false);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
@@ -126,15 +179,14 @@ export function PromptsTab({ form, data, onRefresh }: Props) {
           ? {
               ...p,
               responses: p.responses.map((r) =>
-                r.id === responseId ? { ...r, is_approved: true } : r
+                r.id === responseId ? { ...r, isApproved: true } : r
               ),
             }
           : p
       )
     );
     try {
-      const { error } = await approvePromptResponse(responseId);
-      if (error) throw error;
+      await postApiPromptResponsesIdApprove(responseId);
     } catch {
       form.setValue('prompts', prev);
       toast.error('Could not approve comment.');
@@ -150,8 +202,7 @@ export function PromptsTab({ form, data, onRefresh }: Props) {
       )
     );
     try {
-      const { error } = await rejectPromptResponse(responseId);
-      if (error) throw error;
+      await deleteApiPromptResponsesId(responseId);
     } catch {
       form.setValue('prompts', prev);
       toast.error('Could not reject comment.');
@@ -165,8 +216,7 @@ export function PromptsTab({ form, data, onRefresh }: Props) {
       prompts.filter((p) => p.id !== promptId)
     );
     try {
-      const { error } = await deleteProfilePrompt(promptId);
-      if (error) throw error;
+      await deleteApiProfilePromptsId(promptId);
     } catch {
       form.setValue('prompts', prev);
       toast.error('Could not remove prompt.');
@@ -174,85 +224,119 @@ export function PromptsTab({ form, data, onRefresh }: Props) {
   };
 
   return (
-    <ScrollView contentContainerClassName="p-5 pb-12" showsVerticalScrollIndicator={false}>
-      {prompts.length === 0 && (
-        <View className="bg-white rounded-xl p-7 items-center mb-[14px]">
-          <Text className="text-sm font-semibold text-fg">No prompts yet.</Text>
-          <Text className="text-sm text-fg-muted mt-1.5 text-center">
+    <ScrollView
+      contentContainerStyle={{ padding: 16, paddingBottom: 48, gap: 10 }}
+      showsVerticalScrollIndicator={false}
+    >
+      {prompts.length === 0 ? (
+        <View
+          className="bg-surface"
+          style={{
+            borderRadius: 18,
+            borderWidth: 1,
+            borderColor: LINE,
+            padding: 24,
+            alignItems: 'center',
+          }}
+        >
+          <Text className="text-ink" style={{ fontSize: 14, fontWeight: '600' }}>
+            No prompts yet.
+          </Text>
+          <Text
+            className="text-ink-dim"
+            style={{ fontSize: 13, marginTop: 6, textAlign: 'center' }}
+          >
             Add one to give people something to connect with.
           </Text>
         </View>
-      )}
+      ) : null}
 
       {prompts.map((prompt) => {
-        const pendingR = prompt.responses.filter((r) => !r.is_approved);
-        const approvedR = prompt.responses.filter((r) => r.is_approved);
+        const pendingR = prompt.responses.filter((r) => !r.isApproved);
+        const approvedR = prompt.responses.filter((r) => r.isApproved);
         const isExpanded = expanded.has(prompt.id);
 
         return (
-          <View key={prompt.id} className="bg-white rounded-xl p-4 mb-[14px]">
-            <Text className="text-sm font-semibold text-accent mb-1.5">
-              {prompt.template.question}
+          <View
+            key={prompt.id}
+            className="bg-surface"
+            style={{
+              borderRadius: 18,
+              borderWidth: 1,
+              borderColor: LINE,
+              padding: 14,
+            }}
+          >
+            <FieldLabel>{prompt.template.question}</FieldLabel>
+            <Text
+              className="font-serif text-ink"
+              style={{
+                fontSize: 18,
+                lineHeight: 24,
+                fontStyle: 'italic',
+              }}
+            >
+              {prompt.answer}
             </Text>
-            <Text className="text-base text-fg leading-[22px] font-serif">{prompt.answer}</Text>
 
-            {/* Approved wing comments — swipeable card carousel */}
-            {approvedR.length > 0 && <ApprovedResponsesCarousel responses={approvedR} />}
+            {approvedR.length > 0 ? <ApprovedResponsesCarousel responses={approvedR} /> : null}
 
-            {/* Pending responses */}
-            {pendingR.length > 0 && (
+            {pendingR.length > 0 ? (
               <>
                 <Pressable
-                  className="flex-row items-center gap-1.5 mt-[14px] pt-3"
-                  style={{
-                    borderTopWidth: StyleSheet.hairlineWidth,
-                    borderTopColor: colors.divider,
-                  }}
                   onPress={() => toggle(prompt.id)}
+                  className="flex-row items-center"
+                  style={{
+                    gap: 6,
+                    marginTop: 12,
+                    paddingTop: 12,
+                    borderTopWidth: StyleSheet.hairlineWidth,
+                    borderTopColor: LINE,
+                  }}
                 >
-                  <Text className="flex-1 text-sm font-semibold text-accent">
+                  <Text
+                    className="text-purple"
+                    style={{ flex: 1, fontSize: 13, fontWeight: '600' }}
+                  >
                     {pendingR.length} wingperson comment{pendingR.length > 1 ? 's' : ''} waiting
                   </Text>
-                  <IconSymbol
-                    name={isExpanded ? 'chevron.up' : 'chevron.down'}
-                    size={13}
-                    color={colors.purple}
-                  />
+                  <ChevronIcon up={isExpanded} />
                 </Pressable>
-                {isExpanded &&
-                  pendingR.map((r) => (
-                    <View key={r.id} className="flex-row gap-2.5 mt-3">
-                      <FaceAvatar
-                        initials={getInitials((r as any).author?.chosen_name)}
-                        size={28}
-                        photoUri={(r as any).author?.avatar_url ?? null}
-                      />
-                      <View className="flex-1">
-                        <Text className="text-sm text-fg leading-5">{r.message}</Text>
-                        <View className="flex-row gap-2 mt-2">
-                          <Pressable
-                            className="px-3 py-1.5 rounded-lg bg-accent"
-                            onPress={() => handleApproveResponse(prompt.id, r.id)}
-                          >
-                            <Text className="text-white text-sm font-semibold">Approve</Text>
-                          </Pressable>
-                          <Pressable
-                            className="px-3 py-1.5 rounded-lg bg-surface"
-                            onPress={() => handleRejectResponse(prompt.id, r.id)}
-                          >
-                            <Text className="text-fg text-sm font-semibold">Reject</Text>
-                          </Pressable>
+                {isExpanded
+                  ? pendingR.map((r) => (
+                      <View key={r.id} style={{ flexDirection: 'row', gap: 10, marginTop: 12 }}>
+                        <FaceAvatar
+                          name={r.author?.chosenName ?? ''}
+                          size={26}
+                          photoUri={r.author?.avatarUrl ?? null}
+                        />
+                        <View style={{ flex: 1 }}>
+                          <Text className="text-ink-mid" style={{ fontSize: 14, lineHeight: 20 }}>
+                            {r.message}
+                          </Text>
+                          <View style={{ flexDirection: 'row', gap: 8, marginTop: 8 }}>
+                            <Sprout
+                              size="sm"
+                              onPress={() => handleApproveResponse(prompt.id, r.id)}
+                            >
+                              Approve
+                            </Sprout>
+                            <Sprout
+                              size="sm"
+                              variant="secondary"
+                              onPress={() => handleRejectResponse(prompt.id, r.id)}
+                            >
+                              Reject
+                            </Sprout>
+                          </View>
                         </View>
                       </View>
-                    </View>
-                  ))}
+                    ))
+                  : null}
               </>
-            )}
+            ) : null}
 
-            {/* Delete prompt */}
             <Pressable
-              className="mt-[14px] pt-3"
-              style={{ borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.divider }}
               onPress={() =>
                 Alert.alert('Remove prompt?', 'This cannot be undone.', [
                   { text: 'Cancel', style: 'cancel' },
@@ -263,27 +347,45 @@ export function PromptsTab({ form, data, onRefresh }: Props) {
                   },
                 ])
               }
+              style={{
+                marginTop: 12,
+                paddingTop: 12,
+                borderTopWidth: StyleSheet.hairlineWidth,
+                borderTopColor: LINE,
+              }}
             >
-              <Text className="text-sm text-[#EF4444] font-medium">Remove prompt</Text>
+              <Text className="text-destructive" style={{ fontSize: 13, fontWeight: '500' }}>
+                Remove prompt
+              </Text>
             </Pressable>
           </View>
         );
       })}
 
       <Pressable
-        className="flex-row items-center justify-center gap-2 rounded-xl py-[14px] min-h-[52px]"
-        style={{ borderWidth: 1.5, borderColor: colors.purple, borderStyle: 'dashed' }}
         onPress={() => setModalVisible(true)}
+        className="flex-row items-center justify-center"
+        style={{
+          gap: 8,
+          paddingVertical: 14,
+          borderRadius: 18,
+          borderWidth: 1.5,
+          borderStyle: 'dashed',
+          borderColor: LEAF,
+          minHeight: 52,
+          marginTop: 4,
+        }}
       >
-        <IconSymbol name="plus" size={18} color={colors.purple} />
-        <Text className="text-sm font-semibold text-accent">Add Prompt</Text>
+        <PlusIcon />
+        <Text className="text-purple" style={{ fontSize: 14, fontWeight: '600' }}>
+          Add prompt
+        </Text>
       </Pressable>
 
       <AddPromptModal
         visible={modalVisible}
         onClose={() => setModalVisible(false)}
         usedTemplateIds={usedTemplateIds}
-        datingProfileId={data.id}
         onAdded={onRefresh}
       />
     </ScrollView>

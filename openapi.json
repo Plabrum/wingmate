@@ -1,0 +1,3578 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Pear API",
+    "version": "1.0.0"
+  },
+  "components": {
+    "securitySchemes": {
+      "Bearer": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "DiscoverProfile": {
+        "type": "object",
+        "properties": {
+          "profileId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "userId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "chosenName": {
+            "type": "string"
+          },
+          "gender": {
+            "type": "string",
+            "nullable": true,
+            "enum": ["Male", "Female", "Non-Binary"]
+          },
+          "age": {
+            "type": "integer"
+          },
+          "city": {
+            "type": "string",
+            "enum": ["Boston", "New York"]
+          },
+          "bio": {
+            "type": "string",
+            "nullable": true
+          },
+          "datingStatus": {
+            "type": "string",
+            "enum": ["open", "break", "winging"]
+          },
+          "interests": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "Travel",
+                "Fitness",
+                "Cooking",
+                "Music",
+                "Art",
+                "Movies",
+                "Books",
+                "Gaming",
+                "Outdoors",
+                "Sports",
+                "Technology",
+                "Fashion",
+                "Food",
+                "Photography",
+                "Dance",
+                "Volunteering"
+              ]
+            }
+          },
+          "firstPhoto": {
+            "type": "string",
+            "nullable": true
+          },
+          "wingNote": {
+            "type": "string",
+            "nullable": true
+          },
+          "suggestedBy": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "suggesterName": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "profileId",
+          "userId",
+          "chosenName",
+          "gender",
+          "age",
+          "city",
+          "bio",
+          "datingStatus",
+          "interests",
+          "firstPhoto",
+          "wingNote",
+          "suggestedBy",
+          "suggesterName"
+        ]
+      },
+      "DiscoverResponse": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/DiscoverProfile"
+        }
+      },
+      "LikesYouProfile": {
+        "type": "object",
+        "properties": {
+          "profileId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "userId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "chosenName": {
+            "type": "string"
+          },
+          "gender": {
+            "type": "string",
+            "nullable": true,
+            "enum": ["Male", "Female", "Non-Binary"]
+          },
+          "age": {
+            "type": "integer"
+          },
+          "city": {
+            "type": "string",
+            "enum": ["Boston", "New York"]
+          },
+          "bio": {
+            "type": "string",
+            "nullable": true
+          },
+          "datingStatus": {
+            "type": "string",
+            "enum": ["open", "break", "winging"]
+          },
+          "interests": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "Travel",
+                "Fitness",
+                "Cooking",
+                "Music",
+                "Art",
+                "Movies",
+                "Books",
+                "Gaming",
+                "Outdoors",
+                "Sports",
+                "Technology",
+                "Fashion",
+                "Food",
+                "Photography",
+                "Dance",
+                "Volunteering"
+              ]
+            }
+          },
+          "firstPhoto": {
+            "type": "string",
+            "nullable": true
+          },
+          "wingNote": {
+            "type": "string",
+            "nullable": true
+          },
+          "suggestedBy": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "suggesterName": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "profileId",
+          "userId",
+          "chosenName",
+          "gender",
+          "age",
+          "city",
+          "bio",
+          "datingStatus",
+          "interests",
+          "firstPhoto",
+          "wingNote",
+          "suggestedBy",
+          "suggesterName"
+        ]
+      },
+      "LikesYouResponse": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/LikesYouProfile"
+        }
+      },
+      "LikesYouCountResponse": {
+        "type": "object",
+        "properties": {
+          "count": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": ["count"]
+      },
+      "WingerTab": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": ["id", "name"]
+      },
+      "WingerTabsResponse": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/WingerTab"
+        }
+      },
+      "ActivityKind": {
+        "type": "string",
+        "enum": ["match", "pass", "sent", "reply"]
+      },
+      "ActivityRow": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/ActivityKind"
+          },
+          "daterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "daterName": {
+            "type": "string"
+          },
+          "recipientName": {
+            "type": "string",
+            "nullable": true
+          },
+          "promptQuestion": {
+            "type": "string",
+            "nullable": true
+          },
+          "message": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "daterId",
+          "daterName",
+          "recipientName",
+          "promptQuestion",
+          "message",
+          "createdAt"
+        ]
+      },
+      "WingerActivityResponse": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/ActivityRow"
+        }
+      },
+      "WingProfile": {
+        "type": "object",
+        "properties": {
+          "profileId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "userId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "chosenName": {
+            "type": "string"
+          },
+          "gender": {
+            "type": "string",
+            "nullable": true,
+            "enum": ["Male", "Female", "Non-Binary"]
+          },
+          "age": {
+            "type": "integer"
+          },
+          "city": {
+            "type": "string",
+            "enum": ["Boston", "New York"]
+          },
+          "bio": {
+            "type": "string",
+            "nullable": true
+          },
+          "datingStatus": {
+            "type": "string",
+            "enum": ["open", "break", "winging"]
+          },
+          "interests": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "Travel",
+                "Fitness",
+                "Cooking",
+                "Music",
+                "Art",
+                "Movies",
+                "Books",
+                "Gaming",
+                "Outdoors",
+                "Sports",
+                "Technology",
+                "Fashion",
+                "Food",
+                "Photography",
+                "Dance",
+                "Volunteering"
+              ]
+            }
+          },
+          "firstPhoto": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "profileId",
+          "userId",
+          "chosenName",
+          "gender",
+          "age",
+          "city",
+          "bio",
+          "datingStatus",
+          "interests",
+          "firstPhoto"
+        ]
+      },
+      "WingPoolResponse": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/WingProfile"
+        }
+      },
+      "Match": {
+        "type": "object",
+        "nullable": true,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "userAId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "userBId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "createdAt": {
+            "type": "string"
+          }
+        },
+        "required": ["id", "userAId", "userBId", "createdAt"]
+      },
+      "DirectDecisionResponse": {
+        "type": "object",
+        "properties": {
+          "created": {
+            "type": "boolean"
+          },
+          "match": {
+            "$ref": "#/components/schemas/Match"
+          }
+        },
+        "required": ["created", "match"]
+      },
+      "DirectDecisionRequest": {
+        "type": "object",
+        "properties": {
+          "recipientId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "decision": {
+            "type": "string",
+            "enum": ["approved", "declined"]
+          }
+        },
+        "required": ["recipientId", "decision"]
+      },
+      "ActSuggestionResponse": {
+        "type": "object",
+        "properties": {
+          "match": {
+            "$ref": "#/components/schemas/Match"
+          }
+        },
+        "required": ["match"]
+      },
+      "ActSuggestionRequest": {
+        "type": "object",
+        "properties": {
+          "recipientId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "decision": {
+            "type": "string",
+            "enum": ["approved", "declined"]
+          }
+        },
+        "required": ["recipientId", "decision"]
+      },
+      "SuggestResponse": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "enum": [true]
+          }
+        },
+        "required": ["ok"]
+      },
+      "SuggestRequest": {
+        "type": "object",
+        "properties": {
+          "daterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "recipientId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "note": {
+            "type": "string",
+            "nullable": true
+          },
+          "decision": {
+            "type": "string",
+            "nullable": true,
+            "enum": ["declined"]
+          }
+        },
+        "required": ["daterId", "recipientId", "decision"]
+      },
+      "PendingSuggestion": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "recipientId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "note": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "wingerId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "wingerName": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": ["id", "recipientId", "note", "createdAt", "wingerId", "wingerName"]
+      },
+      "PendingSuggestionsResponse": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/PendingSuggestion"
+        }
+      },
+      "Profile": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "chosenName": {
+            "type": "string",
+            "nullable": true
+          },
+          "avatarUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "phoneNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "dateOfBirth": {
+            "type": "string",
+            "nullable": true
+          },
+          "gender": {
+            "type": "string",
+            "nullable": true,
+            "enum": ["Male", "Female", "Non-Binary"]
+          },
+          "role": {
+            "type": "string",
+            "enum": ["dater", "winger"]
+          },
+          "pushToken": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "chosenName",
+          "avatarUrl",
+          "phoneNumber",
+          "dateOfBirth",
+          "gender",
+          "role",
+          "pushToken"
+        ]
+      },
+      "UpdateProfileRequest": {
+        "type": "object",
+        "properties": {
+          "chosenName": {
+            "type": "string",
+            "minLength": 1
+          },
+          "dateOfBirth": {
+            "type": "string",
+            "nullable": true
+          },
+          "phoneNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "gender": {
+            "type": "string",
+            "nullable": true,
+            "enum": ["Male", "Female", "Non-Binary"]
+          },
+          "role": {
+            "type": "string",
+            "enum": ["dater", "winger"]
+          },
+          "pushToken": {
+            "type": "string",
+            "nullable": true
+          },
+          "avatarUrl": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "PhotoSuggester": {
+        "type": "object",
+        "nullable": true,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "chosenName": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": ["id", "chosenName"]
+      },
+      "OwnProfilePhoto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "storageUrl": {
+            "type": "string"
+          },
+          "displayOrder": {
+            "type": "integer"
+          },
+          "approvedAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "suggesterId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "suggester": {
+            "$ref": "#/components/schemas/PhotoSuggester"
+          }
+        },
+        "required": ["id", "storageUrl", "displayOrder", "approvedAt", "suggesterId", "suggester"]
+      },
+      "PromptTemplateRef": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "question": {
+            "type": "string"
+          }
+        },
+        "required": ["id", "question"]
+      },
+      "PromptResponseAuthor": {
+        "type": "object",
+        "nullable": true,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "chosenName": {
+            "type": "string",
+            "nullable": true
+          },
+          "avatarUrl": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": ["id", "chosenName", "avatarUrl"]
+      },
+      "OwnPromptResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "message": {
+            "type": "string"
+          },
+          "isApproved": {
+            "type": "boolean"
+          },
+          "userId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "author": {
+            "$ref": "#/components/schemas/PromptResponseAuthor"
+          }
+        },
+        "required": ["id", "message", "isApproved", "userId", "createdAt", "author"]
+      },
+      "OwnProfilePrompt": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "answer": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "template": {
+            "$ref": "#/components/schemas/PromptTemplateRef"
+          },
+          "responses": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OwnPromptResponse"
+            }
+          }
+        },
+        "required": ["id", "answer", "createdAt", "template", "responses"]
+      },
+      "OwnDatingProfileResponse": {
+        "type": "object",
+        "nullable": true,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "userId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "bio": {
+            "type": "string",
+            "nullable": true
+          },
+          "city": {
+            "type": "string",
+            "enum": ["Boston", "New York"]
+          },
+          "interestedGender": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["Male", "Female", "Non-Binary"]
+            }
+          },
+          "ageFrom": {
+            "type": "integer"
+          },
+          "ageTo": {
+            "type": "integer",
+            "nullable": true
+          },
+          "religion": {
+            "type": "string",
+            "enum": [
+              "Muslim",
+              "Christian",
+              "Jewish",
+              "Hindu",
+              "Buddhist",
+              "Sikh",
+              "Agnostic",
+              "Atheist",
+              "Other",
+              "Prefer not to say"
+            ]
+          },
+          "religiousPreference": {
+            "type": "string",
+            "nullable": true,
+            "enum": [
+              "Muslim",
+              "Christian",
+              "Jewish",
+              "Hindu",
+              "Buddhist",
+              "Sikh",
+              "Agnostic",
+              "Atheist",
+              "Other",
+              "Prefer not to say"
+            ]
+          },
+          "interests": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "Travel",
+                "Fitness",
+                "Cooking",
+                "Music",
+                "Art",
+                "Movies",
+                "Books",
+                "Gaming",
+                "Outdoors",
+                "Sports",
+                "Technology",
+                "Fashion",
+                "Food",
+                "Photography",
+                "Dance",
+                "Volunteering"
+              ]
+            }
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "datingStatus": {
+            "type": "string",
+            "enum": ["open", "break", "winging"]
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string"
+          },
+          "photos": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OwnProfilePhoto"
+            }
+          },
+          "prompts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OwnProfilePrompt"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "userId",
+          "bio",
+          "city",
+          "interestedGender",
+          "ageFrom",
+          "ageTo",
+          "religion",
+          "religiousPreference",
+          "interests",
+          "isActive",
+          "datingStatus",
+          "createdAt",
+          "updatedAt",
+          "photos",
+          "prompts"
+        ]
+      },
+      "CreateDatingProfileResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": ["id"]
+      },
+      "CreateDatingProfileRequest": {
+        "type": "object",
+        "properties": {
+          "city": {
+            "type": "string",
+            "enum": ["Boston", "New York"]
+          },
+          "bio": {
+            "type": "string"
+          },
+          "ageFrom": {
+            "type": "integer",
+            "minimum": 18
+          },
+          "ageTo": {
+            "type": "integer",
+            "nullable": true
+          },
+          "interestedGender": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["Male", "Female", "Non-Binary"]
+            }
+          },
+          "religion": {
+            "type": "string",
+            "enum": [
+              "Muslim",
+              "Christian",
+              "Jewish",
+              "Hindu",
+              "Buddhist",
+              "Sikh",
+              "Agnostic",
+              "Atheist",
+              "Other",
+              "Prefer not to say"
+            ]
+          },
+          "religiousPreference": {
+            "type": "string",
+            "nullable": true,
+            "enum": [
+              "Muslim",
+              "Christian",
+              "Jewish",
+              "Hindu",
+              "Buddhist",
+              "Sikh",
+              "Agnostic",
+              "Atheist",
+              "Other",
+              "Prefer not to say"
+            ]
+          },
+          "interests": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "Travel",
+                "Fitness",
+                "Cooking",
+                "Music",
+                "Art",
+                "Movies",
+                "Books",
+                "Gaming",
+                "Outdoors",
+                "Sports",
+                "Technology",
+                "Fashion",
+                "Food",
+                "Photography",
+                "Dance",
+                "Volunteering"
+              ]
+            }
+          },
+          "datingStatus": {
+            "type": "string",
+            "enum": ["open", "break", "winging"]
+          }
+        },
+        "required": ["city", "ageFrom", "interestedGender", "religion", "interests"]
+      },
+      "UpdateDatingProfileRequest": {
+        "type": "object",
+        "properties": {
+          "bio": {
+            "type": "string",
+            "nullable": true
+          },
+          "city": {
+            "type": "string",
+            "enum": ["Boston", "New York"]
+          },
+          "ageFrom": {
+            "type": "integer",
+            "minimum": 18
+          },
+          "ageTo": {
+            "type": "integer",
+            "nullable": true
+          },
+          "interestedGender": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["Male", "Female", "Non-Binary"]
+            }
+          },
+          "religion": {
+            "type": "string",
+            "enum": [
+              "Muslim",
+              "Christian",
+              "Jewish",
+              "Hindu",
+              "Buddhist",
+              "Sikh",
+              "Agnostic",
+              "Atheist",
+              "Other",
+              "Prefer not to say"
+            ]
+          },
+          "religiousPreference": {
+            "type": "string",
+            "nullable": true,
+            "enum": [
+              "Muslim",
+              "Christian",
+              "Jewish",
+              "Hindu",
+              "Buddhist",
+              "Sikh",
+              "Agnostic",
+              "Atheist",
+              "Other",
+              "Prefer not to say"
+            ]
+          },
+          "interests": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "Travel",
+                "Fitness",
+                "Cooking",
+                "Music",
+                "Art",
+                "Movies",
+                "Books",
+                "Gaming",
+                "Outdoors",
+                "Sports",
+                "Technology",
+                "Fashion",
+                "Food",
+                "Photography",
+                "Dance",
+                "Volunteering"
+              ]
+            }
+          },
+          "datingStatus": {
+            "type": "string",
+            "enum": ["open", "break", "winging"]
+          },
+          "isActive": {
+            "type": "boolean"
+          }
+        }
+      },
+      "PublicProfilePhoto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "storageUrl": {
+            "type": "string"
+          },
+          "displayOrder": {
+            "type": "integer"
+          },
+          "approvedAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "suggesterId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          }
+        },
+        "required": ["id", "storageUrl", "displayOrder", "approvedAt", "suggesterId"]
+      },
+      "PublicProfilePrompt": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "answer": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "template": {
+            "$ref": "#/components/schemas/PromptTemplateRef"
+          }
+        },
+        "required": ["id", "answer", "createdAt", "template"]
+      },
+      "PublicDatingProfile": {
+        "type": "object",
+        "nullable": true,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "bio": {
+            "type": "string",
+            "nullable": true
+          },
+          "city": {
+            "type": "string",
+            "enum": ["Boston", "New York"]
+          },
+          "interests": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "Travel",
+                "Fitness",
+                "Cooking",
+                "Music",
+                "Art",
+                "Movies",
+                "Books",
+                "Gaming",
+                "Outdoors",
+                "Sports",
+                "Technology",
+                "Fashion",
+                "Food",
+                "Photography",
+                "Dance",
+                "Volunteering"
+              ]
+            }
+          },
+          "religion": {
+            "type": "string",
+            "enum": [
+              "Muslim",
+              "Christian",
+              "Jewish",
+              "Hindu",
+              "Buddhist",
+              "Sikh",
+              "Agnostic",
+              "Atheist",
+              "Other",
+              "Prefer not to say"
+            ]
+          },
+          "photos": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PublicProfilePhoto"
+            }
+          },
+          "prompts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PublicProfilePrompt"
+            }
+          }
+        },
+        "required": ["id", "bio", "city", "interests", "religion", "photos", "prompts"]
+      },
+      "PublicProfile": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "chosenName": {
+            "type": "string",
+            "nullable": true
+          },
+          "avatarUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "datingProfile": {
+            "$ref": "#/components/schemas/PublicDatingProfile"
+          }
+        },
+        "required": ["id", "chosenName", "avatarUrl", "datingProfile"]
+      },
+      "MatchSummaryOther": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "chosenName": {
+            "type": "string",
+            "nullable": true
+          },
+          "dateOfBirth": {
+            "type": "string",
+            "nullable": true
+          },
+          "age": {
+            "type": "integer",
+            "nullable": true
+          },
+          "city": {
+            "type": "string",
+            "nullable": true,
+            "enum": ["Boston", "New York"]
+          },
+          "bio": {
+            "type": "string",
+            "nullable": true
+          },
+          "interests": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "Travel",
+                "Fitness",
+                "Cooking",
+                "Music",
+                "Art",
+                "Movies",
+                "Books",
+                "Gaming",
+                "Outdoors",
+                "Sports",
+                "Technology",
+                "Fashion",
+                "Food",
+                "Photography",
+                "Dance",
+                "Volunteering"
+              ]
+            }
+          },
+          "firstPhoto": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "chosenName",
+          "dateOfBirth",
+          "age",
+          "city",
+          "bio",
+          "interests",
+          "firstPhoto"
+        ]
+      },
+      "MatchSummary": {
+        "type": "object",
+        "properties": {
+          "matchId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "hasMessages": {
+            "type": "boolean"
+          },
+          "other": {
+            "$ref": "#/components/schemas/MatchSummaryOther"
+          }
+        },
+        "required": ["matchId", "createdAt", "hasMessages", "other"]
+      },
+      "MatchesResponse": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/MatchSummary"
+        }
+      },
+      "MatchSheetWinger": {
+        "type": "object",
+        "nullable": true,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "chosenName": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": ["id", "chosenName"]
+      },
+      "MatchSheetWingNote": {
+        "type": "object",
+        "nullable": true,
+        "properties": {
+          "note": {
+            "type": "string"
+          },
+          "suggestedBy": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "winger": {
+            "$ref": "#/components/schemas/MatchSheetWinger"
+          }
+        },
+        "required": ["note", "suggestedBy", "winger"]
+      },
+      "MatchSheetPromptTemplate": {
+        "type": "object",
+        "nullable": true,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "question": {
+            "type": "string"
+          }
+        },
+        "required": ["id", "question"]
+      },
+      "MatchSheetPrompt": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "answer": {
+            "type": "string"
+          },
+          "template": {
+            "$ref": "#/components/schemas/MatchSheetPromptTemplate"
+          }
+        },
+        "required": ["id", "answer", "template"]
+      },
+      "MatchSheet": {
+        "type": "object",
+        "properties": {
+          "wingNote": {
+            "$ref": "#/components/schemas/MatchSheetWingNote"
+          },
+          "prompts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MatchSheetPrompt"
+            }
+          }
+        },
+        "required": ["wingNote", "prompts"]
+      },
+      "MessageSender": {
+        "type": "object",
+        "nullable": true,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "chosenName": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": ["id", "chosenName"]
+      },
+      "Message": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "matchId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "senderId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "body": {
+            "type": "string"
+          },
+          "isRead": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "sender": {
+            "$ref": "#/components/schemas/MessageSender"
+          }
+        },
+        "required": ["id", "matchId", "senderId", "body", "isRead", "createdAt", "sender"]
+      },
+      "MessagesResponse": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/Message"
+        }
+      },
+      "SendMessageRequest": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": ["body"]
+      },
+      "MarkMessagesReadResponse": {
+        "type": "object",
+        "properties": {
+          "updated": {
+            "type": "integer"
+          }
+        },
+        "required": ["updated"]
+      },
+      "ConversationOther": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "chosenName": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": ["id", "chosenName"]
+      },
+      "ConversationLastMessage": {
+        "type": "object",
+        "nullable": true,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "body": {
+            "type": "string"
+          },
+          "senderId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "isRead": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "type": "string"
+          }
+        },
+        "required": ["id", "body", "senderId", "isRead", "createdAt"]
+      },
+      "Conversation": {
+        "type": "object",
+        "properties": {
+          "matchId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "other": {
+            "$ref": "#/components/schemas/ConversationOther"
+          },
+          "lastMessage": {
+            "$ref": "#/components/schemas/ConversationLastMessage"
+          },
+          "unreadCount": {
+            "type": "integer"
+          }
+        },
+        "required": ["matchId", "createdAt", "other", "lastMessage", "unreadCount"]
+      },
+      "ConversationsResponse": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/Conversation"
+        }
+      },
+      "PhotoSuggesterRef": {
+        "type": "object",
+        "nullable": true,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "chosenName": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": ["id", "chosenName"]
+      },
+      "Photo": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "datingProfileId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "storageUrl": {
+            "type": "string"
+          },
+          "displayOrder": {
+            "type": "integer"
+          },
+          "approvedAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "suggesterId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "suggester": {
+            "$ref": "#/components/schemas/PhotoSuggesterRef"
+          }
+        },
+        "required": [
+          "id",
+          "datingProfileId",
+          "storageUrl",
+          "displayOrder",
+          "approvedAt",
+          "suggesterId",
+          "suggester"
+        ]
+      },
+      "OwnPhotosResponse": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/Photo"
+        }
+      },
+      "CreatePhotoRequest": {
+        "type": "object",
+        "properties": {
+          "datingProfileId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "storageUrl": {
+            "type": "string",
+            "minLength": 1
+          },
+          "displayOrder": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": ["datingProfileId", "storageUrl", "displayOrder"]
+      },
+      "PhotoUploadUrlResponse": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string"
+          },
+          "uploadToken": {
+            "type": "string"
+          }
+        },
+        "required": ["path", "uploadToken"]
+      },
+      "PhotoUploadUrlRequest": {
+        "type": "object",
+        "properties": {
+          "datingProfileId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "filename": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          }
+        },
+        "required": ["datingProfileId", "filename"]
+      },
+      "PhotosOkResponse": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "enum": [true]
+          }
+        },
+        "required": ["ok"]
+      },
+      "ReorderPhotoRequest": {
+        "type": "object",
+        "properties": {
+          "displayOrder": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": ["displayOrder"]
+      },
+      "PromptTemplate": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "question": {
+            "type": "string"
+          }
+        },
+        "required": ["id", "question"]
+      },
+      "PromptTemplatesResponse": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/PromptTemplate"
+        }
+      },
+      "PromptsPromptResponseAuthor": {
+        "type": "object",
+        "nullable": true,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "chosenName": {
+            "type": "string",
+            "nullable": true
+          },
+          "avatarUrl": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": ["id", "chosenName", "avatarUrl"]
+      },
+      "PromptResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "profilePromptId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "message": {
+            "type": "string"
+          },
+          "isApproved": {
+            "type": "boolean"
+          },
+          "userId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "author": {
+            "$ref": "#/components/schemas/PromptsPromptResponseAuthor"
+          }
+        },
+        "required": [
+          "id",
+          "profilePromptId",
+          "message",
+          "isApproved",
+          "userId",
+          "createdAt",
+          "author"
+        ]
+      },
+      "ProfilePrompt": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "datingProfileId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "answer": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "template": {
+            "$ref": "#/components/schemas/PromptTemplate"
+          },
+          "responses": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PromptResponse"
+            }
+          }
+        },
+        "required": ["id", "datingProfileId", "answer", "createdAt", "template", "responses"]
+      },
+      "ProfilePromptsResponse": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/ProfilePrompt"
+        }
+      },
+      "CreateProfilePromptRequest": {
+        "type": "object",
+        "properties": {
+          "promptTemplateId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "answer": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": ["promptTemplateId", "answer"]
+      },
+      "PromptsOkResponse": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "enum": [true]
+          }
+        },
+        "required": ["ok"]
+      },
+      "CreatePromptResponseRequest": {
+        "type": "object",
+        "properties": {
+          "profilePromptId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "message": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": ["profilePromptId", "message"]
+      },
+      "WingerSummary": {
+        "type": "object",
+        "nullable": true,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "chosenName": {
+            "type": "string",
+            "nullable": true
+          },
+          "gender": {
+            "type": "string",
+            "nullable": true,
+            "enum": ["Male", "Female", "Non-Binary"]
+          },
+          "avatarUrl": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": ["id", "chosenName", "gender", "avatarUrl"]
+      },
+      "Wingperson": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "winger": {
+            "$ref": "#/components/schemas/WingerSummary"
+          }
+        },
+        "required": ["id", "createdAt", "winger"]
+      },
+      "DaterSummary": {
+        "type": "object",
+        "nullable": true,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "chosenName": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": ["id", "chosenName"]
+      },
+      "IncomingInvitation": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "dater": {
+            "$ref": "#/components/schemas/DaterSummary"
+          }
+        },
+        "required": ["id", "createdAt", "dater"]
+      },
+      "WingingForDater": {
+        "type": "object",
+        "nullable": true,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "chosenName": {
+            "type": "string",
+            "nullable": true
+          },
+          "avatarUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "interests": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string",
+              "enum": [
+                "Travel",
+                "Fitness",
+                "Cooking",
+                "Music",
+                "Art",
+                "Movies",
+                "Books",
+                "Gaming",
+                "Outdoors",
+                "Sports",
+                "Technology",
+                "Fashion",
+                "Food",
+                "Photography",
+                "Dance",
+                "Volunteering"
+              ]
+            }
+          },
+          "bio": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": ["id", "chosenName", "avatarUrl", "interests", "bio"]
+      },
+      "WingingForRow": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "dater": {
+            "$ref": "#/components/schemas/WingingForDater"
+          }
+        },
+        "required": ["id", "createdAt", "dater"]
+      },
+      "SentInvitation": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "phoneNumber": {
+            "type": "string"
+          },
+          "winger": {
+            "$ref": "#/components/schemas/DaterSummary"
+          }
+        },
+        "required": ["id", "createdAt", "phoneNumber", "winger"]
+      },
+      "WingpeopleResponse": {
+        "type": "object",
+        "properties": {
+          "wingpeople": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Wingperson"
+            }
+          },
+          "invitations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IncomingInvitation"
+            }
+          },
+          "wingingFor": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WingingForRow"
+            }
+          },
+          "sentInvitations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SentInvitation"
+            }
+          },
+          "weeklyCounts": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer"
+            }
+          }
+        },
+        "required": ["wingpeople", "invitations", "wingingFor", "sentInvitations", "weeklyCounts"]
+      },
+      "InviteWingpersonResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "phoneNumber": {
+            "type": "string"
+          },
+          "wingerId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          }
+        },
+        "required": ["id", "phoneNumber", "wingerId"]
+      },
+      "InviteWingpersonRequest": {
+        "type": "object",
+        "properties": {
+          "phoneNumber": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": ["phoneNumber"]
+      },
+      "ContactsOkResponse": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "enum": [true]
+          }
+        },
+        "required": ["ok"]
+      }
+    },
+    "parameters": {}
+  },
+  "paths": {
+    "/api/discover": {
+      "get": {
+        "tags": ["discover"],
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": false,
+            "name": "filterWingerId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            },
+            "required": false,
+            "name": "pageSize",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "nullable": true,
+              "minimum": 0,
+              "default": 0
+            },
+            "required": false,
+            "name": "pageOffset",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "boolean",
+              "nullable": true,
+              "default": false
+            },
+            "required": false,
+            "name": "wingerOnly",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Discover pool for the viewer",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DiscoverResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated"
+          }
+        }
+      }
+    },
+    "/api/likes-you": {
+      "get": {
+        "tags": ["likes-you"],
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            },
+            "required": false,
+            "name": "pageSize",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "nullable": true,
+              "minimum": 0,
+              "default": 0
+            },
+            "required": false,
+            "name": "pageOffset",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Profiles who have liked the viewer and remain available",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LikesYouResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated"
+          }
+        }
+      }
+    },
+    "/api/likes-you/count": {
+      "get": {
+        "tags": ["likes-you"],
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Count of pending inbound likes for the viewer",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LikesYouCountResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated"
+          }
+        }
+      }
+    },
+    "/api/winger-tabs": {
+      "get": {
+        "tags": ["winger-tabs"],
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Distinct wingers with pending suggestions for the viewer, most recent first",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WingerTabsResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated"
+          }
+        }
+      }
+    },
+    "/api/winger-activity": {
+      "get": {
+        "tags": ["winger-activity"],
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 50
+            },
+            "required": false,
+            "name": "limit",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Recent winger activity: suggestion outcomes and authored prompt replies, newest first",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WingerActivityResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated"
+          }
+        }
+      }
+    },
+    "/api/wing-pool": {
+      "get": {
+        "tags": ["wing-pool"],
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "daterId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            },
+            "required": false,
+            "name": "pageSize",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "nullable": true,
+              "minimum": 0,
+              "default": 0
+            },
+            "required": false,
+            "name": "pageOffset",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Profiles the wingperson can suggest for the given dater",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WingPoolResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "403": {
+            "description": "Caller is not an active wingperson for this dater"
+          }
+        }
+      }
+    },
+    "/api/decisions": {
+      "post": {
+        "tags": ["decisions"],
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DirectDecisionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Decision recorded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DirectDecisionResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Unauthenticated"
+          }
+        }
+      }
+    },
+    "/api/decisions/suggestions/act": {
+      "post": {
+        "tags": ["decisions"],
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActSuggestionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Suggestion acted on",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActSuggestionResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "404": {
+            "description": "No pending suggestion to act on"
+          }
+        }
+      }
+    },
+    "/api/decisions/suggestions": {
+      "post": {
+        "tags": ["decisions"],
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SuggestRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Suggestion created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuggestResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "403": {
+            "description": "Caller is not an active wingperson for this dater"
+          }
+        }
+      }
+    },
+    "/api/decisions/pending-suggestions": {
+      "get": {
+        "tags": ["decisions"],
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Pending suggestions awaiting the viewer",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PendingSuggestionsResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated"
+          }
+        }
+      }
+    },
+    "/api/profiles/me": {
+      "get": {
+        "tags": ["profiles"],
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Own profile",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Profile"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "404": {
+            "description": "Profile not found"
+          }
+        }
+      },
+      "patch": {
+        "tags": ["profiles"],
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProfileRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated own profile",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Profile"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "404": {
+            "description": "Profile not found"
+          }
+        }
+      }
+    },
+    "/api/dating-profiles/me": {
+      "get": {
+        "tags": ["profiles"],
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Own dating profile (or null if not yet created)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OwnDatingProfileResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated"
+          }
+        }
+      },
+      "patch": {
+        "tags": ["profiles"],
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDatingProfileRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated dating profile",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OwnDatingProfileResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "404": {
+            "description": "Dating profile not found"
+          }
+        }
+      }
+    },
+    "/api/dating-profiles": {
+      "post": {
+        "tags": ["profiles"],
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDatingProfileRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Dating profile created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateDatingProfileResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "409": {
+            "description": "Dating profile already exists"
+          }
+        }
+      }
+    },
+    "/api/profiles/{userId}": {
+      "get": {
+        "tags": ["profiles"],
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "userId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Public profile",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicProfile"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "404": {
+            "description": "Profile not found"
+          }
+        }
+      }
+    },
+    "/api/matches": {
+      "get": {
+        "tags": ["matches"],
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Matches for the viewer (other profile pre-selected)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MatchesResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated"
+          }
+        }
+      }
+    },
+    "/api/matches/{matchId}/sheet": {
+      "get": {
+        "tags": ["matches"],
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "matchId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Wing note + prompts for the other person in the match",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MatchSheet"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "404": {
+            "description": "Match not found or viewer is not party to it"
+          }
+        }
+      }
+    },
+    "/api/matches/{matchId}/messages": {
+      "get": {
+        "tags": ["messages"],
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "matchId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200
+            },
+            "required": false,
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "nullable": true,
+              "minimum": 0
+            },
+            "required": false,
+            "name": "offset",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Messages for the match in chronological order",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessagesResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "404": {
+            "description": "Match not found or viewer is not party to it"
+          }
+        }
+      },
+      "post": {
+        "tags": ["messages"],
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "matchId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendMessageRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Message inserted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "404": {
+            "description": "Match not found or viewer is not party to it"
+          }
+        }
+      }
+    },
+    "/api/matches/{matchId}/messages/read": {
+      "post": {
+        "tags": ["messages"],
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "matchId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Inbound messages marked read for the viewer",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MarkMessagesReadResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "404": {
+            "description": "Match not found or viewer is not party to it"
+          }
+        }
+      }
+    },
+    "/api/conversations": {
+      "get": {
+        "tags": ["messages"],
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Conversations for the viewer with last message + unread count",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversationsResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated"
+          }
+        }
+      }
+    },
+    "/api/photos/me": {
+      "get": {
+        "tags": ["photos"],
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Photos on the caller's dating profile",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OwnPhotosResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated"
+          }
+        }
+      }
+    },
+    "/api/photos": {
+      "post": {
+        "tags": ["photos"],
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePhotoRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Photo metadata created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Photo"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "403": {
+            "description": "Caller is not the dater or an active wingperson"
+          },
+          "404": {
+            "description": "Dating profile not found"
+          }
+        }
+      }
+    },
+    "/api/photos/upload-url": {
+      "post": {
+        "tags": ["photos"],
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PhotoUploadUrlRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Signed upload URL into the dater's profile-photos folder",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PhotoUploadUrlResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "403": {
+            "description": "Caller is not the dater or an active wingperson"
+          },
+          "404": {
+            "description": "Dating profile not found"
+          }
+        }
+      }
+    },
+    "/api/photos/{id}/approve": {
+      "post": {
+        "tags": ["photos"],
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Photo approved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Photo"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "404": {
+            "description": "Photo not found for this caller"
+          }
+        }
+      }
+    },
+    "/api/photos/{id}/reject": {
+      "post": {
+        "tags": ["photos"],
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Photo metadata rejected and removed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PhotosOkResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "404": {
+            "description": "Photo not found for this caller"
+          }
+        }
+      }
+    },
+    "/api/photos/{id}": {
+      "delete": {
+        "tags": ["photos"],
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Photo deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PhotosOkResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "404": {
+            "description": "Photo not found for this caller"
+          }
+        }
+      }
+    },
+    "/api/photos/{id}/reorder": {
+      "patch": {
+        "tags": ["photos"],
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReorderPhotoRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Photo reordered",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Photo"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "404": {
+            "description": "Photo not found for this caller"
+          }
+        }
+      }
+    },
+    "/api/prompt-templates": {
+      "get": {
+        "tags": ["prompts"],
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Full prompt template catalog",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromptTemplatesResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated"
+          }
+        }
+      }
+    },
+    "/api/prompt-templates/onboarding": {
+      "get": {
+        "tags": ["prompts"],
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Random selection of prompt templates for onboarding",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromptTemplatesResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated"
+          }
+        }
+      }
+    },
+    "/api/profile-prompts/me": {
+      "get": {
+        "tags": ["prompts"],
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Caller's profile prompts with responses",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfilePromptsResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated"
+          }
+        }
+      }
+    },
+    "/api/profile-prompts": {
+      "post": {
+        "tags": ["prompts"],
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateProfilePromptRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Profile prompt created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfilePrompt"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "404": {
+            "description": "Caller has no dating profile"
+          }
+        }
+      }
+    },
+    "/api/profile-prompts/{id}": {
+      "delete": {
+        "tags": ["prompts"],
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Profile prompt deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromptsOkResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "404": {
+            "description": "Profile prompt not found for this caller"
+          }
+        }
+      }
+    },
+    "/api/prompt-responses": {
+      "post": {
+        "tags": ["prompts"],
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePromptResponseRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Prompt response created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromptResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "403": {
+            "description": "Caller is not a wingperson or match of the prompt owner"
+          },
+          "404": {
+            "description": "Profile prompt not found"
+          }
+        }
+      }
+    },
+    "/api/prompt-responses/{id}/approve": {
+      "post": {
+        "tags": ["prompts"],
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Prompt response approved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromptResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "404": {
+            "description": "Prompt response not found for this caller"
+          }
+        }
+      }
+    },
+    "/api/prompt-responses/{id}": {
+      "delete": {
+        "tags": ["prompts"],
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Prompt response deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromptsOkResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "404": {
+            "description": "Prompt response not found for this caller"
+          }
+        }
+      }
+    },
+    "/api/wingpeople": {
+      "get": {
+        "tags": ["contacts"],
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Combined wingperson roster, invitations, and weekly counts",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WingpeopleResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated"
+          }
+        }
+      }
+    },
+    "/api/wingpeople/invite": {
+      "post": {
+        "tags": ["contacts"],
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InviteWingpersonRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Pending contact created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InviteWingpersonResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Unauthenticated"
+          }
+        }
+      }
+    },
+    "/api/wingpeople/{id}/accept": {
+      "post": {
+        "tags": ["contacts"],
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Invitation accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContactsOkResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "404": {
+            "description": "No pending invitation for this caller"
+          }
+        }
+      }
+    },
+    "/api/wingpeople/{id}/decline": {
+      "post": {
+        "tags": ["contacts"],
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Invitation declined",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContactsOkResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "404": {
+            "description": "No pending invitation for this caller"
+          }
+        }
+      }
+    },
+    "/api/wingpeople/{id}": {
+      "delete": {
+        "tags": ["contacts"],
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Wingperson removed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContactsOkResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "404": {
+            "description": "Contact not found for this caller"
+          }
+        }
+      }
+    }
+  }
+}

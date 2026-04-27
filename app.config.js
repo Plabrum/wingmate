@@ -2,12 +2,12 @@ const { version } = require('./package.json');
 
 module.exports = {
   expo: {
-    name: 'Wyng',
+    name: 'Pear',
     slug: 'wingmate',
     version,
     orientation: 'portrait',
     icon: './assets/images/icon.png',
-    scheme: 'orbit',
+    scheme: 'pear',
     userInterfaceStyle: 'light',
     newArchEnabled: true,
     ios: {

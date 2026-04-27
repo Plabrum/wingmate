@@ -456,29 +456,54 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
-      get_discover_pool: {
-        Args: {
-          filter_winger_id?: string;
-          page_offset?: number;
-          page_size?: number;
-          viewer_id: string;
-        };
-        Returns: {
-          age: number;
-          bio: string;
-          chosen_name: string;
-          city: Database['public']['Enums']['city'];
-          dating_status: Database['public']['Enums']['dating_status'];
-          first_photo: string;
-          gender: Database['public']['Enums']['gender'];
-          interests: Database['public']['Enums']['interest'][];
-          profile_id: string;
-          suggested_by: string;
-          suggester_name: string;
-          user_id: string;
-          wing_note: string;
-        }[];
-      };
+      get_discover_pool:
+        | {
+            Args: {
+              filter_winger_id?: string;
+              page_offset?: number;
+              page_size?: number;
+              viewer_id: string;
+            };
+            Returns: {
+              age: number;
+              bio: string;
+              chosen_name: string;
+              city: Database['public']['Enums']['city'];
+              dating_status: Database['public']['Enums']['dating_status'];
+              first_photo: string;
+              gender: Database['public']['Enums']['gender'];
+              interests: Database['public']['Enums']['interest'][];
+              profile_id: string;
+              suggested_by: string;
+              suggester_name: string;
+              user_id: string;
+              wing_note: string;
+            }[];
+          }
+        | {
+            Args: {
+              filter_winger_id?: string;
+              page_offset?: number;
+              page_size?: number;
+              viewer_id: string;
+              winger_only?: boolean;
+            };
+            Returns: {
+              age: number;
+              bio: string;
+              chosen_name: string;
+              city: Database['public']['Enums']['city'];
+              dating_status: Database['public']['Enums']['dating_status'];
+              first_photo: string;
+              gender: Database['public']['Enums']['gender'];
+              interests: Database['public']['Enums']['interest'][];
+              profile_id: string;
+              suggested_by: string;
+              suggester_name: string;
+              user_id: string;
+              wing_note: string;
+            }[];
+          };
       get_likes_you_count: { Args: { viewer_id: string }; Returns: number };
       get_likes_you_pool: {
         Args: { page_offset?: number; page_size?: number; viewer_id: string };
