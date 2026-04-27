@@ -304,7 +304,7 @@ function WingpeopleContent({ onOpenInvite }: ContentProps) {
                     borderRadius: 16,
                   }}
                 >
-                  <FaceAvatar name={name} size={42} photoUri={inv.dater?.avatarUrl ?? null} />
+                  <FaceAvatar name={name} size={42} />
                   <View style={{ flex: 1 }}>
                     <Text style={{ fontSize: 14, fontWeight: '600', color: INK }}>
                       {firstName} wants you to wing
@@ -330,7 +330,7 @@ function WingpeopleContent({ onOpenInvite }: ContentProps) {
       {/* ── Section 4: You're Winging For ──────────────────────────────────── */}
       {wingingFor.length > 0 && (
         <>
-          <SectionLabel>You{"'"}re winging for</SectionLabel>
+          <SectionLabel>{`You're winging for`}</SectionLabel>
           <View style={{ paddingHorizontal: 16, gap: 12 }}>
             {wingingFor.map((wf) => {
               const name = wf.dater?.chosenName ?? 'Unknown';

@@ -1,13 +1,12 @@
 import { useState } from 'react';
-import { KeyboardAvoidingView, Modal, Platform } from 'react-native';
+import { Image, KeyboardAvoidingView, Modal, Platform, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import Svg, { Path } from 'react-native-svg';
 
-import { colors } from '@/constants/theme';
 import { useWingSwipe } from '@/hooks/use-wing-swipe';
 import { View, Text, Pressable, ScrollView, TextInput, SafeAreaView } from '@/lib/tw';
-import { NavHeader } from '@/components/ui/NavHeader';
-import { PhotoRect } from '@/components/ui/PhotoRect';
+import { FaceAvatar } from '@/components/ui/FaceAvatar';
 import { Pill } from '@/components/ui/Pill';
 import { Sprout } from '@/components/ui/Sprout';
 import { useGetApiProfilesUserIdSuspense } from '@/lib/api/generated/profiles/profiles';
@@ -18,40 +17,210 @@ import { cardButtonShadow } from '@/lib/styles';
 
 const PAGE_SIZE = 20;
 
-// ── WingCardView ──────────────────────────────────────────────────────────────
+const INK = '#1F1B16';
+const INK2 = '#4A4338';
+const INK3 = '#8B8170';
+const PAPER = '#FBF8F1';
+const CREAM = '#F5F1E8';
+const LINE = 'rgba(31,27,22,0.10)';
+const LEAF = '#5A8C3A';
 
-function WingCardView({ card }: { card: WingProfile }) {
+// ── Icons ────────────────────────────────────────────────────────────────────
+
+function BackIcon({ color = INK }: { color?: string }) {
   return (
-    <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-      <PhotoRect uri={card.firstPhoto} ratio={4 / 5} />
-      <View className="p-4">
-        <Text className="text-3xl font-serif text-fg font-bold">
-          {card.chosenName}, {card.age}
-        </Text>
-        <Text className="text-sm text-fg-muted mt-1 mb-3">{card.city}</Text>
-        {card.interests.length > 0 && (
-          <View className="flex-row flex-wrap gap-2 mb-4">
-            {card.interests.map((interest) => (
-              <Pill key={interest} label={interest} />
-            ))}
-          </View>
-        )}
-        {card.bio != null && (
-          <Text className="text-sm text-fg-muted leading-[22px]">{card.bio}</Text>
-        )}
-      </View>
-    </ScrollView>
+    <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M15 18l-6-6 6-6"
+        stroke={color}
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
   );
 }
 
-// ── NoteModal ─────────────────────────────────────────────────────────────────
+function XIcon({ size = 24, color = INK2 }: { size?: number; color?: string }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M6 6l12 12M18 6L6 18"
+        stroke={color}
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
+function HeartIcon({ size = 24, color = PAPER }: { size?: number; color?: string }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill={color} stroke={color}>
+      <Path
+        d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"
+        strokeWidth={1.5}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
+// ── WingCardEditorial ────────────────────────────────────────────────────────
+
+function WingCardEditorial({
+  card,
+  daterFirstName,
+}: {
+  card: WingProfile;
+  daterFirstName: string;
+}) {
+  return (
+    <View
+      style={{
+        width: '100%',
+        height: '100%',
+        borderRadius: 22,
+        overflow: 'hidden',
+        backgroundColor: CREAM,
+        borderWidth: 1,
+        borderColor: LINE,
+        ...Platform.select({
+          ios: {
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 12 },
+            shadowOpacity: 0.1,
+            shadowRadius: 24,
+          },
+          android: { elevation: 6 },
+        }),
+      }}
+    >
+      <View
+        style={{
+          paddingTop: 20,
+          paddingHorizontal: 18,
+          paddingBottom: 8,
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'baseline',
+        }}
+      >
+        <Text
+          style={{
+            fontSize: 10,
+            color: INK3,
+            letterSpacing: 2,
+            textTransform: 'uppercase',
+            fontWeight: '600',
+          }}
+        >
+          {daterFirstName ? `For ${daterFirstName}` : 'Wing pick'}
+        </Text>
+        <Text
+          style={{
+            fontSize: 10,
+            color: LEAF,
+            letterSpacing: 1.5,
+            textTransform: 'uppercase',
+            fontWeight: '600',
+          }}
+        >
+          Suggestion
+        </Text>
+      </View>
+
+      <View style={{ paddingHorizontal: 18 }}>
+        <Text
+          className="font-serif"
+          style={{
+            fontSize: 44,
+            lineHeight: 44,
+            letterSpacing: -1,
+            color: INK,
+          }}
+        >
+          {card.chosenName},
+        </Text>
+        <Text
+          className="font-serif"
+          style={{
+            fontSize: 44,
+            lineHeight: 44,
+            letterSpacing: -1,
+            color: LEAF,
+            fontStyle: 'italic',
+          }}
+        >
+          {card.age}
+        </Text>
+        {card.city != null && (
+          <Text style={{ fontSize: 13, color: INK2, marginTop: 6 }}>{card.city}</Text>
+        )}
+      </View>
+
+      <ScrollView
+        contentContainerStyle={{ padding: 18, paddingTop: 14, paddingBottom: 20, gap: 12 }}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={{ flexDirection: 'row', gap: 10 }}>
+          <View
+            style={{
+              flex: 1,
+              aspectRatio: 3 / 4,
+              borderRadius: 12,
+              overflow: 'hidden',
+              backgroundColor: '#ebebf0',
+            }}
+          >
+            {card.firstPhoto != null && (
+              <Image
+                source={{ uri: card.firstPhoto }}
+                style={StyleSheet.absoluteFillObject}
+                resizeMode="cover"
+              />
+            )}
+          </View>
+          <View style={{ flex: 1, gap: 8 }}>
+            {card.bio != null && (
+              <Text style={{ fontSize: 12.5, color: INK2, lineHeight: 18 }}>{card.bio}</Text>
+            )}
+            {card.interests.length > 0 && (
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4 }}>
+                {card.interests.slice(0, 3).map((interest) => (
+                  <Pill key={interest} label={interest} tone="outline" size="sm" />
+                ))}
+              </View>
+            )}
+          </View>
+        </View>
+
+        {card.interests.length > 3 && (
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
+            {card.interests.slice(3).map((interest) => (
+              <Pill key={interest} label={interest} tone="cream" size="sm" />
+            ))}
+          </View>
+        )}
+      </ScrollView>
+    </View>
+  );
+}
+
+// ── NoteModal ────────────────────────────────────────────────────────────────
 
 function NoteModal({
   visible,
+  daterFirstName,
+  subjectName,
   onSend,
   onDismiss,
 }: {
   visible: boolean;
+  daterFirstName: string;
+  subjectName: string;
   onSend: (note: string | null) => void;
   onDismiss: () => void;
 }) {
@@ -65,38 +234,72 @@ function NoteModal({
 
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onDismiss}>
-      <View className="flex-1 bg-black/45">
+      <View className="flex-1" style={{ backgroundColor: 'rgba(31,27,22,0.45)' }}>
         <Pressable className="flex-1" onPress={onDismiss} />
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={{ position: 'absolute', bottom: 0, left: 0, right: 0 }}
         >
           <View
-            className="bg-white rounded-tl-[20px] rounded-tr-[20px] px-6 pt-3"
-            style={{ paddingBottom: insets.bottom + 20 }}
+            style={{
+              backgroundColor: CREAM,
+              borderTopLeftRadius: 24,
+              borderTopRightRadius: 24,
+              paddingHorizontal: 20,
+              paddingTop: 14,
+              paddingBottom: insets.bottom + 24,
+            }}
           >
-            <View className="self-center w-9 h-1 rounded-[2px] bg-fg-ghost mb-5" />
-            <Text className="text-lg font-bold text-fg mb-1.5">Add a note?</Text>
-            <Text className="text-sm text-fg-muted leading-5 mb-4">
-              Let them know why you think they{"'"}d get along. (Optional)
+            <View
+              style={{
+                alignSelf: 'center',
+                width: 40,
+                height: 4,
+                borderRadius: 2,
+                backgroundColor: LINE,
+                marginBottom: 14,
+              }}
+            />
+            <Text
+              className="font-serif"
+              style={{ fontSize: 24, color: INK, letterSpacing: -0.4, lineHeight: 28 }}
+            >
+              Add a note for {daterFirstName || 'them'}?
+            </Text>
+            <Text style={{ fontSize: 13, color: INK3, marginTop: 6, marginBottom: 14 }}>
+              Why is {subjectName} a good pick? {daterFirstName || 'They'} will see this with the
+              suggestion.
             </Text>
             <TextInput
-              className="border-[1.5px] border-separator rounded-xl px-4 py-[14px] text-sm text-fg bg-white min-h-[100px]"
-              placeholder="She loves hiking and has a great laugh..."
-              placeholderTextColor={colors.inkGhost}
+              style={{
+                width: '100%',
+                minHeight: 90,
+                borderWidth: 1,
+                borderColor: LINE,
+                borderRadius: 14,
+                padding: 12,
+                backgroundColor: PAPER,
+                fontSize: 14,
+                color: INK,
+                textAlignVertical: 'top',
+              }}
+              placeholder={`e.g. they're obsessed with that pottery studio…`}
+              placeholderTextColor={INK3}
               multiline
-              numberOfLines={4}
               value={note}
               onChangeText={setNote}
-              textAlignVertical="top"
             />
-            <View className="mt-4 gap-[10px]">
-              <Sprout block variant="secondary" onPress={() => handleSend(false)}>
-                Skip & Send
-              </Sprout>
-              <Sprout block onPress={() => handleSend(true)}>
-                Add Note & Send
-              </Sprout>
+            <View style={{ flexDirection: 'row', gap: 10, marginTop: 14 }}>
+              <View style={{ flex: 1 }}>
+                <Sprout block variant="secondary" onPress={() => handleSend(false)}>
+                  Skip & send
+                </Sprout>
+              </View>
+              <View style={{ flex: 1 }}>
+                <Sprout block onPress={() => handleSend(true)}>
+                  Add note & send
+                </Sprout>
+              </View>
             </View>
           </View>
         </KeyboardAvoidingView>
@@ -105,20 +308,27 @@ function NoteModal({
   );
 }
 
-// ── EmptyState ────────────────────────────────────────────────────────────────
+// ── EmptyState ───────────────────────────────────────────────────────────────
 
-function EmptyState({ daterName }: { daterName: string }) {
+function EmptyState({ daterFirstName }: { daterFirstName: string }) {
   return (
-    <View className="flex-1 justify-center items-center p-6">
-      <Text className="text-base text-fg-muted text-center leading-6">
-        You{"'"}ve gone through everyone in {daterName}
-        {"'"}s area. Check back soon.
+    <View className="flex-1 items-center justify-center" style={{ padding: 24 }}>
+      <Text
+        className="font-serif"
+        style={{ fontSize: 24, color: INK, letterSpacing: -0.3, textAlign: 'center' }}
+      >
+        {`That's everyone for now.`}
+      </Text>
+      <Text
+        style={{ fontSize: 13, color: INK3, marginTop: 8, textAlign: 'center', lineHeight: 20 }}
+      >
+        {`You've gone through ${daterFirstName || 'their'}'s pool. Check back soon for new picks.`}
       </Text>
     </View>
   );
 }
 
-// ── WingSwipeContent ──────────────────────────────────────────────────────────
+// ── WingSwipeContent ─────────────────────────────────────────────────────────
 
 function WingSwipeContent() {
   const router = useRouter();
@@ -136,6 +346,7 @@ function WingSwipeContent() {
 
   const daterName = daterContext?.chosenName ?? '';
   const firstName = daterName.split(' ')[0] || daterName;
+  const remaining = Math.max(pool.length - index, 0);
 
   const [noteVisible, setNoteVisible] = useState(false);
 
@@ -146,41 +357,101 @@ function WingSwipeContent() {
 
   return (
     <>
-      <NavHeader
-        back
-        title={daterName ? `Swiping for ${firstName}` : 'Wing Mode'}
-        onBack={() => router.back()}
-      />
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 10,
+          paddingHorizontal: 12,
+          paddingTop: 8,
+          paddingBottom: 12,
+          borderBottomWidth: 1,
+          borderBottomColor: LINE,
+        }}
+      >
+        <Pressable
+          onPress={() => router.back()}
+          hitSlop={12}
+          style={{ padding: 8, marginLeft: -4 }}
+        >
+          <BackIcon />
+        </Pressable>
+        <FaceAvatar name={daterName || '?'} size={32} photoUri={daterContext?.avatarUrl ?? null} />
+        <View style={{ flex: 1 }}>
+          <Text style={{ fontSize: 14, fontWeight: '600', color: INK }}>
+            Swiping for {firstName || 'them'}
+          </Text>
+          <Text style={{ fontSize: 11.5, color: INK3, marginTop: 1 }}>
+            Suggestions go to {firstName || 'them'} for review
+          </Text>
+        </View>
+        {remaining > 0 && (
+          <Pill tone="leaf" size="sm">
+            {remaining} left
+          </Pill>
+        )}
+      </View>
 
-      <View className="flex-1">
+      <View style={{ flex: 1, padding: 14 }}>
         {card != null ? (
-          <WingCardView card={card} />
+          <WingCardEditorial card={card} daterFirstName={firstName} />
         ) : (
-          <EmptyState daterName={firstName || 'them'} />
+          <EmptyState daterFirstName={firstName} />
         )}
       </View>
 
       {card != null && (
-        <View className="flex-row justify-center items-center gap-[40px] py-5 pb-7">
+        <View
+          style={{
+            flexDirection: 'row',
+            justifyContent: 'center',
+            alignItems: 'center',
+            gap: 24,
+            paddingBottom: 28,
+            paddingTop: 6,
+          }}
+        >
           <Pressable
-            className="w-16 h-16 rounded-[32px] justify-center items-center bg-white"
-            style={cardButtonShadow}
             onPress={decline}
+            style={[
+              {
+                width: 60,
+                height: 60,
+                borderRadius: 30,
+                backgroundColor: PAPER,
+                borderWidth: 1,
+                borderColor: LINE,
+                alignItems: 'center',
+                justifyContent: 'center',
+              },
+              cardButtonShadow,
+            ]}
           >
-            <Text className="text-2xl text-fg-muted">✕</Text>
+            <XIcon size={24} color={INK2} />
           </Pressable>
           <Pressable
-            className="w-16 h-16 rounded-[32px] justify-center items-center bg-accent"
-            style={cardButtonShadow}
             onPress={() => setNoteVisible(true)}
+            style={[
+              {
+                width: 60,
+                height: 60,
+                borderRadius: 30,
+                backgroundColor: LEAF,
+                alignItems: 'center',
+                justifyContent: 'center',
+              },
+              cardButtonShadow,
+            ]}
           >
-            <Text className="text-2xl text-white">♥</Text>
+            <HeartIcon size={24} color={PAPER} />
           </Pressable>
         </View>
       )}
 
       <NoteModal
         visible={noteVisible}
+        daterFirstName={firstName}
+        subjectName={card?.chosenName ?? 'they'}
         onSend={handleSuggest}
         onDismiss={() => setNoteVisible(false)}
       />
@@ -188,11 +459,11 @@ function WingSwipeContent() {
   );
 }
 
-// ── WingSwipeScreen ───────────────────────────────────────────────────────────
+// ── WingSwipeScreen ──────────────────────────────────────────────────────────
 
 export default function WingSwipeScreen() {
   return (
-    <SafeAreaView className="flex-1 bg-page" edges={['top']}>
+    <SafeAreaView className="flex-1" edges={['top']} style={{ backgroundColor: CREAM }}>
       <ScreenSuspense>
         <WingSwipeContent />
       </ScreenSuspense>
