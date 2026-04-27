@@ -32,7 +32,7 @@ jobs:
       - name: Deploy edge functions
         run: |
           LOCAL_FNS=$(ls -d supabase/functions/*/ 2>/dev/null | xargs -I{} basename {} | sort)
-          REMOTE_FNS=$(supabase functions list --project-ref ${{ secrets.SUPABASE_PROJECT_REF }} | tail -n +4 | awk '{print $1}' | grep -v '^-' | grep -v '^$' | sort)
+          REMOTE_FNS=$(supabase functions list --project-ref ${{ secrets.SUPABASE_PROJECT_REF }} | tail -n +4 | awk '{print $1}' | grep -v '^-' | grep -v '^$' | grep '^[A-Za-z][A-Za-z0-9_-]*$' | sort)
 
           # Deploy all local functions. Kong (the platform gateway) verifies JWTs
           # for the `api` function. Webhook responders (`notify-*`, `delete-profile-photo`)
