@@ -5,7 +5,6 @@ import { toast } from 'sonner-native';
 import { useQueryClient } from '@tanstack/react-query';
 import type { UseFormReturn } from 'react-hook-form';
 
-import { colors } from '@/constants/theme';
 import type { OwnDatingProfileResponse } from '@/lib/api/generated/model';
 import {
   patchApiDatingProfilesMe,
@@ -15,7 +14,14 @@ import {
 
 import { Pill } from '@/components/ui/Pill';
 import { Sprout } from '@/components/ui/Sprout';
-import { IconSymbol } from '@/components/ui/icon-symbol';
+
+const INK = '#1F1B16';
+const INK2 = '#4A4338';
+const INK3 = '#8B8170';
+const PAPER = '#FBF8F1';
+const LINE = 'rgba(31,27,22,0.10)';
+const LEAF = '#5A8C3A';
+const LEAF_SOFT = '#E5EDD7';
 
 type DatingStatus = 'open' | 'break' | 'winging';
 
@@ -28,6 +34,39 @@ const STATUS_OPTIONS: { key: DatingStatus; label: string; sub: string }[] = [
 interface Props {
   form: UseFormReturn<NonNullable<OwnDatingProfileResponse>>;
   data: NonNullable<OwnDatingProfileResponse>;
+}
+
+function FieldLabel({ children }: { children: string }) {
+  return (
+    <Text
+      style={{
+        fontSize: 10.5,
+        letterSpacing: 1.4,
+        textTransform: 'uppercase',
+        color: INK3,
+        fontWeight: '600',
+        marginBottom: 6,
+      }}
+    >
+      {children}
+    </Text>
+  );
+}
+
+function Card({ children }: { children: React.ReactNode }) {
+  return (
+    <View
+      style={{
+        backgroundColor: PAPER,
+        borderRadius: 18,
+        borderWidth: 1,
+        borderColor: LINE,
+        overflow: 'hidden',
+      }}
+    >
+      {children}
+    </View>
+  );
 }
 
 export function AboutMeTab({ form, data }: Props) {
@@ -48,126 +87,135 @@ export function AboutMeTab({ form, data }: Props) {
     }
   };
 
-  const detailRows = [
-    { label: 'City', value: data.city },
-    { label: 'Religion', value: data.religion },
-    {
-      label: 'Age range',
-      value: data.ageTo ? `${data.ageFrom}–${data.ageTo}` : `${data.ageFrom}+`,
-    },
-    {
-      label: 'Interested in',
-      value: data.interestedGender.length ? data.interestedGender.join(', ') : '—',
-    },
-  ];
+  const ageText = data.ageTo ? `${data.ageFrom} — ${data.ageTo}` : `${data.ageFrom}+`;
+  const lookingFor = data.interestedGender.length
+    ? data.interestedGender.map((g) => g.toLowerCase()).join(' · ')
+    : '—';
 
   return (
     <ScrollView
-      contentContainerClassName="p-5 pb-12"
+      contentContainerStyle={{ padding: 16, paddingBottom: 48, gap: 18 }}
       showsVerticalScrollIndicator={false}
       keyboardShouldPersistTaps="handled"
     >
-      <Text className="text-xs font-bold text-fg-subtle uppercase tracking-[0.6px] mt-5 mb-2">
-        Dating Status
-      </Text>
-      <View className="bg-white rounded-xl overflow-hidden">
-        {STATUS_OPTIONS.map((opt, i) => {
-          const active = datingStatus === opt.key;
-          return (
-            <Pressable
-              key={opt.key}
-              onPress={() => handleStatus(opt.key)}
-              className="flex-row items-center px-[14px] py-[13px]"
-              style={
-                i < STATUS_OPTIONS.length - 1
-                  ? {
-                      borderBottomWidth: StyleSheet.hairlineWidth,
-                      borderBottomColor: colors.divider,
-                    }
-                  : undefined
-              }
-            >
-              <View className="flex-1">
-                <Text className={'text-sm font-medium ' + (active ? 'text-accent' : 'text-fg')}>
-                  {opt.label}
-                </Text>
-                <Text className="text-xs text-fg-subtle mt-px">{opt.sub}</Text>
-              </View>
-              <View
-                className={
-                  'w-5 h-5 rounded-lg border-2 items-center justify-center ' +
-                  (active ? 'border-accent' : 'border-fg-ghost')
-                }
+      {/* Dating status */}
+      <View>
+        <FieldLabel>Dating status</FieldLabel>
+        <Card>
+          {STATUS_OPTIONS.map((opt, i) => {
+            const active = datingStatus === opt.key;
+            return (
+              <Pressable
+                key={opt.key}
+                onPress={() => handleStatus(opt.key)}
+                className="flex-row items-center"
+                style={{
+                  paddingHorizontal: 14,
+                  paddingVertical: 12,
+                  borderBottomWidth: i < STATUS_OPTIONS.length - 1 ? StyleSheet.hairlineWidth : 0,
+                  borderBottomColor: LINE,
+                }}
               >
-                {active && <View className="w-[10px] h-[10px] rounded-[5px] bg-accent" />}
-              </View>
-            </Pressable>
-          );
-        })}
+                <View style={{ flex: 1 }}>
+                  <Text
+                    style={{
+                      fontSize: 14,
+                      fontWeight: '500',
+                      color: active ? LEAF : INK,
+                    }}
+                  >
+                    {opt.label}
+                  </Text>
+                  <Text style={{ fontSize: 12, color: INK3, marginTop: 1 }}>{opt.sub}</Text>
+                </View>
+                <View
+                  style={{
+                    width: 20,
+                    height: 20,
+                    borderRadius: 10,
+                    borderWidth: 2,
+                    borderColor: active ? LEAF : 'rgba(31,27,22,0.20)',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  {active ? (
+                    <View
+                      style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: LEAF }}
+                    />
+                  ) : null}
+                </View>
+              </Pressable>
+            );
+          })}
+        </Card>
       </View>
 
-      {datingStatus !== 'open' && (
-        <View className="flex-row items-start gap-2 bg-accent-muted rounded-lg p-3 mt-[10px]">
-          <IconSymbol name="eye.slash" size={15} color={colors.purple} />
-          <Text className="flex-1 text-sm text-accent leading-[18px]">
+      {datingStatus !== 'open' ? (
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'flex-start',
+            gap: 8,
+            backgroundColor: LEAF_SOFT,
+            borderRadius: 12,
+            padding: 12,
+          }}
+        >
+          <Text style={{ flex: 1, fontSize: 13, color: LEAF, lineHeight: 18 }}>
             Your profile is hidden from Discover while you{"'"}re{' '}
             {datingStatus === 'break' ? 'on a break' : 'just winging'}.
           </Text>
         </View>
-      )}
+      ) : null}
 
-      {datingStatus !== 'winging' && (
-        <>
-          <Text className="text-xs font-bold text-fg-subtle uppercase tracking-[0.6px] mt-5 mb-2">
-            Details
-          </Text>
-          <View className="bg-white rounded-xl overflow-hidden">
-            {detailRows.map((row, i) => (
-              <View
-                key={row.label}
-                className="flex-row items-center justify-between px-[14px] py-[13px]"
-                style={
-                  i < detailRows.length - 1
-                    ? {
-                        borderBottomWidth: StyleSheet.hairlineWidth,
-                        borderBottomColor: colors.divider,
-                      }
-                    : undefined
-                }
-              >
-                <Text className="text-sm text-fg-muted">{row.label}</Text>
-                <Text className="text-sm font-medium text-fg">{row.value}</Text>
-              </View>
+      {/* Bio */}
+      {data.bio ? (
+        <View>
+          <FieldLabel>Bio</FieldLabel>
+          <Text style={{ fontSize: 14.5, lineHeight: 22, color: INK2 }}>{data.bio}</Text>
+        </View>
+      ) : null}
+
+      {/* Looking for / Age range */}
+      <View style={{ flexDirection: 'row', gap: 12 }}>
+        <View style={{ flex: 1 }}>
+          <FieldLabel>Looking for</FieldLabel>
+          <Pill tone="leaf">{lookingFor}</Pill>
+        </View>
+        <View style={{ flex: 1 }}>
+          <FieldLabel>Age range</FieldLabel>
+          <Text style={{ fontSize: 14, fontWeight: '500', color: INK }}>{ageText}</Text>
+        </View>
+      </View>
+
+      {/* City / Religion */}
+      <View style={{ flexDirection: 'row', gap: 12 }}>
+        <View style={{ flex: 1 }}>
+          <FieldLabel>City</FieldLabel>
+          <Text style={{ fontSize: 14, fontWeight: '500', color: INK }}>{data.city}</Text>
+        </View>
+        <View style={{ flex: 1 }}>
+          <FieldLabel>Religion</FieldLabel>
+          <Text style={{ fontSize: 14, fontWeight: '500', color: INK }}>{data.religion}</Text>
+        </View>
+      </View>
+
+      {/* Interests */}
+      {data.interests.length > 0 ? (
+        <View>
+          <FieldLabel>Interests</FieldLabel>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
+            {data.interests.map((interest) => (
+              <Pill key={interest} tone="cream">
+                {interest.toLowerCase()}
+              </Pill>
             ))}
           </View>
+        </View>
+      ) : null}
 
-          {data.bio ? (
-            <>
-              <Text className="text-xs font-bold text-fg-subtle uppercase tracking-[0.6px] mt-5 mb-2">
-                Bio
-              </Text>
-              <View className="bg-white rounded-xl overflow-hidden p-[14px]">
-                <Text className="text-sm text-fg leading-[22px]">{data.bio}</Text>
-              </View>
-            </>
-          ) : null}
-
-          {data.interests.length > 0 && (
-            <>
-              <Text className="text-xs font-bold text-fg-subtle uppercase tracking-[0.6px] mt-5 mb-2">
-                Interests
-              </Text>
-              <View className="flex-row flex-wrap gap-2">
-                {data.interests.map((interest) => (
-                  <Pill key={interest} label={interest} />
-                ))}
-              </View>
-            </>
-          )}
-        </>
-      )}
-
-      <View className="mt-7">
+      <View style={{ marginTop: 8 }}>
         <Sprout
           block
           variant="secondary"

@@ -2,6 +2,7 @@ import { KeyboardAvoidingView, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useQueryClient } from '@tanstack/react-query';
 import { z } from 'zod';
+import Svg, { Path } from 'react-native-svg';
 
 import {
   useGetApiDatingProfilesMeSuspense,
@@ -16,7 +17,44 @@ import { cn } from '@/lib/cn';
 import { createForm, RootError, SubmitButton, useFormSubmit } from '@/lib/forms';
 
 import ScreenSuspense from '@/components/ui/ScreenSuspense';
-import { NavHeader } from '@/components/ui/NavHeader';
+
+const INK = '#1F1B16';
+const INK3 = '#8B8170';
+const LEAF = '#5A8C3A';
+
+function BackIcon({ color = INK }: { color?: string }) {
+  return (
+    <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M15 18l-6-6 6-6"
+        stroke={color}
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
+function EditHeader({ onBack, right }: { onBack: () => void; right?: React.ReactNode }) {
+  return (
+    <View
+      className="flex-row items-center"
+      style={{ paddingHorizontal: 12, paddingTop: 8, paddingBottom: 8, gap: 4 }}
+    >
+      <Pressable onPress={onBack} hitSlop={12} style={{ padding: 8, marginLeft: -4 }}>
+        <BackIcon />
+      </Pressable>
+      <Text
+        className="font-serif"
+        style={{ fontSize: 26, color: INK, letterSpacing: -0.4, flex: 1 }}
+      >
+        Edit profile
+      </Text>
+      {right}
+    </View>
+  );
+}
 
 type Religion = Database['public']['Enums']['religion'];
 
@@ -62,7 +100,17 @@ const editForm = createForm(editSchema);
 
 function SectionLabel({ label }: { label: string }) {
   return (
-    <Text className="text-xs font-bold text-fg-subtle uppercase tracking-[0.6px] mt-5 mb-2.5">
+    <Text
+      style={{
+        fontSize: 10.5,
+        letterSpacing: 1.4,
+        textTransform: 'uppercase',
+        color: INK3,
+        fontWeight: '600',
+        marginTop: 20,
+        marginBottom: 10,
+      }}
+    >
       {label}
     </Text>
   );
@@ -76,8 +124,12 @@ function HeaderSave() {
       onPress={submit}
       disabled={disabled}
       hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+      style={{ paddingHorizontal: 8 }}
     >
-      <Text className={cn('text-sm font-semibold text-accent', disabled && 'opacity-40')}>
+      <Text
+        className={cn(disabled && 'opacity-40')}
+        style={{ fontSize: 14, fontWeight: '600', color: LEAF }}
+      >
         {isSubmitting ? 'Saving…' : 'Save'}
       </Text>
     </Pressable>
@@ -94,7 +146,11 @@ function EditProfileForm({
   const queryClient = useQueryClient();
 
   return (
-    <SafeAreaView className="flex-1 bg-page" edges={['top', 'bottom']}>
+    <SafeAreaView
+      className="flex-1"
+      edges={['top', 'bottom']}
+      style={{ backgroundColor: '#F5F1E8' }}
+    >
       <editForm.Form
         defaultValues={{
           bio: data.bio ?? '',
@@ -129,7 +185,7 @@ function EditProfileForm({
           router.back();
         }}
       >
-        <NavHeader back title="Edit Profile" onBack={() => router.back()} right={<HeaderSave />} />
+        <EditHeader onBack={() => router.back()} right={<HeaderSave />} />
 
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -202,8 +258,12 @@ function EditProfileScreenInner() {
 
   if (!datingProfile) {
     return (
-      <SafeAreaView className="flex-1 bg-page" edges={['top', 'bottom']}>
-        <NavHeader back title="Edit Profile" onBack={() => router.back()} />
+      <SafeAreaView
+        className="flex-1"
+        edges={['top', 'bottom']}
+        style={{ backgroundColor: '#F5F1E8' }}
+      >
+        <EditHeader onBack={() => router.back()} />
       </SafeAreaView>
     );
   }

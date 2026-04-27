@@ -1,8 +1,8 @@
 import { Alert, ActivityIndicator, Dimensions } from 'react-native';
 import { toast } from 'sonner-native';
 import type { UseFormReturn } from 'react-hook-form';
+import Svg, { Path } from 'react-native-svg';
 
-import { colors } from '@/constants/theme';
 import type { OwnDatingProfileResponse } from '@/lib/api/generated/model';
 import { useUploadProfilePhoto } from '@/hooks/use-upload-profile-photo';
 import { getPhotoUrl, pickAndResizePhoto } from '@/lib/photos';
@@ -14,9 +14,64 @@ import {
 
 import { ScrollView, Text, Pressable, View } from '@/lib/tw';
 import { PhotoRect } from '@/components/ui/PhotoRect';
-import { IconSymbol } from '@/components/ui/icon-symbol';
+import { FaceAvatar } from '@/components/ui/FaceAvatar';
+import { Sprout } from '@/components/ui/Sprout';
 
-const PHOTO_COL = (Dimensions.get('window').width - 20 * 2 - 8) / 2;
+const INK = '#1F1B16';
+const INK3 = '#8B8170';
+const PAPER = '#FBF8F1';
+const LINE = 'rgba(31,27,22,0.10)';
+const LEAF = '#5A8C3A';
+
+const PHOTO_GAP = 8;
+const PHOTO_COL = (Dimensions.get('window').width - 16 * 2 - PHOTO_GAP * 2) / 3;
+
+function FieldLabel({ children }: { children: string }) {
+  return (
+    <Text
+      style={{
+        fontSize: 10.5,
+        letterSpacing: 1.4,
+        textTransform: 'uppercase',
+        color: INK3,
+        fontWeight: '600',
+        marginBottom: 8,
+      }}
+    >
+      {children}
+    </Text>
+  );
+}
+
+function PlusIcon({ size = 18, color = LEAF }: { size?: number; color?: string }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path d="M12 5v14M5 12h14" stroke={color} strokeWidth={2} strokeLinecap="round" />
+    </Svg>
+  );
+}
+
+function ArrowUpIcon({ size = 12, color = '#fff' }: { size?: number; color?: string }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M12 19V5M5 12l7-7 7 7"
+        stroke={color}
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
+function XIcon({ size = 12, color = '#fff' }: { size?: number; color?: string }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path d="M6 6l12 12M18 6L6 18" stroke={color} strokeWidth={2} strokeLinecap="round" />
+    </Svg>
+  );
+}
 
 interface Props {
   form: UseFormReturn<NonNullable<OwnDatingProfileResponse>>;
@@ -46,7 +101,7 @@ export function PhotosTab({ form, data, onRefresh }: Props) {
     }
   };
 
-  const handleReject = async (photoId: string, storagePath: string) => {
+  const handleReject = async (photoId: string) => {
     const prev = photos;
     form.setValue(
       'photos',
@@ -110,106 +165,160 @@ export function PhotosTab({ form, data, onRefresh }: Props) {
   };
 
   return (
-    <ScrollView contentContainerClassName="p-5 pb-12" showsVerticalScrollIndicator={false}>
-      {pending.length > 0 && (
-        <>
-          <Text className="text-xs font-bold text-fg-subtle uppercase tracking-[0.6px] mb-[10px] mt-1">
-            Suggested by Wingpeople
-          </Text>
+    <ScrollView
+      contentContainerStyle={{ padding: 16, paddingBottom: 48 }}
+      showsVerticalScrollIndicator={false}
+    >
+      {pending.length > 0 ? (
+        <View style={{ marginBottom: 18 }}>
+          <FieldLabel>Suggested by wingpeople</FieldLabel>
           {pending.map((photo) => {
-            const suggesterName = photo.suggester?.chosenName ?? 'your wingperson';
+            const suggesterName = photo.suggester?.chosenName ?? 'a wingperson';
             return (
-              <View key={photo.id} className="bg-white rounded-xl overflow-hidden mb-3">
+              <View
+                key={photo.id}
+                style={{
+                  backgroundColor: PAPER,
+                  borderRadius: 18,
+                  borderWidth: 1,
+                  borderColor: LINE,
+                  overflow: 'hidden',
+                  marginBottom: 10,
+                }}
+              >
                 <PhotoRect
                   uri={getPhotoUrl(photo.storageUrl)}
                   ratio={4 / 3}
                   blur
                   style={{ borderRadius: 0 }}
                 />
-                <View className="p-3">
-                  <Text className="text-sm font-semibold text-fg">From {suggesterName}</Text>
-                  <Text className="text-sm text-fg-muted mt-0.5">
+                <View style={{ padding: 14 }}>
+                  <View
+                    style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 }}
+                  >
+                    <FaceAvatar name={photo.suggester?.chosenName ?? ''} size={22} />
+                    <Text style={{ fontSize: 14, fontWeight: '600', color: INK }}>
+                      From {suggesterName}
+                    </Text>
+                  </View>
+                  <Text style={{ fontSize: 13, color: INK3, marginBottom: 12 }}>
                     Approve to add this to your profile.
                   </Text>
-                </View>
-                <View className="flex-row gap-2 px-3 pb-3">
-                  <Pressable
-                    className="flex-1 py-[10px] rounded-lg items-center bg-accent"
-                    onPress={() => handleApprove(photo.id)}
-                  >
-                    <Text className="text-white font-semibold text-sm">Approve</Text>
-                  </Pressable>
-                  <Pressable
-                    className="flex-1 py-[10px] rounded-lg items-center bg-surface"
-                    onPress={() => handleReject(photo.id, photo.storageUrl)}
-                  >
-                    <Text className="text-fg font-semibold text-sm">Reject</Text>
-                  </Pressable>
+                  <View style={{ flexDirection: 'row', gap: 8 }}>
+                    <View style={{ flex: 1 }}>
+                      <Sprout block size="sm" onPress={() => handleApprove(photo.id)}>
+                        Approve
+                      </Sprout>
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Sprout
+                        block
+                        size="sm"
+                        variant="secondary"
+                        onPress={() => handleReject(photo.id)}
+                      >
+                        Reject
+                      </Sprout>
+                    </View>
+                  </View>
                 </View>
               </View>
             );
           })}
-        </>
-      )}
+        </View>
+      ) : null}
 
-      <Text className="text-xs font-bold text-fg-subtle uppercase tracking-[0.6px] mb-[10px] mt-1">
-        My Photos{selfPhotos.length > 0 ? ` (${selfPhotos.length})` : ''}
-      </Text>
+      <FieldLabel>
+        {`My photos${selfPhotos.length > 0 ? ` · ${selfPhotos.length}` : ''}`}
+      </FieldLabel>
+
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: PHOTO_GAP }}>
+        {selfPhotos.map((photo, idx) => (
+          <View
+            key={photo.id}
+            style={{ width: PHOTO_COL, aspectRatio: 3 / 4, position: 'relative' }}
+          >
+            <PhotoRect
+              uri={getPhotoUrl(photo.storageUrl)}
+              ratio={3 / 4}
+              style={{ borderRadius: 14 }}
+            />
+            {idx === 0 ? (
+              <View
+                style={{
+                  position: 'absolute',
+                  top: 6,
+                  left: 6,
+                  backgroundColor: LEAF,
+                  borderRadius: 8,
+                  paddingHorizontal: 6,
+                  paddingVertical: 2,
+                }}
+              >
+                <Text style={{ color: '#fff', fontSize: 10, fontWeight: '700' }}>Primary</Text>
+              </View>
+            ) : (
+              <Pressable
+                onPress={() => handleMoveUp(idx)}
+                hitSlop={4}
+                style={{
+                  position: 'absolute',
+                  top: 6,
+                  left: 6,
+                  width: 22,
+                  height: 22,
+                  borderRadius: 11,
+                  backgroundColor: 'rgba(0,0,0,0.45)',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <ArrowUpIcon />
+              </Pressable>
+            )}
+            <Pressable
+              onPress={() => handleDelete(idx)}
+              hitSlop={4}
+              style={{
+                position: 'absolute',
+                top: 6,
+                right: 6,
+                width: 22,
+                height: 22,
+                borderRadius: 11,
+                backgroundColor: 'rgba(0,0,0,0.45)',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <XIcon />
+            </Pressable>
+          </View>
+        ))}
+
+        <Pressable
+          onPress={handleAddPhoto}
+          disabled={uploading}
+          style={{
+            width: PHOTO_COL,
+            aspectRatio: 3 / 4,
+            borderRadius: 14,
+            borderWidth: 1.5,
+            borderStyle: 'dashed',
+            borderColor: LEAF,
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          {uploading ? <ActivityIndicator color={LEAF} size="small" /> : <PlusIcon size={20} />}
+        </Pressable>
+      </View>
 
       {selfPhotos.length === 0 ? (
-        <View className="bg-white rounded-xl p-7 items-center mb-4">
-          <Text className="text-sm font-semibold text-fg">No photos yet.</Text>
-          <Text className="text-sm text-fg-muted mt-1.5 text-center">
-            Add at least one so people can see you.
-          </Text>
-        </View>
-      ) : (
-        <View className="flex-row flex-wrap gap-2">
-          {selfPhotos.map((photo, idx) => (
-            <View key={photo.id} style={{ width: PHOTO_COL, position: 'relative' }}>
-              <PhotoRect uri={getPhotoUrl(photo.storageUrl)} ratio={4 / 5} />
-              {idx === 0 && (
-                <View className="absolute top-2 left-2 bg-accent rounded-md px-[7px] py-[3px]">
-                  <Text className="text-white text-xs font-semibold">Primary</Text>
-                </View>
-              )}
-              {idx !== 0 && (
-                <Pressable
-                  className="absolute top-2 left-2 rounded-lg p-[5px]"
-                  style={{ backgroundColor: 'rgba(0,0,0,0.45)' }}
-                  onPress={() => handleMoveUp(idx)}
-                  hitSlop={{ top: 4, bottom: 4, left: 4, right: 4 }}
-                >
-                  <IconSymbol name="arrow.up" size={13} color={colors.white} />
-                </Pressable>
-              )}
-              <Pressable
-                className="absolute top-2 right-2 rounded-full w-[24px] h-[24px] items-center justify-center"
-                style={{ backgroundColor: 'rgba(0,0,0,0.45)' }}
-                onPress={() => handleDelete(idx)}
-                hitSlop={{ top: 4, bottom: 4, left: 4, right: 4 }}
-              >
-                <IconSymbol name="xmark" size={12} color={colors.white} />
-              </Pressable>
-            </View>
-          ))}
-        </View>
-      )}
-
-      <Pressable
-        className="flex-row items-center justify-center gap-2 border-[1.5px] border-accent border-dashed rounded-xl py-[14px] mt-4 min-h-[52px]"
-        onPress={handleAddPhoto}
-        disabled={uploading}
-      >
-        {uploading ? (
-          <ActivityIndicator color={colors.purple} size="small" />
-        ) : (
-          <>
-            <IconSymbol name="plus" size={18} color={colors.purple} />
-            <Text className="text-sm font-semibold text-accent">Add Photo</Text>
-          </>
-        )}
-      </Pressable>
+        <Text style={{ fontSize: 13, color: INK3, marginTop: 12 }}>
+          Add at least one so people can see you.
+        </Text>
+      ) : null}
     </ScrollView>
   );
 }

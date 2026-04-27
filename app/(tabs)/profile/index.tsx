@@ -1,11 +1,10 @@
 import { useCallback, useState } from 'react';
-import { StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { toast } from 'sonner-native';
 import { useForm } from 'react-hook-form';
 import { useQueryClient } from '@tanstack/react-query';
+import Svg, { Path } from 'react-native-svg';
 
-import { colors } from '@/constants/theme';
 import { useAuth } from '@/context/auth';
 import {
   useGetApiProfilesMeSuspense,
@@ -21,62 +20,79 @@ import { useGetApiWingpeopleSuspense } from '@/lib/api/generated/contacts/contac
 import { pickAndResizePhoto, uploadAvatar } from '@/lib/photos';
 
 import { View, Text, Pressable, SafeAreaView } from '@/lib/tw';
-import { LargeHeader } from '@/components/ui/LargeHeader';
 import { TextTabBar } from '@/components/ui/TextTabBar';
 import { WingStack } from '@/components/ui/WingStack';
 import { FaceAvatar } from '@/components/ui/FaceAvatar';
 import { Sprout } from '@/components/ui/Sprout';
-import { IconSymbol } from '@/components/ui/icon-symbol';
 import ScreenSuspense from '@/components/ui/ScreenSuspense';
 
 import { AboutMeTab } from '@/components/profile/AboutMeTab';
 import { PhotosTab } from '@/components/profile/PhotosTab';
 import { PromptsTab } from '@/components/profile/PromptsTab';
 
-// ── Log out button ────────────────────────────────────────────────────────────
+const INK = '#1F1B16';
+const INK2 = '#4A4338';
+const INK3 = '#8B8170';
+const PAPER = '#FBF8F1';
 
-function LogOutButton() {
-  const { signOut } = useAuth();
+function computeAge(dob: string): number | null {
+  const d = new Date(dob);
+  if (Number.isNaN(d.getTime())) return null;
+  const now = new Date();
+  let age = now.getFullYear() - d.getFullYear();
+  const m = now.getMonth() - d.getMonth();
+  if (m < 0 || (m === 0 && now.getDate() < d.getDate())) age--;
+  return age;
+}
 
-  async function handleLogOut() {
-    const { error } = await signOut();
-    if (error) toast.error('Could not log out. Please try again.');
-  }
+// ── Icons ─────────────────────────────────────────────────────────────────────
 
+function SettingsIcon({ size = 16, color = INK2 }: { size?: number; color?: string }) {
   return (
-    <Pressable onPress={handleLogOut} hitSlop={12}>
-      <Text className="text-sm text-fg-muted">Log out</Text>
-    </Pressable>
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z" stroke={color} strokeWidth={1.6} />
+      <Path
+        d="M19.4 13a7.5 7.5 0 0 0 0-2l2-1.5-2-3.5-2.4.8a7.5 7.5 0 0 0-1.7-1l-.4-2.5h-4l-.4 2.5a7.5 7.5 0 0 0-1.7 1L6.6 6 4.6 9.5l2 1.5a7.5 7.5 0 0 0 0 2l-2 1.5 2 3.5 2.4-.8a7.5 7.5 0 0 0 1.7 1l.4 2.5h4l.4-2.5a7.5 7.5 0 0 0 1.7-1l2.4.8 2-3.5-2-1.5z"
+        stroke={color}
+        strokeWidth={1.4}
+        strokeLinejoin="round"
+      />
+    </Svg>
   );
 }
 
-// ── Shared banner strip ───────────────────────────────────────────────────────
+function CameraIcon({ size = 14, color = INK }: { size?: number; color?: string }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M4 8h3l2-2h6l2 2h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"
+        stroke={color}
+        strokeWidth={1.6}
+        strokeLinejoin="round"
+      />
+      <Path d="M12 17a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z" stroke={color} strokeWidth={1.6} />
+    </Svg>
+  );
+}
 
-function ProfileBanner({
-  title,
-  sub,
-  onPress,
-}: {
-  title: string;
-  sub: string;
-  onPress: () => void;
-}) {
+// ── Settings cog button (header right) ────────────────────────────────────────
+
+function SettingsButton() {
+  const router = useRouter();
   return (
     <Pressable
-      className="flex-row items-center gap-3 px-5 py-4 bg-purple-pale"
-      style={{ borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.divider }}
-      onPress={onPress}
+      onPress={() => router.push('/(tabs)/profile/settings' as any)}
+      className="flex-row items-center"
+      style={{ gap: 6, paddingVertical: 6, paddingHorizontal: 10 }}
+      hitSlop={8}
     >
-      <View className="flex-1">
-        <Text className="text-sm font-semibold text-accent">{title}</Text>
-        <Text className="text-xs text-accent/70 mt-0.5">{sub}</Text>
-      </View>
-      <IconSymbol name="chevron.right" size={13} color={colors.purple} />
+      <SettingsIcon />
+      <Text style={{ fontSize: 13, fontWeight: '600', color: INK2 }}>Settings</Text>
     </Pressable>
   );
 }
 
-// ── Tappable avatar (shared by dater + winger) ────────────────────────────────
+// ── Avatar (tappable to upload) ───────────────────────────────────────────────
 
 type AvatarPickerProps = {
   name: string | null;
@@ -104,47 +120,102 @@ function AvatarPicker({ name, avatarUrl, size, userId }: AvatarPickerProps) {
     }
   };
 
+  const badge = Math.round(size * 0.34);
+
   return (
     <Pressable onPress={handlePick} className="relative" style={{ width: size, height: size }}>
       <FaceAvatar name={name ?? ''} size={size} photoUri={avatarUrl} />
-      {uploading ? (
-        <View
-          className="absolute inset-0 items-center justify-center rounded-full bg-black/40"
-          style={{ borderRadius: size / 2 }}
-        >
-          <IconSymbol name="arrow.clockwise" size={size * 0.3} color="white" />
-        </View>
-      ) : (
-        <View
-          className="absolute bottom-0 right-0 items-center justify-center bg-white rounded-full"
-          style={{ width: size * 0.32, height: size * 0.32, borderRadius: (size * 0.32) / 2 }}
-        >
-          <IconSymbol name="camera.fill" size={size * 0.17} color={colors.purple} />
-        </View>
-      )}
+      <View
+        className="absolute items-center justify-center"
+        style={{
+          right: -2,
+          bottom: -2,
+          width: badge,
+          height: badge,
+          borderRadius: badge / 2,
+          backgroundColor: PAPER,
+          borderWidth: 1.5,
+          borderColor: '#F5F1E8',
+          opacity: uploading ? 0.5 : 1,
+        }}
+      >
+        <CameraIcon size={Math.round(badge * 0.55)} />
+      </View>
     </Pressable>
   );
 }
 
-// ── Winger view (shared by role=winger and dating_status=winging) ─────────────
+// ── Header (serif title + Settings) ──────────────────────────────────────────
+
+function ProfileHeader() {
+  return (
+    <View
+      className="flex-row items-center justify-between"
+      style={{ paddingHorizontal: 16, paddingTop: 6, paddingBottom: 8 }}
+    >
+      <Text className="font-serif" style={{ fontSize: 28, color: INK, letterSpacing: -0.5 }}>
+        Profile
+      </Text>
+      <SettingsButton />
+    </View>
+  );
+}
+
+// ── Winger view (role=winger or datingStatus=winging) ────────────────────────
 
 function WingerView({
   name,
   userId,
   avatarUrl,
+  banner,
 }: {
   name: string | null;
   userId: string;
   avatarUrl: string | null;
+  banner?: { title: string; sub: string; cta: string; onPress: () => void };
 }) {
   const router = useRouter();
   return (
-    <View className="flex-1 items-center justify-center p-10">
-      <AvatarPicker name={name} avatarUrl={avatarUrl} size={72} userId={userId} />
-      <Text className="text-2xl font-bold text-fg mt-4 font-serif">{name ?? 'Winger'}</Text>
-      <Text className="text-sm text-fg-muted mt-1">Winger</Text>
-      <View className="mt-8 w-full">
-        <Sprout block variant="secondary" onPress={() => router.push('/(tabs)/wingpeople' as any)}>
+    <View className="flex-1 items-center justify-center" style={{ paddingHorizontal: 32 }}>
+      <AvatarPicker name={name} avatarUrl={avatarUrl} size={84} userId={userId} />
+      <Text
+        className="font-serif"
+        style={{ fontSize: 26, color: INK, letterSpacing: -0.4, marginTop: 16 }}
+      >
+        {name ?? 'Winger'}
+      </Text>
+      <Text style={{ fontSize: 13, color: INK3, marginTop: 4 }}>Winger</Text>
+
+      {banner ? (
+        <View
+          style={{
+            marginTop: 28,
+            padding: 16,
+            backgroundColor: PAPER,
+            borderRadius: 18,
+            borderWidth: 1,
+            borderColor: 'rgba(31,27,22,0.10)',
+            width: '100%',
+          }}
+        >
+          <Text style={{ fontSize: 14, fontWeight: '600', color: INK }}>{banner.title}</Text>
+          <Text style={{ fontSize: 12.5, color: INK3, marginTop: 4, lineHeight: 18 }}>
+            {banner.sub}
+          </Text>
+          <View style={{ marginTop: 12 }}>
+            <Sprout block size="sm" onPress={banner.onPress}>
+              {banner.cta}
+            </Sprout>
+          </View>
+        </View>
+      ) : null}
+
+      <View style={{ marginTop: 16, width: '100%' }}>
+        <Sprout
+          block
+          variant="secondary"
+          onPress={() => router.push('/(tabs)/profile/wingpeople' as any)}
+        >
           Wingpeople & Invitations
         </Sprout>
       </View>
@@ -194,17 +265,18 @@ function ProfileScreenInner() {
     };
 
     return (
-      <SafeAreaView className="flex-1 bg-page" edges={['top']}>
-        <LargeHeader title="My Profile" right={<LogOutButton />} />
-        <ProfileBanner
-          title="Want to start dating too?"
-          sub="Set up a dater profile and start swiping."
-          onPress={handleSwitchToDater}
-        />
+      <SafeAreaView className="flex-1" edges={['top']} style={{ backgroundColor: '#F5F1E8' }}>
+        <ProfileHeader />
         <WingerView
           name={profile.chosenName}
           userId={userId}
           avatarUrl={profile.avatarUrl ?? null}
+          banner={{
+            title: 'Want to start dating too?',
+            sub: 'Set up a dater profile and start swiping.',
+            cta: 'Start dating',
+            onPress: handleSwitchToDater,
+          }}
         />
       </SafeAreaView>
     );
@@ -227,17 +299,18 @@ function ProfileScreenInner() {
     };
 
     return (
-      <SafeAreaView className="flex-1 bg-page" edges={['top']}>
-        <LargeHeader title="My Profile" right={<LogOutButton />} />
-        <ProfileBanner
-          title="You're in winging mode"
-          sub="Tap here to create a dating profile."
-          onPress={handleResumeDating}
-        />
+      <SafeAreaView className="flex-1" edges={['top']} style={{ backgroundColor: '#F5F1E8' }}>
+        <ProfileHeader />
         <WingerView
           name={profile?.chosenName ?? null}
           userId={userId}
           avatarUrl={profile?.avatarUrl ?? null}
+          banner={{
+            title: "You're in winging mode",
+            sub: 'Resume dating to set up your own profile.',
+            cta: 'Resume dating',
+            onPress: handleResumeDating,
+          }}
         />
       </SafeAreaView>
     );
@@ -249,43 +322,54 @@ function ProfileScreenInner() {
     photoUri: w.winger?.avatarUrl ?? null,
   }));
 
-  return (
-    <SafeAreaView className="flex-1 bg-page" edges={['top']}>
-      <LargeHeader title="My Profile" right={<LogOutButton />} />
+  const wingLabel = wingpeople.length
+    ? `${wingpeople.length} wingperson${wingpeople.length !== 1 ? 'e' : ''}`
+    : 'Invite a wingperson';
 
-      {/* Avatar + wingpeople row */}
+  const age = profile?.dateOfBirth ? computeAge(profile.dateOfBirth) : null;
+  const ageText = age != null ? `, ${age}` : '';
+
+  return (
+    <SafeAreaView className="flex-1" edges={['top']} style={{ backgroundColor: '#F5F1E8' }}>
+      <ProfileHeader />
+
       <View
-        className="flex-row items-center px-5 py-[10px] gap-3"
-        style={{ borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.divider }}
+        className="flex-row items-center"
+        style={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 12, gap: 14 }}
       >
         <AvatarPicker
           name={profile?.chosenName ?? null}
           avatarUrl={profile?.avatarUrl ?? null}
-          size={44}
+          size={72}
           userId={userId}
         />
-        <Pressable
-          className="flex-1 flex-row items-center gap-[10px]"
-          onPress={() => router.push('/(tabs)/profile/wingpeople' as any)}
-        >
-          {wingItems.length > 0 ? (
-            <>
-              <WingStack items={wingItems} size={30} />
-              <Text className="flex-1 text-sm font-semibold text-fg">
-                {wingpeople.length} wingperson{wingpeople.length !== 1 ? 'e' : ''}
-              </Text>
-            </>
-          ) : (
-            <Text className="flex-1 text-sm text-fg-muted">
-              No wingpeople yet — tap to invite one
-            </Text>
-          )}
-          <IconSymbol name="chevron.right" size={13} color={colors.inkGhost} />
-        </Pressable>
+        <View style={{ flex: 1 }}>
+          <Text
+            className="font-serif"
+            style={{ fontSize: 24, color: INK, letterSpacing: -0.4 }}
+            numberOfLines={1}
+          >
+            {(profile?.chosenName ?? '') + ageText}
+          </Text>
+          {datingProfile.city ? (
+            <Text style={{ fontSize: 13, color: INK3, marginTop: 2 }}>{datingProfile.city}</Text>
+          ) : null}
+          <Pressable
+            onPress={() => router.push('/(tabs)/profile/wingpeople' as any)}
+            style={{ marginTop: 6, alignSelf: 'flex-start' }}
+            hitSlop={6}
+          >
+            {wingItems.length > 0 ? (
+              <WingStack items={wingItems} size={26} max={3} label={wingLabel} />
+            ) : (
+              <Text style={{ fontSize: 12.5, fontWeight: '500', color: INK3 }}>{wingLabel}</Text>
+            )}
+          </Pressable>
+        </View>
       </View>
 
       <TextTabBar
-        tabs={['About Me', 'Photos', 'Prompts']}
+        tabs={['About', 'Photos', 'Prompts']}
         active={activeTab}
         setActive={setActiveTab}
       />
