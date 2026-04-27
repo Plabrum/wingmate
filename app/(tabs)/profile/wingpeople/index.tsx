@@ -12,10 +12,9 @@ import { useRouter } from 'expo-router';
 import { Controller, useForm } from 'react-hook-form';
 import { toast } from 'sonner-native';
 import * as SMS from 'expo-sms';
+import Svg, { Path } from 'react-native-svg';
 
 import { useQueryClient } from '@tanstack/react-query';
-import { colors } from '@/constants/theme';
-import { NavHeader } from '@/components/ui/NavHeader';
 import { FaceAvatar } from '@/components/ui/FaceAvatar';
 import { Sprout } from '@/components/ui/Sprout';
 import { View, Text, TextInput, ScrollView, SafeAreaView, Pressable } from '@/lib/tw';
@@ -30,16 +29,90 @@ import {
 } from '@/lib/api/generated/contacts/contacts';
 import { formatPhoneInput, toE164 } from '@/lib/phoneUtils';
 
-// ── Section header ─────────────────────────────────────────────────────────────
+const INK = '#1F1B16';
+const INK2 = '#4A4338';
+const INK3 = '#8B8170';
+const PAPER = '#FBF8F1';
+const CREAM = '#F5F1E8';
+const LINE = 'rgba(31,27,22,0.10)';
+const LEAF = '#5A8C3A';
+const LEAF_SOFT = 'rgba(90,140,58,0.12)';
 
-function SectionHeader({ title, right }: { title: string; right?: React.ReactNode }) {
+// ── Icons ─────────────────────────────────────────────────────────────────────
+
+function BackIcon({ color = INK }: { color?: string }) {
   return (
-    <View className="flex-row items-center justify-between px-5 pt-6 pb-2">
-      <Text className="text-xs font-semibold text-fg-muted uppercase tracking-[0.6px]">
-        {title}
-      </Text>
-      {right}
-    </View>
+    <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M15 18l-6-6 6-6"
+        stroke={color}
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
+function PlusIcon({ size = 14, color = LEAF }: { size?: number; color?: string }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M12 5v14M5 12h14"
+        stroke={color}
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
+function HeartIcon({ size = 14, color = PAPER }: { size?: number; color?: string }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill={color} stroke={color}>
+      <Path
+        d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"
+        strokeWidth={1.5}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
+function MoreIcon({ size = 18, color = INK3 }: { size?: number; color?: string }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M12 6v.01M12 12v.01M12 18v.01"
+        stroke={color}
+        strokeWidth={2.5}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
+// ── SectionLabel ──────────────────────────────────────────────────────────────
+
+function SectionLabel({ children }: { children: string }) {
+  return (
+    <Text
+      style={{
+        fontSize: 11,
+        letterSpacing: 1.2,
+        textTransform: 'uppercase',
+        color: INK3,
+        fontWeight: '600',
+        paddingHorizontal: 16,
+        paddingTop: 18,
+        paddingBottom: 8,
+      }}
+    >
+      {children}
+    </Text>
   );
 }
 
@@ -61,8 +134,6 @@ function WingpeopleContent({ onOpenInvite }: ContentProps) {
 
   const invalidate = () =>
     queryClient.invalidateQueries({ queryKey: getGetApiWingpeopleQueryKey() });
-
-  // ── Mutations ─────────────────────────────────────────────────────────────
 
   const handleAccept = async (contactId: string) => {
     const result = await acceptMutation.mutateAsync({ id: contactId }).catch(() => null);
@@ -118,170 +189,215 @@ function WingpeopleContent({ onOpenInvite }: ContentProps) {
     ]);
   };
 
-  // ── Render ────────────────────────────────────────────────────────────────
-
   return (
-    <ScrollView contentContainerClassName="pb-12">
-      {/* ── Section 1: Your Wingpeople ────────────────────────────────────── */}
-      <SectionHeader
-        title="Your Wingpeople"
-        right={
-          wingpeople.length < 5 ? (
-            <Pressable
-              onPress={onOpenInvite}
-              className="px-3 py-[5px] rounded-full bg-accent-muted"
-              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            >
-              <Text className="text-sm font-semibold text-accent">+ Invite</Text>
-            </Pressable>
-          ) : null
-        }
-      />
+    <ScrollView contentContainerStyle={{ paddingBottom: 32 }}>
+      {/* ── Section 1: Your Wingpeople ─────────────────────────────────────── */}
+      <SectionLabel>{`Your wingpeople · ${wingpeople.length} of 5`}</SectionLabel>
 
       {wingpeople.length === 0 ? (
-        <Text className="text-sm text-fg-muted px-5 py-[14px] leading-5">
+        <Text
+          style={{
+            fontSize: 13,
+            color: INK3,
+            paddingHorizontal: 16,
+            paddingVertical: 12,
+            lineHeight: 20,
+          }}
+        >
           No wingpeople yet. Invite a trusted friend to swipe for you.
         </Text>
       ) : (
-        wingpeople.map((w) => {
-          const name = w.winger?.chosenName ?? 'Unknown';
-          const count = weeklyCounts[w.id] ?? 0;
-          return (
-            <Pressable
-              key={w.id}
-              className="flex-row items-center px-5 py-3 gap-3 bg-white"
-              style={{
-                borderBottomWidth: StyleSheet.hairlineWidth,
-                borderBottomColor: colors.divider,
-              }}
-              onLongPress={() => handleRemove(w.id)}
-              delayLongPress={500}
-            >
-              <FaceAvatar name={name} size={40} photoUri={w.winger?.avatarUrl ?? null} />
-              <View className="flex-1">
-                <Text className="text-sm font-semibold text-fg">{name}</Text>
-                <Text className="text-xs text-fg-muted mt-0.5">
-                  {count} pick{count !== 1 ? 's' : ''} this week
-                </Text>
-              </View>
-            </Pressable>
-          );
-        })
-      )}
-
-      {/* ── Section 2: Sent Invites ────────────────────────────────────── */}
-      {sentInvitations.length > 0 && (
-        <>
-          <SectionHeader title="Sent Invites" />
-          {sentInvitations.map((inv) => {
-            const displayName = inv.winger?.chosenName ?? inv.phoneNumber ?? 'Unknown';
+        <View style={{ paddingHorizontal: 16, gap: 10 }}>
+          {wingpeople.map((w) => {
+            const name = w.winger?.chosenName ?? 'Unknown';
+            const count = weeklyCounts[w.id] ?? 0;
             return (
-              <View
-                key={inv.id}
-                className="flex-row items-center px-5 py-3 gap-3 bg-white"
+              <Pressable
+                key={w.id}
+                onLongPress={() => handleRemove(w.id)}
+                delayLongPress={500}
                 style={{
-                  borderBottomWidth: StyleSheet.hairlineWidth,
-                  borderBottomColor: colors.divider,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 12,
+                  paddingHorizontal: 12,
+                  paddingVertical: 10,
+                  backgroundColor: PAPER,
+                  borderRadius: 16,
+                  borderWidth: 1,
+                  borderColor: LINE,
                 }}
               >
-                <FaceAvatar name={displayName} size={40} />
-                <View className="flex-1">
-                  <Text className="text-sm font-semibold text-fg">{displayName}</Text>
-                  <Text className="text-xs text-fg-muted mt-0.5">Invite pending</Text>
+                <FaceAvatar name={name} size={44} photoUri={w.winger?.avatarUrl ?? null} />
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 14.5, fontWeight: '600', color: INK }}>{name}</Text>
+                  <Text style={{ fontSize: 12, color: INK3, marginTop: 2 }}>
+                    {count} pick{count !== 1 ? 's' : ''} this week
+                  </Text>
                 </View>
-                <Pressable
-                  className="px-[14px] py-2 rounded-full bg-surface"
-                  onPress={() => handleCancelInvite(inv.id)}
-                >
-                  <Text className="text-sm font-semibold text-fg-muted">Cancel</Text>
+                <Pressable hitSlop={8} style={{ padding: 6 }} onPress={() => handleRemove(w.id)}>
+                  <MoreIcon />
                 </Pressable>
-              </View>
+              </Pressable>
             );
           })}
+        </View>
+      )}
+
+      {/* ── Section 2: Sent Invites ─────────────────────────────────────────── */}
+      {sentInvitations.length > 0 && (
+        <>
+          <SectionLabel>{`Sent invites · ${sentInvitations.length}`}</SectionLabel>
+          <View style={{ paddingHorizontal: 16, gap: 10 }}>
+            {sentInvitations.map((inv) => {
+              const displayName = inv.winger?.chosenName ?? inv.phoneNumber ?? 'Unknown';
+              return (
+                <View
+                  key={inv.id}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 12,
+                    paddingHorizontal: 12,
+                    paddingVertical: 10,
+                    backgroundColor: PAPER,
+                    borderRadius: 16,
+                    borderWidth: 1,
+                    borderColor: LINE,
+                  }}
+                >
+                  <FaceAvatar name={displayName} size={44} />
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontSize: 14.5, fontWeight: '600', color: INK }}>
+                      {displayName}
+                    </Text>
+                    <Text style={{ fontSize: 12, color: INK3, marginTop: 2 }}>Invite pending</Text>
+                  </View>
+                  <Sprout size="sm" variant="secondary" onPress={() => handleCancelInvite(inv.id)}>
+                    Cancel
+                  </Sprout>
+                </View>
+              );
+            })}
+          </View>
         </>
       )}
 
-      {/* ── Section 3: Invitations ──────────────────────────────────────── */}
-      <SectionHeader title="Invitations" />
-
-      {invitations.length === 0 ? (
-        <Text className="text-sm text-fg-muted px-5 py-[14px] leading-5">
-          No invitations right now.
-        </Text>
-      ) : (
-        invitations.map((inv) => {
-          const name = inv.dater?.chosenName ?? 'Unknown';
-          return (
-            <View
-              key={inv.id}
-              className="flex-row items-center px-5 py-3 gap-3 bg-white"
-              style={{
-                borderBottomWidth: StyleSheet.hairlineWidth,
-                borderBottomColor: colors.divider,
-              }}
-            >
-              <FaceAvatar name={name} size={40} />
-              <Text className="flex-1 text-sm font-semibold text-fg">{name}</Text>
-              <Pressable
-                className="px-[14px] py-2 rounded-full bg-surface"
-                onPress={() => handleDecline(inv.id)}
-              >
-                <Text className="text-sm font-semibold text-fg-muted">Decline</Text>
-              </Pressable>
-              <Pressable
-                className="px-[14px] py-2 rounded-full bg-accent"
-                onPress={() => handleAccept(inv.id)}
-              >
-                <Text className="text-sm font-semibold text-white">Accept</Text>
-              </Pressable>
-            </View>
-          );
-        })
+      {/* ── Section 3: Invitations ──────────────────────────────────────────── */}
+      {invitations.length > 0 && (
+        <>
+          <SectionLabel>{`Invitations · ${invitations.length}`}</SectionLabel>
+          <View style={{ paddingHorizontal: 16, gap: 10 }}>
+            {invitations.map((inv) => {
+              const name = inv.dater?.chosenName ?? 'Unknown';
+              const firstName = name.split(' ')[0] || name;
+              return (
+                <View
+                  key={inv.id}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 10,
+                    paddingHorizontal: 14,
+                    paddingVertical: 12,
+                    backgroundColor: LEAF_SOFT,
+                    borderRadius: 16,
+                  }}
+                >
+                  <FaceAvatar name={name} size={42} photoUri={inv.dater?.avatarUrl ?? null} />
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontSize: 14, fontWeight: '600', color: INK }}>
+                      {firstName} wants you to wing
+                    </Text>
+                    <Text style={{ fontSize: 12, color: INK2, marginTop: 2 }}>
+                      You{"'"}d help curate {firstName}
+                      {"'"}s feed.
+                    </Text>
+                  </View>
+                  <Sprout size="sm" variant="secondary" onPress={() => handleDecline(inv.id)}>
+                    Decline
+                  </Sprout>
+                  <Sprout size="sm" onPress={() => handleAccept(inv.id)}>
+                    Accept
+                  </Sprout>
+                </View>
+              );
+            })}
+          </View>
+        </>
       )}
 
-      {/* ── Section 4: You're Winging For ──────────────────────────────── */}
-      <SectionHeader title="You're Winging For" />
-
-      {wingingFor.length === 0 ? (
-        <Text className="text-sm text-fg-muted px-5 py-[14px] leading-5">
-          No one has invited you to wing for them yet.
-        </Text>
-      ) : (
-        wingingFor.map((wf) => {
-          const name = wf.dater?.chosenName ?? 'Unknown';
-          const firstName = name.split(' ')[0];
-          return (
-            <View
-              key={wf.id}
-              className="flex-row items-center px-5 py-3 gap-3 bg-white"
-              style={{
-                borderBottomWidth: StyleSheet.hairlineWidth,
-                borderBottomColor: colors.divider,
-              }}
-            >
-              <FaceAvatar name={name} size={40} photoUri={wf.dater?.avatarUrl ?? null} />
-              <Text className="flex-1 text-sm font-semibold text-fg">{name}</Text>
-              <Pressable
-                className="px-[14px] py-2 rounded-full bg-accent-muted"
-                onPress={() =>
-                  router.push(
-                    `/(tabs)/profile/wingpeople/dater-profile?daterId=${wf.dater?.id}` as any
-                  )
-                }
-              >
-                <Text className="text-sm font-semibold text-accent">Add to profile</Text>
-              </Pressable>
-              <Pressable
-                className="px-[14px] py-2 rounded-full bg-accent-muted"
-                onPress={() =>
-                  router.push(`/(tabs)/profile/wingpeople/wingswipe?daterId=${wf.dater?.id}` as any)
-                }
-              >
-                <Text className="text-sm font-semibold text-accent">Swipe for {firstName}</Text>
-              </Pressable>
-            </View>
-          );
-        })
+      {/* ── Section 4: You're Winging For ──────────────────────────────────── */}
+      {wingingFor.length > 0 && (
+        <>
+          <SectionLabel>You{"'"}re winging for</SectionLabel>
+          <View style={{ paddingHorizontal: 16, gap: 12 }}>
+            {wingingFor.map((wf) => {
+              const name = wf.dater?.chosenName ?? 'Unknown';
+              const firstName = name.split(' ')[0] || name;
+              const daterId = wf.dater?.id;
+              return (
+                <View
+                  key={wf.id}
+                  style={{
+                    backgroundColor: PAPER,
+                    borderRadius: 18,
+                    borderWidth: 1,
+                    borderColor: LINE,
+                    padding: 14,
+                  }}
+                >
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: 12,
+                      marginBottom: 12,
+                    }}
+                  >
+                    <FaceAvatar name={name} size={48} photoUri={wf.dater?.avatarUrl ?? null} />
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ fontSize: 15, fontWeight: '600', color: INK }}>{name}</Text>
+                      <Text style={{ fontSize: 12, color: INK3, marginTop: 2 }}>
+                        Help {firstName} build their profile and find matches.
+                      </Text>
+                    </View>
+                  </View>
+                  <View style={{ flexDirection: 'row', gap: 8 }}>
+                    <View style={{ flex: 1 }}>
+                      <Sprout
+                        block
+                        size="sm"
+                        variant="secondary"
+                        onPress={() =>
+                          router.push(
+                            `/(tabs)/profile/wingpeople/contribute?daterId=${daterId}` as any
+                          )
+                        }
+                      >
+                        Add to profile
+                      </Sprout>
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Sprout
+                        block
+                        size="sm"
+                        icon={<HeartIcon />}
+                        onPress={() =>
+                          router.push(
+                            `/(tabs)/profile/wingpeople/wingswipe?daterId=${daterId}` as any
+                          )
+                        }
+                      >
+                        Swipe for {firstName}
+                      </Sprout>
+                    </View>
+                  </View>
+                </View>
+              );
+            })}
+          </View>
+        </>
       )}
     </ScrollView>
   );
@@ -347,13 +463,33 @@ export default function WingpeopleScreen() {
   });
 
   return (
-    <SafeAreaView className="flex-1 bg-page" edges={['top']}>
-      <NavHeader back title="Wingpeople" onBack={() => router.back()} />
+    <SafeAreaView className="flex-1" edges={['top']} style={{ backgroundColor: CREAM }}>
+      <View
+        className="flex-row items-center"
+        style={{ paddingHorizontal: 12, paddingTop: 8, paddingBottom: 8, gap: 4 }}
+      >
+        <Pressable
+          onPress={() => router.back()}
+          hitSlop={12}
+          style={{ padding: 8, marginLeft: -4 }}
+        >
+          <BackIcon />
+        </Pressable>
+        <Text
+          className="font-serif"
+          style={{ fontSize: 26, color: INK, letterSpacing: -0.4, flex: 1 }}
+        >
+          Wingpeople
+        </Text>
+        <Sprout size="sm" icon={<PlusIcon />} onPress={onOpenInvite}>
+          Invite
+        </Sprout>
+      </View>
 
       <Suspense
         fallback={
           <View className="flex-1 items-center justify-center">
-            <ActivityIndicator color={colors.purple} />
+            <ActivityIndicator color={LEAF} />
           </View>
         }
       >
@@ -367,20 +503,40 @@ export default function WingpeopleScreen() {
         transparent
         onRequestClose={closeInviteSheet}
       >
-        <View className="flex-1 bg-black/45">
+        <View className="flex-1" style={{ backgroundColor: 'rgba(31,27,22,0.45)' }}>
           <Pressable className="flex-1" onPress={closeInviteSheet} />
           <KeyboardAvoidingView
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             style={{ position: 'absolute', bottom: 0, left: 0, right: 0 }}
           >
             <View
-              className="bg-white rounded-t-[20px] px-6 pt-3"
-              style={{ paddingBottom: insets.bottom + 20 }}
+              style={{
+                backgroundColor: CREAM,
+                borderTopLeftRadius: 24,
+                borderTopRightRadius: 24,
+                paddingHorizontal: 20,
+                paddingTop: 14,
+                paddingBottom: insets.bottom + 24,
+              }}
             >
-              <View className="self-center w-9 h-1 rounded-full bg-fg-ghost mb-5" />
-              <Text className="text-lg font-bold text-fg mb-1.5">Invite a Wingperson</Text>
-              <Text className="text-sm text-fg-muted leading-5 mb-5">
-                Enter their phone number and we{"'"}ll open a text for you to send.
+              <View
+                style={{
+                  alignSelf: 'center',
+                  width: 40,
+                  height: 4,
+                  borderRadius: 2,
+                  backgroundColor: LINE,
+                  marginBottom: 14,
+                }}
+              />
+              <Text
+                className="font-serif"
+                style={{ fontSize: 24, color: INK, letterSpacing: -0.4, lineHeight: 28 }}
+              >
+                Invite a wingperson
+              </Text>
+              <Text style={{ fontSize: 13, color: INK3, marginTop: 6, marginBottom: 14 }}>
+                Enter their phone number — we{"'"}ll text them an invite.
               </Text>
 
               <Controller
@@ -393,29 +549,40 @@ export default function WingpeopleScreen() {
                 render={({ field: { value, onChange }, fieldState: { error } }) => (
                   <>
                     <TextInput
-                      className="border-[1.5px] border-separator rounded-xl px-4 py-[14px] text-base text-fg bg-white"
+                      style={{
+                        borderWidth: 1,
+                        borderColor: LINE,
+                        borderRadius: 14,
+                        paddingHorizontal: 14,
+                        paddingVertical: 14,
+                        fontSize: 14,
+                        color: INK,
+                        backgroundColor: PAPER,
+                      }}
                       placeholder="(555) 000-0000"
-                      placeholderTextColor={colors.inkGhost}
+                      placeholderTextColor={INK3}
                       keyboardType="phone-pad"
                       value={value}
                       onChangeText={(t) => onChange(formatPhoneInput(t))}
                       autoFocus
                     />
                     {error && (
-                      <Text className="text-[#B91C1C] text-sm mt-1.5">{error.message}</Text>
+                      <Text style={{ color: '#B91C1C', fontSize: 13, marginTop: 6 }}>
+                        {error.message}
+                      </Text>
                     )}
                   </>
                 )}
               />
 
-              <View className="mt-5">
+              <View style={{ marginTop: 14 }}>
                 <Sprout
                   block
                   onPress={onSendInvite}
                   loading={isSubmitting}
                   disabled={!isValid || isSubmitting}
                 >
-                  Send Invite
+                  Send invite
                 </Sprout>
               </View>
             </View>
@@ -425,3 +592,6 @@ export default function WingpeopleScreen() {
     </SafeAreaView>
   );
 }
+
+// Suppress unused-warning (kept import path of StyleSheet for any future tweaks)
+const _ = StyleSheet;
