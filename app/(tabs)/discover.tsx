@@ -1,5 +1,6 @@
 import React, { Suspense, useCallback, useState } from 'react';
-import { ActivityIndicator, Dimensions, Platform, StyleSheet } from 'react-native';
+import { Dimensions, Platform, StyleSheet } from 'react-native';
+import PulseSpinner from '@/components/ui/PulseSpinner';
 import { router } from 'expo-router';
 import { useForm } from 'react-hook-form';
 import { useQueryClient } from '@tanstack/react-query';
@@ -325,6 +326,8 @@ function DiscoverCard({
   onPass: () => void;
 }) {
   const swipeX = useSharedValue(0);
+  const [photoIndex, setPhotoIndex] = useState(0);
+  const photos = card.photos;
 
   const finishSwipe = useCallback(
     (direction: 'like' | 'pass') => {
@@ -384,9 +387,9 @@ function DiscoverCard({
       >
         {/* Photo region */}
         <View style={{ flex: 6, position: 'relative' }}>
-          {card.firstPhoto ? (
+          {photos.length > 0 ? (
             <Image
-              source={{ uri: card.firstPhoto }}
+              source={{ uri: photos[photoIndex] }}
               style={StyleSheet.absoluteFillObject}
               contentFit="cover"
               transition={200}
@@ -395,32 +398,51 @@ function DiscoverCard({
             <View style={[StyleSheet.absoluteFillObject, { backgroundColor: '#ebebf0' }]} />
           )}
 
+          {/* Tap zones for photo navigation — sit above photo, below stamps */}
+          <View
+            style={[StyleSheet.absoluteFillObject, { flexDirection: 'row' }]}
+            pointerEvents="box-none"
+          >
+            <Pressable
+              style={{ flex: 1 }}
+              onPress={() => setPhotoIndex((i) => Math.max(0, i - 1))}
+            />
+            <Pressable
+              style={{ flex: 1 }}
+              onPress={() => setPhotoIndex((i) => Math.min(photos.length - 1, i + 1))}
+            />
+          </View>
+
           <PassStamp swipeX={swipeX} />
           <LikeStamp swipeX={swipeX} />
 
-          {/* Photo dots */}
-          <View
-            style={{
-              position: 'absolute',
-              top: 10,
-              left: 16,
-              right: 16,
-              flexDirection: 'row',
-              gap: 4,
-            }}
-          >
-            {[0, 1, 2, 3].map((i) => (
-              <View
-                key={i}
-                style={{
-                  flex: 1,
-                  height: 3,
-                  borderRadius: 2,
-                  backgroundColor: i === 0 ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.4)',
-                }}
-              />
-            ))}
-          </View>
+          {/* Photo indicator bars */}
+          {photos.length > 1 && (
+            <View
+              style={{
+                position: 'absolute',
+                top: 10,
+                left: 16,
+                right: 16,
+                flexDirection: 'row',
+                gap: 4,
+              }}
+              pointerEvents="none"
+            >
+              {photos.map((_, i) => (
+                <View
+                  key={i}
+                  style={{
+                    flex: 1,
+                    height: 3,
+                    borderRadius: 2,
+                    backgroundColor:
+                      i === photoIndex ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.4)',
+                  }}
+                />
+              ))}
+            </View>
+          )}
 
           {/* Bottom gradient scrim */}
           <LinearGradient
@@ -636,9 +658,9 @@ function MatchOverlay({
             backgroundColor: '#ebebf0',
           }}
         >
-          {card.firstPhoto ? (
+          {card.photos[0] ? (
             <Image
-              source={{ uri: card.firstPhoto }}
+              source={{ uri: card.photos[0] }}
               style={StyleSheet.absoluteFillObject}
               contentFit="cover"
             />
@@ -1009,7 +1031,7 @@ function DiscoverContent({ userId }: { userId: string }) {
       <Suspense
         fallback={
           <View className="flex-1 justify-center items-center p-6 gap-4">
-            <ActivityIndicator size="large" color={LEAF} />
+            <PulseSpinner color={LEAF} />
           </View>
         }
       >

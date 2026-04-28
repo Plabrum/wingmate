@@ -326,7 +326,7 @@ function ProfileScreenInner() {
   }));
 
   const wingLabel = wingpeople.length
-    ? `${wingpeople.length} wingperson${wingpeople.length !== 1 ? 'e' : ''}`
+    ? `${wingpeople.length} wingperson${wingpeople.length !== 1 ? 's' : ''}`
     : 'Invite a wingperson';
 
   const age = profile?.dateOfBirth ? computeAge(profile.dateOfBirth) : null;

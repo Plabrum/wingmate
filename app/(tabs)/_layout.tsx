@@ -1,11 +1,18 @@
-import { Tabs } from 'expo-router';
-import React from 'react';
+import { Tabs, Redirect, router } from 'expo-router';
+import React, { Suspense, useEffect } from 'react';
 import { Platform, StyleSheet } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { useSession } from '@/context/auth';
 import { PearMark } from '@/components/ui/PearMark';
+import {
+  useGetApiProfilesMeSuspense,
+  useGetApiDatingProfilesMeSuspense,
+} from '@/lib/api/generated/profiles/profiles';
+import { registerPushToken } from '@/lib/push';
+import Splash from '@/components/ui/Splash';
 
 const ACTIVE = '#5A8C3A';
 const INACTIVE = '#8b8170';
@@ -42,10 +49,31 @@ const sharedScreenOptions = {
   },
 } as const;
 
-export default function TabLayout() {
-  const { session } = useSession();
+function TabsGuard({ userId }: { userId: string }) {
+  const { data: profile } = useGetApiProfilesMeSuspense();
+  const { data: datingProfile } = useGetApiDatingProfilesMeSuspense();
 
-  if (!session) return null;
+  const needsOnboarding = !profile?.chosenName || (!datingProfile && profile.role !== 'winger');
+  const isWinger = profile?.role === 'winger' || datingProfile?.datingStatus === 'winging';
+
+  useEffect(() => {
+    registerPushToken(userId);
+  }, [userId]);
+
+  useEffect(() => {
+    AsyncStorage.getItem('pending_invite').then((val) => {
+      if (!val) return;
+      AsyncStorage.removeItem('pending_invite');
+      router.replace('/(tabs)/profile/wingpeople/' as any);
+    });
+  }, [userId]);
+
+  useEffect(() => {
+    if (needsOnboarding) router.replace('/(onboarding)' as any);
+    else if (isWinger) router.replace('/(winger-tabs)/friends' as any);
+  }, [needsOnboarding, isWinger]);
+
+  if (needsOnboarding || isWinger) return <Splash variant="spinner" />;
 
   return (
     <Tabs screenOptions={sharedScreenOptions}>
@@ -80,5 +108,18 @@ export default function TabLayout() {
         }}
       />
     </Tabs>
+  );
+}
+
+export default function TabLayout() {
+  const { session, loading } = useSession();
+
+  if (loading) return <Splash variant="spinner" />;
+  if (!session) return <Redirect href="/(auth)/login" />;
+
+  return (
+    <Suspense fallback={<Splash variant="spinner" />}>
+      <TabsGuard userId={session.user.id} />
+    </Suspense>
   );
 }

@@ -21,8 +21,7 @@ export interface DiscoverProfile {
   bio: string | null;
   datingStatus: DiscoverProfileDatingStatus;
   interests: DiscoverProfileInterestsItem[];
-  /** @nullable */
-  firstPhoto: string | null;
+  photos: string[];
   /** @nullable */
   wingNote: string | null;
   /** @nullable */
