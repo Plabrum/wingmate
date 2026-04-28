@@ -283,6 +283,10 @@ function MessagesContent({ userId, onlineIds }: ContentProps) {
         />
       )}
       contentContainerStyle={{ flexGrow: 1, paddingBottom: 100 }}
+      initialNumToRender={10}
+      maxToRenderPerBatch={8}
+      windowSize={9}
+      removeClippedSubviews
     />
   );
 }

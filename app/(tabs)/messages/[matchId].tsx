@@ -241,6 +241,9 @@ function ChatBody({ matchId, userId, otherUserId, otherName }: ChatBodyProps) {
             isOptimistic={item.id.startsWith('temp-')}
           />
         )}
+        initialNumToRender={20}
+        maxToRenderPerBatch={12}
+        windowSize={11}
       />
 
       {isOtherTyping && (

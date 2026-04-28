@@ -6,11 +6,34 @@ if (!SUPABASE_URL) {
 }
 const API_BASE = `${SUPABASE_URL}/functions/v1`;
 
+let cachedToken: string | null = null;
+let cachedExpiresAt = 0;
+let inflightRefresh: Promise<string | null> | null = null;
+
+supabase.auth.onAuthStateChange((_event, session) => {
+  cachedToken = session?.access_token ?? null;
+  cachedExpiresAt = session?.expires_at ? session.expires_at * 1000 : 0;
+});
+
+async function getAccessToken(): Promise<string | null> {
+  // Refresh ~30s before expiry to avoid edge-case 401s.
+  if (cachedToken && Date.now() < cachedExpiresAt - 30_000) {
+    return cachedToken;
+  }
+  if (!inflightRefresh) {
+    inflightRefresh = supabase.auth.getSession().then(({ data }) => {
+      cachedToken = data.session?.access_token ?? null;
+      cachedExpiresAt = data.session?.expires_at ? data.session.expires_at * 1000 : 0;
+      inflightRefresh = null;
+      return cachedToken;
+    });
+  }
+  return inflightRefresh;
+}
+
 export async function pearFetch<T>(url: string, options: RequestInit = {}): Promise<T> {
   const target = url.startsWith('http') ? url : `${API_BASE}${url}`;
-
-  const { data: sessionData } = await supabase.auth.getSession();
-  const token = sessionData.session?.access_token;
+  const token = await getAccessToken();
 
   const res = await fetch(target, {
     ...options,

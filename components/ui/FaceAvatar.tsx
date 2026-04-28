@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { memo, useState } from 'react';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Text, View } from '@/lib/tw';
@@ -14,7 +14,7 @@ type Props = {
 
 const RING_COLOR = '#5A8C3A';
 
-export function FaceAvatar({ name, size = 40, photoUri, ring }: Props) {
+function FaceAvatarImpl({ name, size = 40, photoUri, ring }: Props) {
   const [failedUri, setFailedUri] = useState<string | null>(null);
   const ringStyle = ring ? { borderWidth: ring, borderColor: RING_COLOR } : undefined;
 
@@ -58,3 +58,5 @@ export function FaceAvatar({ name, size = 40, photoUri, ring }: Props) {
     </View>
   );
 }
+
+export const FaceAvatar = memo(FaceAvatarImpl);

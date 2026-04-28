@@ -578,6 +578,10 @@ function MatchesList() {
         contentContainerStyle={{ padding: 16, paddingBottom: 32, gap: 12 }}
         onRefresh={refetch}
         refreshing={isRefetching}
+        initialNumToRender={8}
+        maxToRenderPerBatch={6}
+        windowSize={7}
+        removeClippedSubviews
         ListHeaderComponent={
           <View style={{ marginHorizontal: -16, marginTop: -16, marginBottom: 4 }}>
             <LargeHeader

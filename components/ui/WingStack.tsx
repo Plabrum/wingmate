@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Text as RNText } from 'react-native';
 import { View } from '@/lib/tw';
 import { colors } from '@/constants/theme';
@@ -15,7 +16,7 @@ type Props = {
   label?: string;
 };
 
-export function WingStack({ items, size = 28, max = 3, label }: Props) {
+function WingStackImpl({ items, size = 28, max = 3, label }: Props) {
   if (items.length === 0) return null;
   const shown = items.slice(0, max);
   const extra = items.length - shown.length;
@@ -62,3 +63,5 @@ export function WingStack({ items, size = 28, max = 3, label }: Props) {
     </View>
   );
 }
+
+export const WingStack = memo(WingStackImpl);
