@@ -54,13 +54,10 @@
   --color-canvas: var(--color-background);
   --color-muted: var(--color-surface-muted);
 
-  /* Brand-color aliases (purple → leaf) */
+  /* Brand-color aliases */
   --color-accent-muted: var(--color-primary-soft);
   --color-accent-soft: var(--color-primary-soft);
   --color-accent-press: oklch(0.4 0.1 145);
-  --color-purple: var(--color-primary);
-  --color-purple-pale: var(--color-primary-soft);
-  --color-purple-soft: var(--color-primary-soft);
   --color-lavender: var(--color-primary-soft);
 
   /* Border aliases */

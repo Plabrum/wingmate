@@ -10,7 +10,8 @@ export const DiscoverQuery = z.object({
   filterWingerId: z.string().uuid().optional().openapi({ example: undefined }),
   pageSize: z.coerce.number().int().min(1).max(100).default(20),
   pageOffset: z.coerce.number().int().min(0).default(0),
-  wingerOnly: z.coerce.boolean().default(false),
+  wingerOnly: z.coerce.boolean().optional(),
+  likesYouOnly: z.coerce.boolean().optional(),
 }).openapi('DiscoverQuery');
 
 export const DiscoverProfile = z.object({

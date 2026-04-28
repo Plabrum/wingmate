@@ -2,7 +2,9 @@ import { useState } from 'react';
 import { ActivityIndicator, FlatList, KeyboardAvoidingView, Modal, Platform } from 'react-native';
 import { router } from 'expo-router';
 import { Image } from 'expo-image';
-import Svg, { Path } from 'react-native-svg';
+import { Ionicons } from '@expo/vector-icons';
+
+import { LinearGradient } from 'expo-linear-gradient';
 
 import { View, Text, Pressable, ScrollView, TextInput, SafeAreaView } from '@/lib/tw';
 import { cn } from '@/lib/cn';
@@ -40,38 +42,13 @@ type PromptState = {
 
 // ── Icons ─────────────────────────────────────────────────────────────────────
 
-function XIcon({ size = 16, color = INK }: { size?: number; color?: string }) {
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-      <Path
-        d="M6 6l12 12M18 6L6 18"
-        stroke={color}
-        strokeWidth={2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
-}
-
-function CheckIcon({ size = 14, color = LEAF }: { size?: number; color?: string }) {
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-      <Path
-        d="M5 12l5 5L20 7"
-        stroke={color}
-        strokeWidth={2.4}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
-}
-
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function matchedAgo(createdAt: string): string {
-  const days = Math.max(0, Math.floor((Date.now() - new Date(createdAt).getTime()) / 86400000));
+  const days = Math.max(
+    0,
+    Math.floor((Date.now() - new Date(createdAt.replace(' ', 'T')).getTime()) / 86400000)
+  );
   if (days === 0) return 'matched today';
   if (days === 1) return 'matched 1 day ago';
   if (days < 30) return `matched ${days} days ago`;
@@ -118,15 +95,15 @@ function MatchCard({ match, onPress }: MatchCardProps) {
       )}
 
       {/* Bottom gradient scrim */}
-      <View
+      <LinearGradient
         pointerEvents="none"
+        colors={['transparent', 'rgba(0,0,0,0.7)']}
         style={{
           position: 'absolute',
           left: 0,
           right: 0,
           bottom: 0,
           height: '55%',
-          backgroundColor: 'rgba(0,0,0,0.45)',
         }}
       />
 
@@ -240,8 +217,8 @@ function PromptCard({
       <View style={{ marginTop: 10 }}>
         {state.sent ? (
           <View className="flex-row items-center gap-1.5">
-            <CheckIcon size={14} color={LEAF} />
-            <Text className="text-purple" style={{ fontSize: 12.5, fontWeight: '600' }}>
+            <Ionicons name="checkmark" size={14} color={LEAF} />
+            <Text className="text-primary" style={{ fontSize: 12.5, fontWeight: '600' }}>
               Reply sent
             </Text>
           </View>
@@ -291,7 +268,7 @@ function PromptCard({
           </View>
         ) : (
           <Pressable onPress={onOpen} hitSlop={6}>
-            <Text className="text-purple" style={{ fontSize: 13, fontWeight: '600' }}>
+            <Text className="text-primary" style={{ fontSize: 13, fontWeight: '600' }}>
               Reply to this prompt →
             </Text>
           </Pressable>
@@ -353,7 +330,7 @@ function SheetBody({ match }: { match: MatchSummary }) {
           <FaceAvatar name={wingNote.winger?.chosenName ?? 'Wing'} size={28} />
           <View style={{ flex: 1, minWidth: 0 }}>
             <Text
-              className="text-purple"
+              className="text-primary"
               style={{
                 fontSize: 11,
                 fontWeight: '700',
@@ -497,7 +474,7 @@ function MatchSheet({ match, visible, onClose }: MatchSheetProps) {
                 justifyContent: 'center',
               }}
             >
-              <XIcon size={16} color={INK} />
+              <Ionicons name="close" size={16} color={INK} />
             </Pressable>
           </View>
 

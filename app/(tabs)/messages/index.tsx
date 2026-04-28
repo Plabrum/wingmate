@@ -18,7 +18,7 @@ const LINE2 = 'rgba(31,27,22,0.06)';
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function relativeTime(isoString: string): string {
-  const diff = Date.now() - new Date(isoString).getTime();
+  const diff = Date.now() - new Date(isoString.replace(' ', 'T')).getTime();
   const mins = Math.floor(diff / 60_000);
   if (mins < 1) return 'now';
   if (mins < 60) return `${mins}m`;
@@ -26,7 +26,10 @@ function relativeTime(isoString: string): string {
   if (hours < 24) return `${hours}h`;
   const days = Math.floor(hours / 24);
   if (days < 7) return `${days}d`;
-  return new Date(isoString).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  return new Date(isoString.replace(' ', 'T')).toLocaleDateString(undefined, {
+    month: 'short',
+    day: 'numeric',
+  });
 }
 
 // ── SectionLabel ──────────────────────────────────────────────────────────────
@@ -64,7 +67,7 @@ function SayHelloItem({ convo, onPress }: SayHelloItemProps) {
       <View style={{ position: 'relative' }}>
         <FaceAvatar name={name} size={62} />
         <View
-          className="bg-purple"
+          className="bg-primary"
           style={{
             position: 'absolute',
             top: -2,
@@ -158,7 +161,7 @@ function ConvoRow({ convo, userId, isOnline, onPress }: ConvoRowProps) {
               : 'New match — say hello!'}
           </Text>
           {isUnread && (
-            <View className="bg-purple" style={{ width: 8, height: 8, borderRadius: 4 }} />
+            <View className="bg-primary" style={{ width: 8, height: 8, borderRadius: 4 }} />
           )}
         </View>
       </View>

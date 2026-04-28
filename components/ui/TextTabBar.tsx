@@ -42,7 +42,7 @@ export function TextTabBar({ tabs, active, setActive, badges }: Props) {
                 )}
               </View>
               {i === active && (
-                <View className="h-0.5 bg-accent rounded-[1px] absolute bottom-0 left-0 right-0" />
+                <View className="h-0.5 bg-primary rounded-[1px] absolute bottom-0 left-0 right-0" />
               )}
             </Pressable>
           );

@@ -132,7 +132,7 @@ export function AddPromptModal({ visible, onClose, usedTemplateIds, onAdded }: P
                     className="flex-row items-center gap-1 mb-4"
                     hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                   >
-                    <IconSymbol name="chevron.left" size={13} color={colors.purple} />
+                    <IconSymbol name="chevron.left" size={13} color={colors.primary} />
                     <Text className="text-sm text-accent">Back to prompts</Text>
                   </Pressable>
                   <Text className="text-xl font-bold text-fg font-serif mb-5 leading-7">

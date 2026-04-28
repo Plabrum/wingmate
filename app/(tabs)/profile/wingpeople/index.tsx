@@ -12,7 +12,7 @@ import { useRouter } from 'expo-router';
 import { Controller, useForm } from 'react-hook-form';
 import { toast } from 'sonner-native';
 import * as SMS from 'expo-sms';
-import Svg, { Path } from 'react-native-svg';
+import { Ionicons } from '@expo/vector-icons';
 
 import { useQueryClient } from '@tanstack/react-query';
 import { FaceAvatar } from '@/components/ui/FaceAvatar';
@@ -35,63 +35,6 @@ const PAPER = '#FBF8F1';
 const LINE = 'rgba(31,27,22,0.10)';
 const LEAF = '#5A8C3A';
 const LEAF_SOFT = 'rgba(90,140,58,0.12)';
-
-// ── Icons ─────────────────────────────────────────────────────────────────────
-
-function BackIcon({ color = INK }: { color?: string }) {
-  return (
-    <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
-      <Path
-        d="M15 18l-6-6 6-6"
-        stroke={color}
-        strokeWidth={2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
-}
-
-function PlusIcon({ size = 14, color = LEAF }: { size?: number; color?: string }) {
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-      <Path
-        d="M12 5v14M5 12h14"
-        stroke={color}
-        strokeWidth={2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
-}
-
-function HeartIcon({ size = 14, color = PAPER }: { size?: number; color?: string }) {
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill={color} stroke={color}>
-      <Path
-        d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"
-        strokeWidth={1.5}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
-}
-
-function MoreIcon({ size = 18, color = INK3 }: { size?: number; color?: string }) {
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-      <Path
-        d="M12 6v.01M12 12v.01M12 18v.01"
-        stroke={color}
-        strokeWidth={2.5}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
-}
 
 // ── SectionLabel ──────────────────────────────────────────────────────────────
 
@@ -236,7 +179,7 @@ function WingpeopleContent({ onOpenInvite }: ContentProps) {
                   </Text>
                 </View>
                 <Pressable hitSlop={8} style={{ padding: 6 }} onPress={() => handleRemove(w.id)}>
-                  <MoreIcon />
+                  <Ionicons name="ellipsis-vertical" size={18} color={INK3} />
                 </Pressable>
               </Pressable>
             );
@@ -386,7 +329,7 @@ function WingpeopleContent({ onOpenInvite }: ContentProps) {
                       <Sprout
                         block
                         size="sm"
-                        icon={<HeartIcon />}
+                        icon={<Ionicons name="heart" size={14} color={PAPER} />}
                         onPress={() =>
                           router.push(
                             `/(tabs)/profile/wingpeople/wingswipe?daterId=${daterId}` as any
@@ -477,7 +420,7 @@ export default function WingpeopleScreen() {
           hitSlop={12}
           style={{ padding: 8, marginLeft: -4 }}
         >
-          <BackIcon />
+          <Ionicons name="chevron-back" size={22} color={INK} />
         </Pressable>
         <Text
           className="font-serif text-ink"
@@ -485,7 +428,11 @@ export default function WingpeopleScreen() {
         >
           Wingpeople
         </Text>
-        <Sprout size="sm" icon={<PlusIcon />} onPress={onOpenInvite}>
+        <Sprout
+          size="sm"
+          icon={<Ionicons name="add" size={14} color={PAPER} />}
+          onPress={onOpenInvite}
+        >
           Invite
         </Sprout>
       </View>

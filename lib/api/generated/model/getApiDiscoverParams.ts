@@ -21,4 +21,8 @@ export type GetApiDiscoverParams = {
    * @nullable
    */
   wingerOnly?: boolean | null;
+  /**
+   * @nullable
+   */
+  likesYouOnly?: boolean | null;
 };

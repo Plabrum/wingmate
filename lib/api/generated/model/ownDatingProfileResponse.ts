@@ -68,4 +68,5 @@ export type OwnDatingProfileResponse = {
   updatedAt: string;
   photos: OwnProfilePhoto[];
   prompts: OwnProfilePrompt[];
+  ripeness: number;
 } | null;

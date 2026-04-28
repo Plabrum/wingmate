@@ -12,9 +12,8 @@ import { Platform } from 'react-native';
 
 export const colors = {
   // Brand (leaf green / pear)
-  purple: '#3F6E48', // legacy alias → primary
-  purplePale: '#DDEBDC', // legacy alias → primary-soft
-  purpleSoft: '#DDEBDC',
+  primary: '#3F6E48',
+  primarySoft: '#DDEBDC',
 
   // Foreground
   ink: '#1F1B16',
@@ -29,7 +28,6 @@ export const colors = {
   // Borders / status
   divider: 'rgba(31,27,22,0.10)',
   green: '#4FAF6A',
-  lavender: '#DDEBDC',
   white: '#FBF8F1',
 } as const;
 

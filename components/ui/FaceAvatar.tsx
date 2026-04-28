@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Text, View } from '@/lib/tw';
@@ -14,14 +15,16 @@ type Props = {
 const RING_COLOR = '#5A8C3A';
 
 export function FaceAvatar({ name, size = 40, photoUri, ring }: Props) {
+  const [failedUri, setFailedUri] = useState<string | null>(null);
   const ringStyle = ring ? { borderWidth: ring, borderColor: RING_COLOR } : undefined;
 
-  if (photoUri) {
+  if (photoUri && photoUri !== failedUri) {
     return (
       <Image
         source={{ uri: photoUri }}
         style={[{ width: size, height: size, borderRadius: size / 2 }, ringStyle]}
         contentFit="cover"
+        onError={() => setFailedUri(photoUri)}
       />
     );
   }
@@ -43,7 +46,12 @@ export function FaceAvatar({ name, size = 40, photoUri, ring }: Props) {
       />
       <Text
         className="font-serif text-white"
-        style={{ fontSize, lineHeight: fontSize, letterSpacing: -0.5 }}
+        style={{
+          fontSize,
+          lineHeight: fontSize * 1.2,
+          letterSpacing: -0.5,
+          includeFontPadding: false,
+        }}
       >
         {initial}
       </Text>

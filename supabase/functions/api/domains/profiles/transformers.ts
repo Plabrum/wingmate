@@ -69,8 +69,26 @@ function rowsToOwnPrompts(prompts: PromptRow[], responses: ResponseRow[]): OwnPr
   }));
 }
 
+function computeRipeness(
+  photos: OwnProfilePhoto[],
+  prompts: OwnProfilePrompt[],
+  bio: string | null,
+  interests: string[],
+  city: string,
+): number {
+  const approvedPhotos = photos.filter((p) => p.approvedAt !== null);
+  const photoScore = Math.min(approvedPhotos.length / 6, 1) * 30;
+  const promptScore = Math.min(prompts.length / 3, 1) * 25;
+  const bioScore = bio ? 20 : 0;
+  const interestScore = interests.length > 0 ? 15 : 0;
+  const cityScore = city ? 10 : 0;
+  return Math.round(photoScore + promptScore + bioScore + interestScore + cityScore);
+}
+
 export function bundleToOwnDatingProfile(bundle: OwnDatingProfileBundle): OwnDatingProfile {
   const { base, photos, prompts, responses } = bundle;
+  const mappedPhotos = photos.map(rowToOwnPhoto);
+  const mappedPrompts = rowsToOwnPrompts(prompts, responses);
   return {
     id: base.id,
     userId: base.user_id,
@@ -86,8 +104,9 @@ export function bundleToOwnDatingProfile(bundle: OwnDatingProfileBundle): OwnDat
     datingStatus: base.dating_status as OwnDatingProfile['datingStatus'],
     createdAt: base.created_at,
     updatedAt: base.updated_at,
-    photos: photos.map(rowToOwnPhoto),
-    prompts: rowsToOwnPrompts(prompts, responses),
+    photos: mappedPhotos,
+    prompts: mappedPrompts,
+    ripeness: computeRipeness(mappedPhotos, mappedPrompts, base.bio, base.interests, base.city ?? ''),
   };
 }
 

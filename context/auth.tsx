@@ -30,23 +30,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'INITIAL_SESSION' && __DEV__) return;
+      if (event === 'INITIAL_SESSION' && __DEV__ && !session) {
+        supabase.auth
+          .signInWithPassword({ email: 'dev@local.test', password: 'devpassword' })
+          .then(({ error }) => {
+            if (error) {
+              console.error('[dev] auto sign-in failed:', error.message);
+              setLoading(false);
+              SplashScreen.hideAsync();
+            }
+          });
+        return;
+      }
       setSession(session);
       setLoading(false);
       SplashScreen.hideAsync();
     });
-
-    if (__DEV__) {
-      supabase.auth
-        .signInWithPassword({ email: 'dev@local.test', password: 'devpassword' })
-        .then(({ error }) => {
-          if (error) {
-            console.error('[dev] auto sign-in failed:', error.message);
-            setLoading(false);
-            SplashScreen.hideAsync();
-          }
-        });
-    }
 
     return () => subscription.unsubscribe();
   }, []);

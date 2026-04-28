@@ -4,7 +4,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { toast } from 'sonner-native';
 import { useQueryClient } from '@tanstack/react-query';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Svg, { Path } from 'react-native-svg';
+import { Ionicons } from '@expo/vector-icons';
 
 import { useAuth } from '@/context/auth';
 import {
@@ -25,57 +25,6 @@ const INK3 = '#8B8170';
 const LINE = 'rgba(31,27,22,0.10)';
 const LEAF = '#5A8C3A';
 const LEAF_SOFT = 'rgba(90,140,58,0.12)';
-
-// ── Icons ────────────────────────────────────────────────────────────────────
-
-function BackIcon({ color = INK }: { color?: string }) {
-  return (
-    <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
-      <Path
-        d="M15 18l-6-6 6-6"
-        stroke={color}
-        strokeWidth={2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
-}
-
-function CameraIcon({ size = 20, color = LEAF }: { size?: number; color?: string }) {
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-      <Path
-        d="M3 7h3.5L8 5h8l1.5 2H21v12H3V7z"
-        stroke={color}
-        strokeWidth={1.8}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <Path
-        d="M12 16.5a3.5 3.5 0 100-7 3.5 3.5 0 000 7z"
-        stroke={color}
-        strokeWidth={1.8}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
-}
-
-function CheckIcon({ size = 14, color = LEAF }: { size?: number; color?: string }) {
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-      <Path
-        d="M5 12l5 5L20 7"
-        stroke={color}
-        strokeWidth={2.2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
-}
 
 // ── SectionLabel ─────────────────────────────────────────────────────────────
 
@@ -281,7 +230,7 @@ function ContributeContent() {
           hitSlop={12}
           style={{ padding: 8, marginLeft: -4 }}
         >
-          <BackIcon />
+          <Ionicons name="chevron-back" size={22} color={INK} />
         </Pressable>
         <Text
           className="font-serif text-ink"
@@ -345,9 +294,9 @@ function ContributeContent() {
               <ActivityIndicator color={LEAF} size="small" />
             ) : (
               <>
-                <CameraIcon size={20} color={LEAF} />
+                <Ionicons name="camera-outline" size={20} color={LEAF} />
                 <Text
-                  className="text-purple"
+                  className="text-primary"
                   style={{
                     fontSize: 10.5,
                     fontWeight: '600',
@@ -407,8 +356,8 @@ function ContributeContent() {
                   </Text>
                   {responded ? (
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                      <CheckIcon size={14} color={LEAF} />
-                      <Text className="text-purple" style={{ fontSize: 12, fontWeight: '600' }}>
+                      <Ionicons name="checkmark" size={14} color={LEAF} />
+                      <Text className="text-primary" style={{ fontSize: 12, fontWeight: '600' }}>
                         Comment sent — {firstName} will review
                       </Text>
                     </View>
@@ -417,7 +366,7 @@ function ContributeContent() {
                       onPress={() => setRespondingToPrompt({ id: prompt.id, question })}
                       hitSlop={6}
                     >
-                      <Text className="text-purple" style={{ fontSize: 12.5, fontWeight: '600' }}>
+                      <Text className="text-primary" style={{ fontSize: 12.5, fontWeight: '600' }}>
                         Add comment →
                       </Text>
                     </Pressable>

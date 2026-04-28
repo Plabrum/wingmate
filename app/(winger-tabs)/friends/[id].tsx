@@ -213,10 +213,10 @@ function FriendDetailContent() {
           disabled={uploading}
         >
           {uploading ? (
-            <ActivityIndicator color={colors.purple} size="small" />
+            <ActivityIndicator color={colors.primary} size="small" />
           ) : (
             <>
-              <IconSymbol name="plus" size={18} color={colors.purple} />
+              <IconSymbol name="plus" size={18} color={colors.primary} />
               <Text className="text-sm font-semibold text-accent">Suggest a Photo</Text>
             </>
           )}
@@ -248,7 +248,7 @@ function FriendDetailContent() {
                     }}
                     onPress={() => setRespondingToPrompt({ id: prompt.id, question })}
                   >
-                    <IconSymbol name="bubble.left" size={14} color={colors.purple} />
+                    <IconSymbol name="bubble.left" size={14} color={colors.primary} />
                     <Text className="text-sm font-semibold text-accent">Add Comment</Text>
                   </Pressable>
                 </View>

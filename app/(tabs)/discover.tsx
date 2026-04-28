@@ -16,18 +16,15 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { Image } from 'expo-image';
-import Svg, { Path } from 'react-native-svg';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 
 import { View, Text, ScrollView, SafeAreaView, Pressable } from '@/lib/tw';
 import { useAuth } from '@/context/auth';
 import { useDiscover, type PoolFetcher, type LikeResult } from '@/hooks/use-discover';
 import type { Enums } from '@/types/database';
 import { getApiDiscover, useGetApiDiscoverSuspense } from '@/lib/api/generated/discover/discover';
-import {
-  getApiLikesYou,
-  useGetApiLikesYouCountSuspense,
-  useGetApiLikesYouSuspense,
-} from '@/lib/api/generated/likes-you/likes-you';
+import { useGetApiLikesYouCountSuspense } from '@/lib/api/generated/likes-you/likes-you';
 import type { DiscoverProfile } from '@/lib/api/generated/model';
 import {
   useGetApiDatingProfilesMeSuspense,
@@ -115,38 +112,6 @@ function DiscoverPausedScreen({
   );
 }
 
-// ── Icons ─────────────────────────────────────────────────────────────────────
-
-function HeartIcon({ size = 14, color }: { size?: number; color: string }) {
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill={color}>
-      <Path d="M20.84 4.6a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.07a5.5 5.5 0 0 0-7.78 7.78l1.06 1.07L12 21.23l7.78-7.78 1.06-1.07a5.5 5.5 0 0 0 0-7.78z" />
-    </Svg>
-  );
-}
-
-function XIcon({ size = 24, color }: { size?: number; color: string }) {
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-      <Path
-        d="M6 6l12 12M18 6L6 18"
-        stroke={color}
-        strokeWidth={2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
-}
-
-function HeartFilledIcon({ size = 24, color }: { size?: number; color: string }) {
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill={color}>
-      <Path d="M20.84 4.6a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.07a5.5 5.5 0 0 0-7.78 7.78l1.06 1.07L12 21.23l7.78-7.78 1.06-1.07a5.5 5.5 0 0 0 0-7.78z" />
-    </Svg>
-  );
-}
-
 // ── DiscoverFilters ───────────────────────────────────────────────────────────
 
 type FilterDef = {
@@ -161,7 +126,7 @@ const FILTERS: FilterDef[] = [
     key: 'likes',
     label: 'Likes you',
     tone: 'ink',
-    icon: (color) => <HeartIcon size={12} color={color} />,
+    icon: (color) => <Ionicons name="heart" size={12} color={color} />,
   },
   {
     key: 'handpicked',
@@ -174,15 +139,19 @@ const FILTERS: FilterDef[] = [
 function DiscoverFilters({
   active,
   onToggle,
+  onClearAll,
   counts,
 }: {
   active: Filter[];
   onToggle: (key: Filter) => void;
+  onClearAll: () => void;
   counts: Partial<Record<Filter, number>>;
 }) {
   return (
     <View className="flex-row items-center flex-wrap px-4 pt-1 pb-3 gap-2">
-      <Text className="text-[13px] text-foreground-muted font-medium mr-1">For you</Text>
+      <Pressable onPress={onClearAll} disabled={active.length === 0}>
+        <Text className="text-[13px] text-foreground-muted font-medium mr-1">For you</Text>
+      </Pressable>
       <Text className="text-foreground-subtle text-xs">·</Text>
       {FILTERS.map((f) => {
         const on = active.includes(f.key);
@@ -256,7 +225,7 @@ function WingCredential({ suggesterName, note }: { suggesterName: string; note: 
       <WingStack items={[{ name: suggesterName }]} size={30} />
       <View className="flex-1 min-w-0">
         <Text
-          className="text-purple"
+          className="text-primary"
           style={{
             fontSize: 10.5,
             fontWeight: '700',
@@ -337,7 +306,7 @@ function LikeStamp({ swipeX }: { swipeX: SharedValue<number> }) {
         style,
       ]}
     >
-      <Text className="text-purple" style={{ fontSize: 18, fontWeight: '700', letterSpacing: 2 }}>
+      <Text className="text-primary" style={{ fontSize: 18, fontWeight: '700', letterSpacing: 2 }}>
         LIKE
       </Text>
     </Animated.View>
@@ -453,16 +422,16 @@ function DiscoverCard({
             ))}
           </View>
 
-          {/* Gradient overlay via stacked semi-transparent layer */}
-          <View
+          {/* Bottom gradient scrim */}
+          <LinearGradient
             pointerEvents="none"
+            colors={['transparent', 'rgba(0,0,0,0.7)']}
             style={{
               position: 'absolute',
               left: 0,
               right: 0,
               bottom: 0,
-              height: '50%',
-              backgroundColor: 'rgba(0,0,0,0.25)',
+              height: '55%',
             }}
           />
 
@@ -542,7 +511,7 @@ function DiscoverCard({
                 cardButtonShadow,
               ]}
             >
-              <XIcon size={24} color={INK_MUTED} />
+              <Ionicons name="close" size={24} color={INK_MUTED} />
             </Pressable>
             <Pressable
               onPress={onLike}
@@ -558,7 +527,7 @@ function DiscoverCard({
                 cardButtonShadow,
               ]}
             >
-              <HeartFilledIcon size={24} color={PAPER} />
+              <Ionicons name="heart" size={24} color={PAPER} />
             </Pressable>
           </View>
         </View>
@@ -607,12 +576,12 @@ function MatchOverlay({
             justifyContent: 'center',
           }}
         >
-          <XIcon size={18} color={INK} />
+          <Ionicons name="close" size={18} color={INK} />
         </Pressable>
       </View>
 
       <Text
-        className="text-purple"
+        className="text-primary"
         style={{
           fontSize: 11,
           letterSpacing: 2,
@@ -634,7 +603,7 @@ function MatchOverlay({
         }}
       >
         It’s a{' '}
-        <Text className="text-purple" style={{ fontStyle: 'italic' }}>
+        <Text className="text-primary" style={{ fontStyle: 'italic' }}>
           pear
         </Text>
         .
@@ -815,6 +784,48 @@ function WingEmptyState({ onInvite }: { onInvite: () => void }) {
   );
 }
 
+function NoMoreProfilesEmptyState() {
+  return (
+    <View
+      style={{
+        flex: 1,
+        borderRadius: 22,
+        backgroundColor: PAPER,
+        borderWidth: 1,
+        borderColor: LINE,
+        borderStyle: 'dashed',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 32,
+        gap: 16,
+      }}
+    >
+      <Text
+        className="text-ink"
+        style={{
+          fontFamily: 'DMSerifDisplay',
+          fontSize: 24,
+          lineHeight: 26,
+          letterSpacing: -0.4,
+        }}
+      >
+        All caught up.
+      </Text>
+      <Text
+        className="text-ink-mid"
+        style={{
+          fontSize: 14,
+          lineHeight: 21,
+          textAlign: 'center',
+          maxWidth: 280,
+        }}
+      >
+        You{"'"}ve seen everyone nearby for now. New profiles appear as people join.
+      </Text>
+    </View>
+  );
+}
+
 // ── PoolView ──────────────────────────────────────────────────────────────────
 
 type PoolViewProps = {
@@ -893,20 +904,21 @@ function LikesYouPool({
   onDecrementLikes: ((recipientId: string) => void) | null;
   handPickedOnly: boolean;
 }) {
-  const { data: rawInitialPool } = useGetApiLikesYouSuspense({
+  const { data: initialPool } = useGetApiDiscoverSuspense({
     pageSize: PAGE_SIZE,
     pageOffset: 0,
+    likesYouOnly: true,
+    ...(handPickedOnly && { wingerOnly: true }),
   });
 
-  const initialPool = handPickedOnly
-    ? rawInitialPool.filter((p) => p.suggestedBy != null)
-    : rawInitialPool;
-
   const fetchPool = useCallback<PoolFetcher>(
-    async (_uid, pageSize, offset) => {
-      const data = await getApiLikesYou({ pageSize, pageOffset: offset });
-      return handPickedOnly ? data.filter((p) => p.suggestedBy != null) : data;
-    },
+    (_uid, pageSize, offset) =>
+      getApiDiscover({
+        pageSize,
+        pageOffset: offset,
+        likesYouOnly: true,
+        ...(handPickedOnly && { wingerOnly: true }),
+      }),
     [handPickedOnly]
   );
 
@@ -933,12 +945,12 @@ function DiscoverFeedPool({
   const { data: initialPool } = useGetApiDiscoverSuspense({
     pageSize: PAGE_SIZE,
     pageOffset: 0,
-    wingerOnly: handPickedOnly,
+    ...(handPickedOnly && { wingerOnly: true }),
   });
 
   const fetchPool = useCallback<PoolFetcher>(
     (_uid, pageSize, offset) =>
-      getApiDiscover({ pageSize, pageOffset: offset, wingerOnly: handPickedOnly }),
+      getApiDiscover({ pageSize, pageOffset: offset, ...(handPickedOnly && { wingerOnly: true }) }),
     [handPickedOnly]
   );
 
@@ -974,12 +986,15 @@ function DiscoverContent({ userId }: { userId: string }) {
   const wantsHandPicked = activeFilters.includes('handpicked');
   const filterKey = `${wantsLikes ? 1 : 0}-${wantsHandPicked ? 1 : 0}`;
 
-  const emptyState =
-    wantsHandPicked && !wantsLikes ? (
-      <WingEmptyState onInvite={() => router.push('/(tabs)/profile/wingpeople')} />
-    ) : (
-      <FilterEmptyState onClear={clearFilters} />
-    );
+  const hasFilters = activeFilters.length > 0;
+
+  const emptyState = !hasFilters ? (
+    <NoMoreProfilesEmptyState />
+  ) : wantsHandPicked && !wantsLikes ? (
+    <WingEmptyState onInvite={() => router.push('/(tabs)/profile/wingpeople')} />
+  ) : (
+    <FilterEmptyState onClear={clearFilters} />
+  );
 
   return (
     <SafeAreaView className="flex-1 bg-background">
@@ -987,6 +1002,7 @@ function DiscoverContent({ userId }: { userId: string }) {
       <DiscoverFilters
         active={activeFilters}
         onToggle={toggleFilter}
+        onClearAll={clearFilters}
         counts={{ likes: likesYouCount }}
       />
 

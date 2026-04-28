@@ -372,12 +372,12 @@ const variantStyles: Record<ButtonVariant, { box: string; text: string; spinner:
   outline: {
     box: 'bg-transparent border-[1.5px] border-accent rounded-xl py-[15px] px-6 items-center justify-center',
     text: 'text-accent text-base font-semibold',
-    spinner: colors.purple,
+    spinner: colors.primary,
   },
   ghost: {
     box: 'bg-transparent rounded-xl py-[15px] px-6 items-center justify-center',
     text: 'text-accent text-base font-semibold',
-    spinner: colors.purple,
+    spinner: colors.primary,
   },
   destructive: {
     box: 'bg-error rounded-xl py-[15px] px-6 items-center justify-center',

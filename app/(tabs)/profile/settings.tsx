@@ -1,7 +1,7 @@
 import { useRouter } from 'expo-router';
 import { toast } from 'sonner-native';
 import { StyleSheet } from 'react-native';
-import Svg, { Path } from 'react-native-svg';
+import { Ionicons } from '@expo/vector-icons';
 
 import { useAuth } from '@/context/auth';
 import {
@@ -16,37 +16,6 @@ const INK = '#1F1B16';
 const INK3 = '#8B8170';
 const LINE = 'rgba(31,27,22,0.10)';
 const DANGER = '#A33';
-
-// ── Icons ─────────────────────────────────────────────────────────────────────
-
-function BackIcon({ color = INK }: { color?: string }) {
-  return (
-    <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
-      <Path
-        d="M15 18l-6-6 6-6"
-        stroke={color}
-        strokeWidth={2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
-}
-
-function ChevronRightIcon({ color = INK3 }: { color?: string }) {
-  return (
-    <Svg width={7} height={12} viewBox="0 0 7 12" fill="none">
-      <Path
-        d="M1 1l5 5-5 5"
-        stroke={color}
-        strokeWidth={1.6}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        fill="none"
-      />
-    </Svg>
-  );
-}
 
 // ── SectionLabel ──────────────────────────────────────────────────────────────
 
@@ -107,7 +76,7 @@ function Row({ label, detail, danger, last, onPress }: RowProps) {
           {detail}
         </Text>
       ) : null}
-      {!danger ? <ChevronRightIcon /> : null}
+      {!danger ? <Ionicons name="chevron-forward" size={14} color={INK3} /> : null}
     </Pressable>
   );
 }
@@ -172,7 +141,7 @@ function SettingsScreenInner() {
           hitSlop={12}
           style={{ padding: 8, marginLeft: -4 }}
         >
-          <BackIcon />
+          <Ionicons name="chevron-back" size={22} color={INK} />
         </Pressable>
         <Text className="font-serif text-ink" style={{ fontSize: 26, letterSpacing: -0.4 }}>
           Settings

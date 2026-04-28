@@ -23,7 +23,7 @@ export function NavHeader({ back, onBack, title, sub, right }: Props) {
           className="w-10"
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         >
-          <IconSymbol name="chevron.left" size={20} color={colors.purple} />
+          <IconSymbol name="chevron.left" size={20} color={colors.primary} />
         </Pressable>
       ) : (
         <View className="w-10" />

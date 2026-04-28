@@ -50,7 +50,7 @@ function rowToLastMessage(row: ConversationRow): ConversationLastMessage | null 
     body: row.last_message_body,
     senderId: row.last_message_sender_id,
     isRead: row.last_message_is_read,
-    createdAt: row.last_message_created_at,
+    createdAt: new Date(row.last_message_created_at).toISOString(),
   };
 }
 

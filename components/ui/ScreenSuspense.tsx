@@ -6,7 +6,7 @@ import ScreenErrorBoundary from './ScreenErrorBoundary';
 function DefaultSkeleton() {
   return (
     <View style={styles.skeleton}>
-      <ActivityIndicator size="large" color={colors.purple} />
+      <ActivityIndicator size="large" color={colors.primary} />
     </View>
   );
 }

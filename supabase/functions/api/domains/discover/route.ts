@@ -48,7 +48,8 @@ export function mountDiscover(app: OpenAPIHono<AppEnv>) {
       filterWingerId: query.filterWingerId,
       pageSize: query.pageSize,
       pageOffset: query.pageOffset,
-      wingerOnly: query.wingerOnly,
+      wingerOnly: query.wingerOnly ? true : undefined,
+      likesYouOnly: query.likesYouOnly ? true : undefined,
     });
 
     const body: DiscoverProfile[] = rows.map(rowToDiscoverProfile);

@@ -113,8 +113,8 @@ function AvatarPicker({ name, avatarUrl, size, userId }: AvatarPickerProps) {
     try {
       await uploadAvatar(userId, uri);
       queryClient.invalidateQueries({ queryKey: getGetApiProfilesMeQueryKey() });
-    } catch {
-      toast.error("Couldn't upload photo. Try again.");
+    } catch (e) {
+      toast.error(`Avatar upload failed: ${e instanceof Error ? e.message : JSON.stringify(e)}`);
     } finally {
       setUploading(false);
     }

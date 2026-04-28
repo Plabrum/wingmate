@@ -34,9 +34,9 @@ module.exports = {
         'expo-splash-screen',
         {
           image: './assets/images/splash-icon.png',
-          imageWidth: 200,
+          imageWidth: 300,
           resizeMode: 'contain',
-          backgroundColor: '#ffffff',
+          backgroundColor: '#F2EDDF',
         },
       ],
       '@react-native-community/datetimepicker',

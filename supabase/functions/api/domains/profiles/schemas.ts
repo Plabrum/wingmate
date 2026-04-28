@@ -109,6 +109,7 @@ export const OwnDatingProfile = z
     updatedAt: z.string(),
     photos: z.array(OwnProfilePhoto),
     prompts: z.array(OwnProfilePrompt),
+    ripeness: z.number().int(),
   })
   .openapi('OwnDatingProfile');
 

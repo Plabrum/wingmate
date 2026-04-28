@@ -7,7 +7,7 @@ import { useGetApiWingerActivitySuspense } from '@/lib/api/generated/winger-acti
 import type { ActivityRow } from '@/lib/api/generated/model';
 
 function formatRelativeTime(iso: string): string {
-  const then = new Date(iso).getTime();
+  const then = new Date(iso.replace(' ', 'T')).getTime();
   if (Number.isNaN(then)) return '';
   const diffMs = Date.now() - then;
   const minutes = Math.round(diffMs / 60_000);
@@ -83,7 +83,7 @@ function ActivityContent() {
           className="mx-4 mt-2 p-5 rounded-2xl bg-accent-muted"
           style={{ borderWidth: 1, borderColor: 'rgba(90,140,58,0.13)' }}
         >
-          <Text className="text-xs uppercase mb-2 text-purple" style={{ letterSpacing: 1.4 }}>
+          <Text className="text-xs uppercase mb-2 text-primary" style={{ letterSpacing: 1.4 }}>
             Nothing yet
           </Text>
           <Text

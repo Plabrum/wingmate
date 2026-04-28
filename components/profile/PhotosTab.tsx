@@ -242,7 +242,7 @@ export function PhotosTab({ form, data, onRefresh }: Props) {
             />
             {idx === 0 ? (
               <View
-                className="bg-purple"
+                className="bg-primary"
                 style={{
                   position: 'absolute',
                   top: 6,
@@ -300,7 +300,7 @@ export function PhotosTab({ form, data, onRefresh }: Props) {
           disabled={uploading}
           style={{
             width: PHOTO_COL,
-            aspectRatio: 3 / 4,
+            height: Math.round(PHOTO_COL * (4 / 3)),
             borderRadius: 14,
             borderWidth: 1.5,
             borderStyle: 'dashed',

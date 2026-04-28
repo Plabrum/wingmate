@@ -482,7 +482,7 @@ function EmptySlot({ onPress, disabled }: { onPress: () => void; disabled: boole
       )}
     >
       {disabled ? (
-        <ActivityIndicator color={colors.purple} />
+        <ActivityIndicator color={colors.primary} />
       ) : (
         <Text className="text-foreground-subtle" style={{ fontSize: 24, lineHeight: 24 }}>
           +

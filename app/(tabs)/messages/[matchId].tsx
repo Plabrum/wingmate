@@ -22,7 +22,7 @@ const LINE = 'rgba(31,27,22,0.10)';
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function formatTimestamp(isoString: string): string {
-  const date = new Date(isoString);
+  const date = new Date(isoString.replace(' ', 'T'));
   return date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
 }
 
@@ -76,7 +76,7 @@ function ChatHeader({ name, isOnline }: ChatHeaderProps) {
       }}
     >
       <Pressable
-        onPress={() => router.back()}
+        onPress={() => router.dismiss()}
         hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         style={{ padding: 4, marginLeft: -4 }}
       >
@@ -267,10 +267,7 @@ function ChatBody({ matchId, userId, otherUserId, otherName }: ChatBodyProps) {
           style={{
             flex: 1,
             borderRadius: 20,
-            paddingHorizontal: 14,
-            paddingVertical: 4,
             minHeight: 40,
-            justifyContent: 'center',
           }}
         >
           <Controller
@@ -283,6 +280,8 @@ function ChatBody({ matchId, userId, otherUserId, otherName }: ChatBodyProps) {
                   fontSize: 14.5,
                   lineHeight: 20,
                   maxHeight: 120,
+                  paddingHorizontal: 14,
+                  paddingVertical: 10,
                 }}
                 value={value}
                 onChangeText={(text) => {

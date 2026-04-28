@@ -834,6 +834,9 @@
             "items": {
               "$ref": "#/components/schemas/OwnProfilePrompt"
             }
+          },
+          "ripeness": {
+            "type": "integer"
           }
         },
         "required": [
@@ -852,7 +855,8 @@
           "createdAt",
           "updatedAt",
           "photos",
-          "prompts"
+          "prompts",
+          "ripeness"
         ]
       },
       "CreateDatingProfileResponse": {
@@ -2039,6 +2043,16 @@
             },
             "required": false,
             "name": "wingerOnly",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "boolean",
+              "nullable": true,
+              "default": false
+            },
+            "required": false,
+            "name": "likesYouOnly",
             "in": "query"
           }
         ],

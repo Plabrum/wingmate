@@ -1,4 +1,6 @@
-import { Text, View } from '@/lib/tw';
+import { Text as RNText } from 'react-native';
+import { View } from '@/lib/tw';
+import { colors } from '@/constants/theme';
 import { FaceAvatar } from './FaceAvatar';
 
 export type WingStackItem = {
@@ -29,26 +31,33 @@ export function WingStack({ items, size = 28, max = 3, label }: Props) {
         ))}
         {extra > 0 ? (
           <View
-            className="items-center justify-center bg-muted"
             style={{
               marginLeft: -overlap,
               width: size,
               height: size,
               borderRadius: size / 2,
               zIndex: shown.length,
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: colors.muted,
             }}
           >
-            <Text
-              className="font-semibold text-ink-mid"
-              style={{ fontSize: Math.round(size * 0.36) }}
+            <RNText
+              style={{
+                fontSize: Math.round(size * 0.36),
+                fontWeight: '600',
+                color: colors.inkMid,
+              }}
             >
               +{extra}
-            </Text>
+            </RNText>
           </View>
         ) : null}
       </View>
       {label ? (
-        <Text className="ml-2 text-[12.5px] font-medium text-fg-subtle">{label}</Text>
+        <RNText style={{ marginLeft: 8, fontSize: 12.5, fontWeight: '500', color: colors.inkDim }}>
+          {label}
+        </RNText>
       ) : null}
     </View>
   );

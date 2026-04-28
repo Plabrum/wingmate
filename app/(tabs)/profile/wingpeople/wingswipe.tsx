@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Image, KeyboardAvoidingView, Modal, Platform, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import Svg, { Path } from 'react-native-svg';
+import { Ionicons } from '@expo/vector-icons';
 
 import { useWingSwipe } from '@/hooks/use-wing-swipe';
 import { View, Text, Pressable, ScrollView, TextInput, SafeAreaView } from '@/lib/tw';
@@ -22,49 +22,6 @@ const INK2 = '#4A4338';
 const INK3 = '#8B8170';
 const PAPER = '#FBF8F1';
 const LINE = 'rgba(31,27,22,0.10)';
-
-// ── Icons ────────────────────────────────────────────────────────────────────
-
-function BackIcon({ color = INK }: { color?: string }) {
-  return (
-    <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
-      <Path
-        d="M15 18l-6-6 6-6"
-        stroke={color}
-        strokeWidth={2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
-}
-
-function XIcon({ size = 24, color = INK2 }: { size?: number; color?: string }) {
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-      <Path
-        d="M6 6l12 12M18 6L6 18"
-        stroke={color}
-        strokeWidth={2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
-}
-
-function HeartIcon({ size = 24, color = PAPER }: { size?: number; color?: string }) {
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill={color} stroke={color}>
-      <Path
-        d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"
-        strokeWidth={1.5}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
-}
 
 // ── WingCardEditorial ────────────────────────────────────────────────────────
 
@@ -118,7 +75,7 @@ function WingCardEditorial({
           {daterFirstName ? `For ${daterFirstName}` : 'Wing pick'}
         </Text>
         <Text
-          className="text-purple"
+          className="text-primary"
           style={{
             fontSize: 10,
             letterSpacing: 1.5,
@@ -142,7 +99,7 @@ function WingCardEditorial({
           {card.chosenName},
         </Text>
         <Text
-          className="font-serif text-purple"
+          className="font-serif text-primary"
           style={{
             fontSize: 44,
             lineHeight: 44,
@@ -374,7 +331,7 @@ function WingSwipeContent() {
           hitSlop={12}
           style={{ padding: 8, marginLeft: -4 }}
         >
-          <BackIcon />
+          <Ionicons name="chevron-back" size={22} color={INK} />
         </Pressable>
         <FaceAvatar name={daterName || '?'} size={32} photoUri={daterContext?.avatarUrl ?? null} />
         <View style={{ flex: 1 }}>
@@ -427,11 +384,11 @@ function WingSwipeContent() {
               cardButtonShadow,
             ]}
           >
-            <XIcon size={24} color={INK2} />
+            <Ionicons name="close" size={24} color={INK2} />
           </Pressable>
           <Pressable
             onPress={() => setNoteVisible(true)}
-            className="bg-purple"
+            className="bg-primary"
             style={[
               {
                 width: 60,
@@ -443,7 +400,7 @@ function WingSwipeContent() {
               cardButtonShadow,
             ]}
           >
-            <HeartIcon size={24} color={PAPER} />
+            <Ionicons name="heart" size={24} color={PAPER} />
           </Pressable>
         </View>
       )}

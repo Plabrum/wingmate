@@ -1,4 +1,4 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Platform } from 'react-native';
 import { ScrollView, Text, Pressable, View } from '@/lib/tw';
 import { useRouter } from 'expo-router';
 import { toast } from 'sonner-native';
@@ -37,10 +37,11 @@ function FieldLabel({ children }: { children: string }) {
     <Text
       className="text-ink-dim"
       style={{
-        fontSize: 10.5,
-        letterSpacing: 1.4,
+        fontSize: 10,
+        letterSpacing: 1.2,
         textTransform: 'uppercase',
-        fontWeight: '600',
+        fontWeight: '500',
+        fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
         marginBottom: 6,
       }}
     >
@@ -151,7 +152,7 @@ export function AboutMeTab({ form, data }: Props) {
 
       {datingStatus !== 'open' ? (
         <View
-          className="bg-purple-pale"
+          className="bg-primary-soft"
           style={{
             flexDirection: 'row',
             alignItems: 'flex-start',
@@ -160,7 +161,7 @@ export function AboutMeTab({ form, data }: Props) {
             padding: 12,
           }}
         >
-          <Text className="text-purple" style={{ flex: 1, fontSize: 13, lineHeight: 18 }}>
+          <Text className="text-primary" style={{ flex: 1, fontSize: 13, lineHeight: 18 }}>
             Your profile is hidden from Discover while you{"'"}re{' '}
             {datingStatus === 'break' ? 'on a break' : 'just winging'}.
           </Text>

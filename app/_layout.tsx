@@ -3,7 +3,7 @@ import 'react-native-url-polyfill/auto';
 import 'react-native-reanimated';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { Stack, Redirect, router } from 'expo-router';
+import { Stack, Redirect, router, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Toaster } from 'sonner-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -40,9 +40,13 @@ export const unstable_settings = {
 function AuthenticatedNavigator({ userId }: { userId: string }) {
   const { data: profile } = useGetApiProfilesMeSuspense();
   const { data: datingProfile } = useGetApiDatingProfilesMeSuspense();
+  const segments = useSegments();
 
   const needsOnboarding = !profile?.chosenName || (!datingProfile && profile.role !== 'winger');
   const isWinger = profile?.role === 'winger' || datingProfile?.datingStatus === 'winging';
+
+  const expectedShell = needsOnboarding ? '(onboarding)' : isWinger ? '(winger-tabs)' : '(tabs)';
+  const inCorrectShell = segments[0] === expectedShell;
 
   const dest = needsOnboarding
     ? '/(onboarding)'
@@ -65,7 +69,13 @@ function AuthenticatedNavigator({ userId }: { userId: string }) {
     registerPushToken(userId);
   }, [userId]);
 
-  return <Redirect href={dest as any} />;
+  if (inCorrectShell) return null;
+  return (
+    <>
+      <Splash />
+      <Redirect href={dest as any} />
+    </>
+  );
 }
 
 function RootNavigator() {

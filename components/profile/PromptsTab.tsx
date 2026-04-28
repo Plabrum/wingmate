@@ -8,7 +8,7 @@ import {
 } from 'react-native';
 import { toast } from 'sonner-native';
 import type { UseFormReturn } from 'react-hook-form';
-import Svg, { Path } from 'react-native-svg';
+import { Ionicons } from '@expo/vector-icons';
 
 import type { OwnDatingProfileResponse, OwnPromptResponse } from '@/lib/api/generated/model';
 import {
@@ -31,28 +31,6 @@ const PEEK = 20;
 const SNAP_INTERVAL = SLIDE_WIDTH - PEEK + 8;
 
 type ApprovedResponse = OwnPromptResponse;
-
-function PlusIcon({ size = 18, color = LEAF }: { size?: number; color?: string }) {
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-      <Path d="M12 5v14M5 12h14" stroke={color} strokeWidth={2} strokeLinecap="round" />
-    </Svg>
-  );
-}
-
-function ChevronIcon({ up, color = LEAF }: { up: boolean; color?: string }) {
-  return (
-    <Svg width={12} height={12} viewBox="0 0 24 24" fill="none">
-      <Path
-        d={up ? 'M6 15l6-6 6 6' : 'M6 9l6 6 6-6'}
-        stroke={color}
-        strokeWidth={2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
-}
 
 function FieldLabel({ children }: { children: string }) {
   return (
@@ -295,12 +273,16 @@ export function PromptsTab({ form, onRefresh }: Props) {
                   }}
                 >
                   <Text
-                    className="text-purple"
+                    className="text-primary"
                     style={{ flex: 1, fontSize: 13, fontWeight: '600' }}
                   >
                     {pendingR.length} wingperson comment{pendingR.length > 1 ? 's' : ''} waiting
                   </Text>
-                  <ChevronIcon up={isExpanded} />
+                  <Ionicons
+                    name={isExpanded ? 'chevron-up' : 'chevron-down'}
+                    size={12}
+                    color={LEAF}
+                  />
                 </Pressable>
                 {isExpanded
                   ? pendingR.map((r) => (
@@ -376,8 +358,8 @@ export function PromptsTab({ form, onRefresh }: Props) {
           marginTop: 4,
         }}
       >
-        <PlusIcon />
-        <Text className="text-purple" style={{ fontSize: 14, fontWeight: '600' }}>
+        <Ionicons name="add" size={18} color={LEAF} />
+        <Text className="text-primary" style={{ fontSize: 14, fontWeight: '600' }}>
           Add prompt
         </Text>
       </Pressable>
