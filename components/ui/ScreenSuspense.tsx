@@ -1,12 +1,12 @@
 import { Suspense, type ReactNode } from 'react';
-import { ActivityIndicator, View, StyleSheet } from 'react-native';
-import { colors } from '@/constants/theme';
+import { View, StyleSheet } from 'react-native';
+import PulseSpinner from '@/components/ui/PulseSpinner';
 import ScreenErrorBoundary from './ScreenErrorBoundary';
 
 function DefaultSkeleton() {
   return (
     <View style={styles.skeleton}>
-      <ActivityIndicator size="large" color={colors.primary} />
+      <PulseSpinner />
     </View>
   );
 }

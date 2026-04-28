@@ -42,7 +42,7 @@ export async function uploadAvatar(userId: string, uri: string): Promise<void> {
   if (uploadError) throw uploadError;
 
   const { data } = supabase.storage.from('avatars').getPublicUrl(path);
-  await patchApiProfilesMe({ avatarUrl: data.publicUrl });
+  await patchApiProfilesMe({ avatarUrl: `${data.publicUrl}?t=${Date.now()}` });
 }
 
 export function getPhotoUrl(storagePath: string | null): string | null {

@@ -1,42 +1,8 @@
-import { useEffect } from 'react';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withRepeat,
-  withSequence,
-  withTiming,
-  withDelay,
-} from 'react-native-reanimated';
 import { View, Text } from '@/lib/tw';
 import { PearMark } from '@/components/ui/PearMark';
+import PulseSpinner from '@/components/ui/PulseSpinner';
 
 const LEAF = '#5A8C3A';
-
-function PulseDot({ delay }: { delay: number }) {
-  const opacity = useSharedValue(0.25);
-
-  useEffect(() => {
-    opacity.value = withDelay(
-      delay,
-      withRepeat(
-        withSequence(withTiming(0.95, { duration: 600 }), withTiming(0.25, { duration: 600 })),
-        -1,
-        false
-      )
-    );
-  }, [delay, opacity]);
-
-  const style = useAnimatedStyle(() => ({ opacity: opacity.value }));
-
-  return (
-    <Animated.View
-      style={[
-        { width: 8, height: 8, borderRadius: 5, backgroundColor: LEAF, marginHorizontal: 4 },
-        style,
-      ]}
-    />
-  );
-}
 
 export default function Splash() {
   return (
@@ -83,13 +49,8 @@ export default function Splash() {
         </View>
       </View>
 
-      <View
-        className="absolute left-0 right-0 flex-row items-center justify-center"
-        style={{ bottom: 110 }}
-      >
-        <PulseDot delay={0} />
-        <PulseDot delay={180} />
-        <PulseDot delay={360} />
+      <View className="absolute left-0 right-0" style={{ bottom: 110 }}>
+        <PulseSpinner color={LEAF} />
       </View>
 
       <View className="absolute left-0 right-0" style={{ bottom: 56 }}>

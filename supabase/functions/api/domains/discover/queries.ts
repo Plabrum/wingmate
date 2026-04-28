@@ -26,13 +26,11 @@ export async function fetchDiscoverPool(
 
   const ageExpr = sql<number>`extract(year from age(${profiles.dateOfBirth}))::int`;
 
-  const firstPhotoExpr = sql<string | null>`(
-    select ${profilePhotos.storageUrl}
+  const photosExpr = sql<string[]>`(
+    select coalesce(array_agg(${profilePhotos.storageUrl} order by ${profilePhotos.displayOrder}), '{}')
     from ${profilePhotos}
     where ${profilePhotos.datingProfileId} = ${datingProfiles.id}
       and ${profilePhotos.approvedAt} is not null
-    order by ${profilePhotos.displayOrder}
-    limit 1
   )`;
 
   const wingNoteExpr = sql<string | null>`(
@@ -170,7 +168,7 @@ export async function fetchDiscoverPool(
       bio: datingProfiles.bio,
       dating_status: datingProfiles.datingStatus,
       interests: datingProfiles.interests,
-      first_photo: firstPhotoExpr.as('first_photo'),
+      photos: photosExpr.as('photos'),
       wing_note: wingNoteExpr.as('wing_note'),
       suggested_by: suggestedByExpr.as('suggested_by'),
       suggester_name: suggesterNameExpr.as('suggester_name'),

@@ -24,7 +24,7 @@ export const DiscoverProfile = z.object({
   bio: z.string().nullable(),
   datingStatus: z.enum(datingStatusValues),
   interests: z.array(z.enum(interestValues)),
-  firstPhoto: z.string().nullable(),
+  photos: z.array(z.string()),
   wingNote: z.string().nullable(),
   suggestedBy: z.string().uuid().nullable(),
   suggesterName: z.string().nullable(),

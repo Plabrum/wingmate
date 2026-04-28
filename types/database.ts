@@ -543,6 +543,7 @@ export type Database = {
           user_id: string;
         }[];
       };
+      is_active_wingperson: { Args: { _dater: string }; Returns: boolean };
     };
     Enums: {
       city: 'Boston' | 'New York';

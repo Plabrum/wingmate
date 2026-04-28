@@ -10,7 +10,7 @@ export type DiscoverRow = {
   bio: string | null;
   dating_status: DiscoverProfile['datingStatus'];
   interests: DiscoverProfile['interests'];
-  first_photo: string | null;
+  photos: string[];
   wing_note: string | null;
   suggested_by: string | null;
   suggester_name: string | null;
@@ -27,7 +27,7 @@ export function rowToDiscoverProfile(row: DiscoverRow): DiscoverProfile {
     bio: row.bio,
     datingStatus: row.dating_status,
     interests: row.interests,
-    firstPhoto: row.first_photo,
+    photos: row.photos ?? [],
     wingNote: row.wing_note,
     suggestedBy: row.suggested_by,
     suggesterName: row.suggester_name,
