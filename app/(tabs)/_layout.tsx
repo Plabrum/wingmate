@@ -1,15 +1,18 @@
 import { Tabs, Redirect, router } from 'expo-router';
-import React, { Suspense, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { Platform, StyleSheet } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useQuery } from '@tanstack/react-query';
 
 import { useSession } from '@/context/auth';
 import { PearMark } from '@/components/ui/PearMark';
 import {
-  useGetApiProfilesMeSuspense,
-  useGetApiDatingProfilesMeSuspense,
+  getApiProfilesMe,
+  getGetApiProfilesMeQueryKey,
+  getApiDatingProfilesMe,
+  getGetApiDatingProfilesMeQueryKey,
 } from '@/lib/api/generated/profiles/profiles';
 import { registerPushToken } from '@/lib/push';
 import Splash from '@/components/ui/Splash';
@@ -50,10 +53,17 @@ const sharedScreenOptions = {
 } as const;
 
 function TabsGuard({ userId }: { userId: string }) {
-  const { data: profile } = useGetApiProfilesMeSuspense();
-  const { data: datingProfile } = useGetApiDatingProfilesMeSuspense();
+  const { data: profile, isPending: profilePending } = useQuery({
+    queryKey: getGetApiProfilesMeQueryKey(),
+    queryFn: getApiProfilesMe,
+  });
+  const { data: datingProfile, isPending: datingPending } = useQuery({
+    queryKey: getGetApiDatingProfilesMeQueryKey(),
+    queryFn: getApiDatingProfilesMe,
+  });
 
-  const needsOnboarding = !profile?.chosenName || (!datingProfile && profile.role !== 'winger');
+  const loading = profilePending || datingPending;
+  const needsOnboarding = !profile?.chosenName || (!datingProfile && profile?.role !== 'winger');
   const isWinger = profile?.role === 'winger' || datingProfile?.datingStatus === 'winging';
 
   useEffect(() => {
@@ -69,11 +79,12 @@ function TabsGuard({ userId }: { userId: string }) {
   }, [userId]);
 
   useEffect(() => {
+    if (loading) return;
     if (needsOnboarding) router.replace('/(onboarding)' as any);
     else if (isWinger) router.replace('/(winger-tabs)/friends' as any);
-  }, [needsOnboarding, isWinger]);
+  }, [loading, needsOnboarding, isWinger]);
 
-  if (needsOnboarding || isWinger) return <Splash variant="spinner" />;
+  if (loading || needsOnboarding || isWinger) return <Splash />;
 
   return (
     <Tabs screenOptions={sharedScreenOptions}>
@@ -114,12 +125,8 @@ function TabsGuard({ userId }: { userId: string }) {
 export default function TabLayout() {
   const { session, loading } = useSession();
 
-  if (loading) return <Splash variant="spinner" />;
+  if (loading) return <Splash />;
   if (!session) return <Redirect href="/(auth)/login" />;
 
-  return (
-    <Suspense fallback={<Splash variant="spinner" />}>
-      <TabsGuard userId={session.user.id} />
-    </Suspense>
-  );
+  return <TabsGuard userId={session.user.id} />;
 }

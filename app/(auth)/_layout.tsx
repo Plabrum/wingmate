@@ -5,7 +5,7 @@ import Splash from '@/components/ui/Splash';
 export default function AuthLayout() {
   const { session, loading } = useSession();
 
-  if (loading) return <Splash variant="spinner" />;
+  if (loading) return <Splash />;
   if (session) return <Redirect href="/(tabs)/discover" />;
 
   return (
