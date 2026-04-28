@@ -18,7 +18,7 @@ const BASE_ROW: DiscoverRow = {
   bio: 'Loves coffee',
   dating_status: 'open',
   interests: ['Outdoors', 'Food'],
-  first_photo: 'https://example.com/photo.jpg',
+  photos: ['https://example.com/photo.jpg'],
   wing_note: null,
   suggested_by: null,
   suggester_name: null,
