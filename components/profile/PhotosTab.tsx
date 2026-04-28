@@ -1,4 +1,5 @@
-import { Alert, ActivityIndicator, Dimensions } from 'react-native';
+import { Alert, Dimensions } from 'react-native';
+import PulseSpinner from '@/components/ui/PulseSpinner';
 import { toast } from 'sonner-native';
 import type { UseFormReturn } from 'react-hook-form';
 import Svg, { Path } from 'react-native-svg';
@@ -309,7 +310,7 @@ export function PhotosTab({ form, data, onRefresh }: Props) {
             justifyContent: 'center',
           }}
         >
-          {uploading ? <ActivityIndicator color={LEAF} size="small" /> : <PlusIcon size={20} />}
+          {uploading ? <PulseSpinner color={LEAF} /> : <PlusIcon size={20} />}
         </Pressable>
       </View>
 

@@ -1,12 +1,6 @@
 import { useState } from 'react';
-import {
-  ActivityIndicator,
-  Dimensions,
-  KeyboardAvoidingView,
-  Modal,
-  Platform,
-  StyleSheet,
-} from 'react-native';
+import { Dimensions, KeyboardAvoidingView, Modal, Platform, StyleSheet } from 'react-native';
+import PulseSpinner from '@/components/ui/PulseSpinner';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { toast } from 'sonner-native';
 import { useQueryClient } from '@tanstack/react-query';
@@ -213,7 +207,7 @@ function FriendDetailContent() {
           disabled={uploading}
         >
           {uploading ? (
-            <ActivityIndicator color={colors.primary} size="small" />
+            <PulseSpinner color={colors.primary} />
           ) : (
             <>
               <IconSymbol name="plus" size={18} color={colors.primary} />

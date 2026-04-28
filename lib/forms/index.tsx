@@ -1,5 +1,6 @@
 import * as React from 'react';
-import { ActivityIndicator, StyleSheet, type KeyboardTypeOptions } from 'react-native';
+import { StyleSheet, type KeyboardTypeOptions } from 'react-native';
+import PulseSpinner from '@/components/ui/PulseSpinner';
 import {
   Controller,
   FormProvider,
@@ -417,7 +418,7 @@ export function SubmitButton({
       onPress={submit ?? undefined}
     >
       {isSubmitting ? (
-        <ActivityIndicator color={styles.spinner} />
+        <PulseSpinner color={styles.spinner} />
       ) : (
         <Text className={styles.text}>{label}</Text>
       )}

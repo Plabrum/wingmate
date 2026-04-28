@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { ActivityIndicator, KeyboardAvoidingView, Modal, Platform, StyleSheet } from 'react-native';
+import { KeyboardAvoidingView, Modal, Platform, StyleSheet } from 'react-native';
+import PulseSpinner from '@/components/ui/PulseSpinner';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { toast } from 'sonner-native';
 import { useQueryClient } from '@tanstack/react-query';
@@ -291,7 +292,7 @@ function ContributeContent() {
             }}
           >
             {uploading ? (
-              <ActivityIndicator color={LEAF} size="small" />
+              <PulseSpinner color={LEAF} />
             ) : (
               <>
                 <Ionicons name="camera-outline" size={20} color={LEAF} />

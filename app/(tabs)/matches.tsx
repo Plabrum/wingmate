@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { ActivityIndicator, FlatList, KeyboardAvoidingView, Modal, Platform } from 'react-native';
+import { FlatList, KeyboardAvoidingView, Modal, Platform } from 'react-native';
+import PulseSpinner from '@/components/ui/PulseSpinner';
 import { router } from 'expo-router';
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
@@ -258,7 +259,7 @@ function PromptCard({
               }}
             >
               {state.sending ? (
-                <ActivityIndicator size="small" color={PAPER} />
+                <PulseSpinner color={PAPER} />
               ) : (
                 <Text className="text-surface" style={{ fontWeight: '600', fontSize: 13 }}>
                   Send
@@ -524,7 +525,7 @@ function MatchSheet({ match, visible, onClose }: MatchSheetProps) {
             <ScreenSuspense
               fallback={
                 <View style={{ paddingTop: 24, alignItems: 'center' }}>
-                  <ActivityIndicator color={LEAF} />
+                  <PulseSpinner color={LEAF} />
                 </View>
               }
             >

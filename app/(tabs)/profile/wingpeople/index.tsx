@@ -1,12 +1,6 @@
 import { Suspense, useState } from 'react';
-import {
-  ActivityIndicator,
-  Alert,
-  KeyboardAvoidingView,
-  Modal,
-  Platform,
-  StyleSheet,
-} from 'react-native';
+import { Alert, KeyboardAvoidingView, Modal, Platform, StyleSheet } from 'react-native';
+import Splash from '@/components/ui/Splash';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Controller, useForm } from 'react-hook-form';
@@ -437,13 +431,7 @@ export default function WingpeopleScreen() {
         </Sprout>
       </View>
 
-      <Suspense
-        fallback={
-          <View className="flex-1 items-center justify-center">
-            <ActivityIndicator color={LEAF} />
-          </View>
-        }
-      >
+      <Suspense fallback={<Splash variant="spinner" />}>
         <WingpeopleContent onOpenInvite={onOpenInvite} />
       </Suspense>
 

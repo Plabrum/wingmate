@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { ActivityIndicator, KeyboardAvoidingView, Platform, Share } from 'react-native';
+import { KeyboardAvoidingView, Platform, Share } from 'react-native';
+import PulseSpinner from '@/components/ui/PulseSpinner';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { z } from 'zod';
@@ -482,7 +483,7 @@ function EmptySlot({ onPress, disabled }: { onPress: () => void; disabled: boole
       )}
     >
       {disabled ? (
-        <ActivityIndicator color={colors.primary} />
+        <PulseSpinner color={colors.primary} />
       ) : (
         <Text className="text-foreground-subtle" style={{ fontSize: 24, lineHeight: 24 }}>
           +
