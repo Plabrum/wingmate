@@ -1,13 +1,6 @@
-import { Stack, Redirect } from 'expo-router';
-import { useSession } from '@/context/auth';
-import Splash from '@/components/ui/Splash';
+import { Stack } from 'expo-router';
 
 export default function AuthLayout() {
-  const { session, loading } = useSession();
-
-  if (loading) return <Splash />;
-  if (session) return <Redirect href="/(tabs)/discover" />;
-
   return (
     <Stack>
       <Stack.Screen name="login" options={{ headerShown: false }} />

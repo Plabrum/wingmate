@@ -16,6 +16,7 @@ export async function pearFetch<T>(url: string, options: RequestInit = {}): Prom
     ...options,
     headers: {
       'Content-Type': 'application/json',
+      'x-region': 'us-west-2',
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...(options.headers ?? {}),
     },

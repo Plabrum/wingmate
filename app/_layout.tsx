@@ -3,10 +3,12 @@ import 'react-native-url-polyfill/auto';
 import 'react-native-reanimated';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { Stack } from 'expo-router';
+import { Stack, router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Toaster } from 'sonner-native';
 import { useQuery, QueryClientProvider } from '@tanstack/react-query';
+import { useEffect } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { useFonts } from 'expo-font';
 import { DMSerifDisplay_400Regular } from '@expo-google-fonts/dm-serif-display';
@@ -26,6 +28,7 @@ import {
   getApiDatingProfilesMe,
   getGetApiDatingProfilesMeQueryKey,
 } from '@/lib/api/generated/profiles/profiles';
+import { registerPushToken } from '@/lib/push';
 import Splash from '@/components/ui/Splash';
 
 export const unstable_settings = {
@@ -34,18 +37,55 @@ export const unstable_settings = {
 
 function AppShell() {
   const { session, loading: authLoading } = useSession();
-  const { isPending: profilePending } = useQuery({
+
+  const { data: profile, isPending: profilePending } = useQuery({
     queryKey: getGetApiProfilesMeQueryKey(),
     queryFn: getApiProfilesMe,
     enabled: !!session,
   });
-  const { isPending: datingPending } = useQuery({
+  const { data: datingProfile, isPending: datingPending } = useQuery({
     queryKey: getGetApiDatingProfilesMeQueryKey(),
     queryFn: getApiDatingProfilesMe,
     enabled: !!session,
   });
 
-  if (authLoading || (session && (profilePending || datingPending))) return <Splash />;
+  const loading = authLoading || (!!session && (profilePending || datingPending));
+  const needsOnboarding =
+    !loading &&
+    !!session &&
+    (!profile?.chosenName || (!datingProfile && profile?.role !== 'winger'));
+  const isWinger =
+    !loading &&
+    !!session &&
+    (profile?.role === 'winger' || datingProfile?.datingStatus === 'winging');
+
+  useEffect(() => {
+    if (session?.user.id) registerPushToken(session.user.id);
+  }, [session?.user.id]);
+
+  useEffect(() => {
+    if (!session?.user.id) return;
+    AsyncStorage.getItem('pending_invite').then((val) => {
+      if (!val) return;
+      AsyncStorage.removeItem('pending_invite');
+      router.replace('/(tabs)/profile/wingpeople/' as any);
+    });
+  }, [session?.user.id]);
+
+  useEffect(() => {
+    if (loading) return;
+    if (!session) {
+      router.replace('/(auth)/login' as any);
+    } else if (needsOnboarding) {
+      router.replace('/(onboarding)' as any);
+    } else if (isWinger) {
+      router.replace('/(winger-tabs)/friends' as any);
+    } else {
+      router.replace('/(tabs)/discover' as any);
+    }
+  }, [loading, session?.user.id, needsOnboarding, isWinger]);
+
+  if (loading) return <Splash />;
 
   return (
     <Stack screenOptions={{ animation: 'none' }}>

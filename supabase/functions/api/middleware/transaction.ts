@@ -32,9 +32,8 @@ export const transactionMiddleware = createMiddleware<{
   }
   const claims = c.get('claims');
   await db.transaction(async (tx) => {
-    await tx.execute(sql`select set_config('role', 'authenticated', true)`);
     await tx.execute(
-      sql`select set_config('request.jwt.claims', ${JSON.stringify(claims)}, true)`,
+      sql`select set_config('role', 'authenticated', true), set_config('request.jwt.claims', ${JSON.stringify(claims)}, true)`,
     );
     c.set('db', tx);
     await next();
