@@ -31,11 +31,18 @@ export const transactionMiddleware = createMiddleware<{
     return next();
   }
   const claims = c.get('claims');
+  const t0 = performance.now();
   await db.transaction(async (tx) => {
+    const t1 = performance.now();
     await tx.execute(
       sql`select set_config('role', 'authenticated', true), set_config('request.jwt.claims', ${JSON.stringify(claims)}, true)`,
     );
+    const t2 = performance.now();
     c.set('db', tx);
     await next();
+    const t3 = performance.now();
+    console.log(
+      `[timing] ${c.req.method} ${c.req.path} | conn=${Math.round(t1 - t0)}ms set_config=${Math.round(t2 - t1)}ms handler=${Math.round(t3 - t2)}ms total=${Math.round(t3 - t0)}ms`,
+    );
   });
 });
