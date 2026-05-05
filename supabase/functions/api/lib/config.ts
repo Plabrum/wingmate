@@ -7,7 +7,7 @@ function required(key: string): string {
 // SUPABASE_REGION is auto-injected on hosted Supabase; absent in the local
 // dev stack. It's the sole signal for `isProd` — no operator-set flag.
 export const config = {
-  databaseUrl: required('SUPABASE_DB_URL'),
+  databaseUrl: Deno.env.get('POOLER_URL') ?? required('SUPABASE_DB_URL'),
   supabaseUrl: required('SUPABASE_URL'),
   supabaseAnonKey: required('SUPABASE_ANON_KEY'),
   isProd: !!Deno.env.get('SUPABASE_REGION'),
