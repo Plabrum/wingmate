@@ -20,7 +20,16 @@ import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 
-import { View, Text, ScrollView, SafeAreaView, Pressable } from '@/lib/tw';
+import {
+  Modal,
+  ModalView,
+  View,
+  Text,
+  ScrollView,
+  SafeAreaView,
+  Pressable,
+  TextInput,
+} from '@/lib/tw';
 import { useAuth } from '@/context/auth';
 import { useDiscover, type PoolFetcher, type LikeResult } from '@/hooks/use-discover';
 import type { Enums } from '@/types/database';
@@ -32,6 +41,7 @@ import {
   patchApiDatingProfilesMe,
   getGetApiDatingProfilesMeQueryKey,
 } from '@/lib/api/generated/profiles/profiles';
+import { postApiReports } from '@/lib/api/generated/reports/reports';
 import { LargeHeader } from '@/components/ui/LargeHeader';
 import { Pill } from '@/components/ui/Pill';
 import { Sprout } from '@/components/ui/Sprout';
@@ -316,17 +326,24 @@ function LikeStamp({ swipeX }: { swipeX: SharedValue<number> }) {
 
 // ── DiscoverCard ──────────────────────────────────────────────────────────────
 
+type ReportStep = 'confirm' | 'reason';
+
 function DiscoverCard({
   card,
   onLike,
   onPass,
+  onReport,
 }: {
   card: DiscoverProfile;
   onLike: () => void;
   onPass: () => void;
+  onReport: (reason: string) => Promise<void>;
 }) {
   const swipeX = useSharedValue(0);
   const [photoIndex, setPhotoIndex] = useState(0);
+  const [reportStep, setReportStep] = useState<ReportStep | null>(null);
+  const [reportReason, setReportReason] = useState('');
+  const [reporting, setReporting] = useState(false);
   const photos = card.photos;
 
   const finishSwipe = useCallback(
@@ -361,200 +378,367 @@ function DiscoverCard({
     transform: [{ translateX: swipeX.value }, { rotate: `${swipeX.value * 0.04}deg` }],
   }));
 
+  async function submitReport() {
+    if (!reportReason.trim() || reporting) return;
+    setReporting(true);
+    try {
+      await onReport(reportReason.trim());
+      setReportStep(null);
+      setReportReason('');
+    } catch {
+      toast.error("Couldn't send report. Try again.");
+    } finally {
+      setReporting(false);
+    }
+  }
+
   return (
-    <GestureDetector gesture={pan}>
-      <Animated.View
-        style={[
-          {
-            flex: 1,
-            borderRadius: 22,
-            overflow: 'hidden',
-            backgroundColor: PAPER,
-            borderWidth: 1,
-            borderColor: LINE,
-            ...Platform.select({
-              ios: {
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 12 },
-                shadowOpacity: 0.1,
-                shadowRadius: 24,
-              },
-              android: { elevation: 6 },
-            }),
-          },
-          cardStyle,
-        ]}
+    <>
+      <Modal
+        visible={reportStep != null}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setReportStep(null)}
       >
-        {/* Photo region */}
-        <View style={{ flex: 6, position: 'relative' }}>
-          {photos.length > 0 ? (
-            <Image
-              source={{ uri: photos[photoIndex] }}
-              style={StyleSheet.absoluteFillObject}
-              contentFit="cover"
-              transition={200}
-            />
-          ) : (
-            <View style={[StyleSheet.absoluteFillObject, { backgroundColor: '#ebebf0' }]} />
-          )}
-
-          {/* Tap zones for photo navigation — sit above photo, below stamps */}
+        <ModalView
+          backgroundColor="rgba(0,0,0,0.5)"
+          style={{ justifyContent: 'center', alignItems: 'center', padding: 24 }}
+        >
           <View
-            style={[StyleSheet.absoluteFillObject, { flexDirection: 'row' }]}
-            pointerEvents="box-none"
+            style={{
+              backgroundColor: PAPER,
+              borderRadius: 22,
+              padding: 24,
+              width: '100%',
+              maxWidth: 360,
+              gap: 16,
+            }}
           >
-            <Pressable
-              style={{ flex: 1 }}
-              onPress={() => setPhotoIndex((i) => Math.max(0, i - 1))}
-            />
-            <Pressable
-              style={{ flex: 1 }}
-              onPress={() => setPhotoIndex((i) => Math.min(photos.length - 1, i + 1))}
-            />
-          </View>
-
-          <PassStamp swipeX={swipeX} />
-          <LikeStamp swipeX={swipeX} />
-
-          {/* Photo indicator bars */}
-          {photos.length > 1 && (
-            <View
-              style={{
-                position: 'absolute',
-                top: 10,
-                left: 16,
-                right: 16,
-                flexDirection: 'row',
-                gap: 4,
-              }}
-              pointerEvents="none"
-            >
-              {photos.map((_, i) => (
-                <View
-                  key={i}
+            {reportStep === 'confirm' ? (
+              <>
+                <View style={{ gap: 6 }}>
+                  <Text style={{ fontFamily: 'DMSerifDisplay', fontSize: 22, color: INK }}>
+                    Report profile?
+                  </Text>
+                  <Text style={{ fontSize: 14, color: INK_MUTED, lineHeight: 20 }}>
+                    Something feel off? Let us know and we&apos;ll look into it.
+                  </Text>
+                </View>
+                <View style={{ flexDirection: 'row', gap: 10 }}>
+                  <Pressable
+                    onPress={() => setReportStep(null)}
+                    style={{
+                      flex: 1,
+                      paddingVertical: 13,
+                      borderRadius: 14,
+                      borderWidth: 1,
+                      borderColor: LINE,
+                      alignItems: 'center',
+                    }}
+                  >
+                    <Text style={{ fontSize: 15, fontWeight: '600', color: INK_MUTED }}>
+                      No, cancel
+                    </Text>
+                  </Pressable>
+                  <Pressable
+                    onPress={() => setReportStep('reason')}
+                    style={{
+                      flex: 1,
+                      paddingVertical: 13,
+                      borderRadius: 14,
+                      backgroundColor: PASS_RED,
+                      alignItems: 'center',
+                    }}
+                  >
+                    <Text style={{ fontSize: 15, fontWeight: '600', color: PAPER }}>
+                      Yes, report
+                    </Text>
+                  </Pressable>
+                </View>
+              </>
+            ) : (
+              <>
+                <View style={{ gap: 6 }}>
+                  <Text style={{ fontFamily: 'DMSerifDisplay', fontSize: 22, color: INK }}>
+                    What&apos;s the issue?
+                  </Text>
+                  <Text style={{ fontSize: 14, color: INK_MUTED, lineHeight: 20 }}>
+                    Describe the problem so we can review it.
+                  </Text>
+                </View>
+                <TextInput
+                  value={reportReason}
+                  onChangeText={setReportReason}
+                  placeholder="Describe the issue…"
+                  placeholderTextColor={INK_SUBTLE}
+                  multiline
+                  maxLength={500}
                   style={{
-                    flex: 1,
-                    height: 3,
-                    borderRadius: 2,
-                    backgroundColor:
-                      i === photoIndex ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.4)',
+                    backgroundColor: 'white',
+                    borderWidth: 1,
+                    borderColor: LINE,
+                    borderRadius: 14,
+                    padding: 14,
+                    fontSize: 14,
+                    color: INK,
+                    minHeight: 100,
+                    textAlignVertical: 'top',
                   }}
                 />
-              ))}
-            </View>
-          )}
-
-          {/* Bottom gradient scrim */}
-          <LinearGradient
-            pointerEvents="none"
-            colors={['transparent', 'rgba(0,0,0,0.7)']}
-            style={{
-              position: 'absolute',
-              left: 0,
-              right: 0,
-              bottom: 0,
-              height: '55%',
-            }}
-          />
-
-          <View style={{ position: 'absolute', left: 16, right: 16, bottom: 14 }}>
-            <View className="flex-row items-baseline gap-2">
-              <Text
-                className="text-surface"
-                style={{
-                  fontFamily: 'DMSerifDisplay',
-                  fontSize: 30,
-                  letterSpacing: -0.5,
-                }}
-              >
-                {card.chosenName}
-              </Text>
-              <Text style={{ fontSize: 22, color: 'rgba(255,255,255,0.9)' }}>{card.age}</Text>
-            </View>
-            {card.city != null && (
-              <Text style={{ fontSize: 13, color: 'rgba(255,255,255,0.85)', marginTop: 4 }}>
-                {card.city}
-              </Text>
+                <View style={{ flexDirection: 'row', gap: 10 }}>
+                  <Pressable
+                    onPress={() => {
+                      setReportStep(null);
+                      setReportReason('');
+                    }}
+                    style={{
+                      flex: 1,
+                      paddingVertical: 13,
+                      borderRadius: 14,
+                      borderWidth: 1,
+                      borderColor: LINE,
+                      alignItems: 'center',
+                    }}
+                  >
+                    <Text style={{ fontSize: 15, fontWeight: '600', color: INK_MUTED }}>
+                      Cancel
+                    </Text>
+                  </Pressable>
+                  <Pressable
+                    onPress={submitReport}
+                    disabled={!reportReason.trim() || reporting}
+                    style={{
+                      flex: 1,
+                      paddingVertical: 13,
+                      borderRadius: 14,
+                      backgroundColor: PASS_RED,
+                      alignItems: 'center',
+                      opacity: !reportReason.trim() || reporting ? 0.4 : 1,
+                    }}
+                  >
+                    <Text style={{ fontSize: 15, fontWeight: '600', color: PAPER }}>
+                      {reporting ? 'Sending…' : 'Send'}
+                    </Text>
+                  </Pressable>
+                </View>
+              </>
             )}
           </View>
-        </View>
+        </ModalView>
+      </Modal>
+      <GestureDetector gesture={pan}>
+        <Animated.View
+          style={[
+            {
+              flex: 1,
+              borderRadius: 22,
+              overflow: 'hidden',
+              backgroundColor: PAPER,
+              borderWidth: 1,
+              borderColor: LINE,
+              ...Platform.select({
+                ios: {
+                  shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 12 },
+                  shadowOpacity: 0.1,
+                  shadowRadius: 24,
+                },
+                android: { elevation: 6 },
+              }),
+            },
+            cardStyle,
+          ]}
+        >
+          {/* Photo region */}
+          <View style={{ flex: 6, position: 'relative' }}>
+            {photos.length > 0 ? (
+              <Image
+                source={{ uri: photos[photoIndex] }}
+                style={StyleSheet.absoluteFillObject}
+                contentFit="cover"
+                transition={200}
+              />
+            ) : (
+              <View style={[StyleSheet.absoluteFillObject, { backgroundColor: '#ebebf0' }]} />
+            )}
 
-        {/* Info region */}
-        <View style={{ flex: 4 }}>
-          <ScrollView
-            className="flex-1"
-            contentContainerStyle={{ padding: 16, paddingBottom: 84, gap: 10 }}
-            showsVerticalScrollIndicator={false}
-          >
-            {card.wingNote != null && card.suggesterName != null && (
-              <WingCredential suggesterName={card.suggesterName} note={card.wingNote} />
-            )}
-            {card.bio != null && (
-              <Text className="text-ink-mid" style={{ fontSize: 14, lineHeight: 20 }}>
-                {card.bio}
-              </Text>
-            )}
-            {card.interests.length > 0 && (
-              <View className="flex-row flex-wrap gap-1.5">
-                {card.interests.map((interest) => (
-                  <Pill key={interest} label={interest} tone="cream" size="sm" />
+            {/* Tap zones for photo navigation — sit above photo, below stamps */}
+            <View
+              style={[StyleSheet.absoluteFillObject, { flexDirection: 'row' }]}
+              pointerEvents="box-none"
+            >
+              <Pressable
+                style={{ flex: 1 }}
+                onPress={() => setPhotoIndex((i) => Math.max(0, i - 1))}
+              />
+              <Pressable
+                style={{ flex: 1 }}
+                onPress={() => setPhotoIndex((i) => Math.min(photos.length - 1, i + 1))}
+              />
+            </View>
+
+            <PassStamp swipeX={swipeX} />
+            <LikeStamp swipeX={swipeX} />
+
+            {/* Photo indicator bars */}
+            {photos.length > 1 && (
+              <View
+                style={{
+                  position: 'absolute',
+                  top: 10,
+                  left: 16,
+                  right: 16,
+                  flexDirection: 'row',
+                  gap: 4,
+                }}
+                pointerEvents="none"
+              >
+                {photos.map((_, i) => (
+                  <View
+                    key={i}
+                    style={{
+                      flex: 1,
+                      height: 3,
+                      borderRadius: 2,
+                      backgroundColor:
+                        i === photoIndex ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.4)',
+                    }}
+                  />
                 ))}
               </View>
             )}
-          </ScrollView>
 
-          {/* Action buttons */}
-          <View
-            pointerEvents="box-none"
-            style={{
-              position: 'absolute',
-              bottom: 14,
-              left: 0,
-              right: 0,
-              flexDirection: 'row',
-              justifyContent: 'center',
-              alignItems: 'center',
-              gap: 18,
-            }}
-          >
+            {/* Report icon */}
             <Pressable
-              onPress={onPass}
-              style={[
-                {
-                  width: 60,
-                  height: 60,
-                  borderRadius: 30,
-                  backgroundColor: PAPER,
-                  borderWidth: 1,
-                  borderColor: LINE,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                },
-                cardButtonShadow,
-              ]}
+              onPress={() => setReportStep('confirm')}
+              hitSlop={8}
+              style={{
+                position: 'absolute',
+                top: 14,
+                right: 14,
+                width: 30,
+                height: 30,
+                borderRadius: 15,
+                backgroundColor: 'rgba(0,0,0,0.35)',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
             >
-              <Ionicons name="close" size={24} color={INK_MUTED} />
+              <Ionicons name="alert-circle-outline" size={18} color="rgba(255,255,255,0.9)" />
             </Pressable>
-            <Pressable
-              onPress={onLike}
-              style={[
-                {
-                  width: 60,
-                  height: 60,
-                  borderRadius: 30,
-                  backgroundColor: LEAF,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                },
-                cardButtonShadow,
-              ]}
-            >
-              <Ionicons name="heart" size={24} color={PAPER} />
-            </Pressable>
+
+            {/* Bottom gradient scrim */}
+            <LinearGradient
+              pointerEvents="none"
+              colors={['transparent', 'rgba(0,0,0,0.7)']}
+              style={{
+                position: 'absolute',
+                left: 0,
+                right: 0,
+                bottom: 0,
+                height: '55%',
+              }}
+            />
+
+            <View style={{ position: 'absolute', left: 16, right: 16, bottom: 14 }}>
+              <View className="flex-row items-baseline gap-2">
+                <Text
+                  className="text-surface"
+                  style={{
+                    fontFamily: 'DMSerifDisplay',
+                    fontSize: 30,
+                    letterSpacing: -0.5,
+                  }}
+                >
+                  {card.chosenName}
+                </Text>
+                <Text style={{ fontSize: 22, color: 'rgba(255,255,255,0.9)' }}>{card.age}</Text>
+              </View>
+              {card.city != null && (
+                <Text style={{ fontSize: 13, color: 'rgba(255,255,255,0.85)', marginTop: 4 }}>
+                  {card.city}
+                </Text>
+              )}
+            </View>
           </View>
-        </View>
-      </Animated.View>
-    </GestureDetector>
+
+          {/* Info region */}
+          <View style={{ flex: 4 }}>
+            <ScrollView
+              className="flex-1"
+              contentContainerStyle={{ padding: 16, paddingBottom: 84, gap: 10 }}
+              showsVerticalScrollIndicator={false}
+            >
+              {card.wingNote != null && card.suggesterName != null && (
+                <WingCredential suggesterName={card.suggesterName} note={card.wingNote} />
+              )}
+              {card.bio != null && (
+                <Text className="text-ink-mid" style={{ fontSize: 14, lineHeight: 20 }}>
+                  {card.bio}
+                </Text>
+              )}
+              {card.interests.length > 0 && (
+                <View className="flex-row flex-wrap gap-1.5">
+                  {card.interests.map((interest) => (
+                    <Pill key={interest} label={interest} tone="cream" size="sm" />
+                  ))}
+                </View>
+              )}
+            </ScrollView>
+
+            {/* Action buttons */}
+            <View
+              pointerEvents="box-none"
+              style={{
+                position: 'absolute',
+                bottom: 14,
+                left: 0,
+                right: 0,
+                flexDirection: 'row',
+                justifyContent: 'center',
+                alignItems: 'center',
+                gap: 18,
+              }}
+            >
+              <Pressable
+                onPress={onPass}
+                style={[
+                  {
+                    width: 60,
+                    height: 60,
+                    borderRadius: 30,
+                    backgroundColor: PAPER,
+                    borderWidth: 1,
+                    borderColor: LINE,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  },
+                  cardButtonShadow,
+                ]}
+              >
+                <Ionicons name="close" size={24} color={INK_MUTED} />
+              </Pressable>
+              <Pressable
+                onPress={onLike}
+                style={[
+                  {
+                    width: 60,
+                    height: 60,
+                    borderRadius: 30,
+                    backgroundColor: LEAF,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  },
+                  cardButtonShadow,
+                ]}
+              >
+                <Ionicons name="heart" size={24} color={PAPER} />
+              </Pressable>
+            </View>
+          </View>
+        </Animated.View>
+      </GestureDetector>
+    </>
   );
 }
 
@@ -893,6 +1077,15 @@ function PoolView({ userId, initialPool, fetchPool, emptyState, onDecrementLikes
     invalidatePools(decidedCard);
   }
 
+  async function handleReport(reason: string) {
+    if (!card) return;
+    const reportedCard = card;
+    onDecrementLikes?.(reportedCard.userId);
+    await postApiReports({ recipientId: reportedCard.userId, reason });
+    await pass();
+    invalidatePools(reportedCard);
+  }
+
   if (card == null) {
     return <View className="flex-1 px-3.5 pb-2">{emptyState}</View>;
   }
@@ -900,7 +1093,7 @@ function PoolView({ userId, initialPool, fetchPool, emptyState, onDecrementLikes
   return (
     <>
       <View className="flex-1 px-3.5 pb-2">
-        <DiscoverCard card={card} onLike={handleLike} onPass={handlePass} />
+        <DiscoverCard card={card} onLike={handleLike} onPass={handlePass} onReport={handleReport} />
       </View>
       {matchCard && (
         <MatchOverlay

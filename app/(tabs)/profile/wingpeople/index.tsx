@@ -1,11 +1,12 @@
 import { Suspense, useState } from 'react';
-import { Alert, KeyboardAvoidingView, Modal, Platform, StyleSheet } from 'react-native';
+import { Alert, KeyboardAvoidingView, Modal, Platform } from 'react-native';
 import Splash from '@/components/ui/Splash';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Controller, useForm } from 'react-hook-form';
 import { toast } from 'sonner-native';
 import * as SMS from 'expo-sms';
+import * as Contacts from 'expo-contacts';
 import { Ionicons } from '@expo/vector-icons';
 
 import { useQueryClient } from '@tanstack/react-query';
@@ -22,12 +23,12 @@ import {
   usePostApiWingpeopleInvite,
 } from '@/lib/api/generated/contacts/contacts';
 import { formatPhoneInput, toE164 } from '@/lib/phoneUtils';
+import { ContactsPicker, type ContactEntry } from '@/components/wingpeople/ContactsPicker';
 
 const INK = '#1F1B16';
 const INK3 = '#8B8170';
 const PAPER = '#FBF8F1';
 const LINE = 'rgba(31,27,22,0.10)';
-const LEAF = '#5A8C3A';
 const LEAF_SOFT = 'rgba(90,140,58,0.12)';
 
 // ── SectionLabel ──────────────────────────────────────────────────────────────
@@ -355,6 +356,8 @@ export default function WingpeopleScreen() {
   const { data: profile } = useGetApiProfilesMeSuspense();
 
   const [inviteVisible, setInviteVisible] = useState(false);
+  const [contactsVisible, setContactsVisible] = useState(false);
+  const [allContacts, setAllContacts] = useState<ContactEntry[]>([]);
 
   const inviteMutation = usePostApiWingpeopleInvite();
 
@@ -374,17 +377,14 @@ export default function WingpeopleScreen() {
     reset();
   };
 
-  const onSendInvite = handleSubmit(async ({ phone }) => {
-    const e164 = toE164(phone)!;
-
+  const sendInviteToPhone = async (e164: string) => {
     const result = await inviteMutation
       .mutateAsync({ data: { phoneNumber: e164 } })
       .catch(() => null);
     if (result == null) {
       toast.error("Couldn't send invite. Try again.");
-      return;
+      return false;
     }
-
     if (result.wingerId == null) {
       const isAvailable = await SMS.isAvailableAsync();
       if (isAvailable) {
@@ -398,10 +398,42 @@ export default function WingpeopleScreen() {
         toast.error('SMS is not available on this device.');
       }
     }
-
     queryClient.invalidateQueries({ queryKey: getGetApiWingpeopleQueryKey() });
-    closeInviteSheet();
+    return true;
+  };
+
+  const onSendInvite = handleSubmit(async ({ phone }) => {
+    const e164 = toE164(phone)!;
+    const ok = await sendInviteToPhone(e164);
+    if (ok) closeInviteSheet();
   });
+
+  const openContactsPicker = async () => {
+    const { status } = await Contacts.requestPermissionsAsync();
+    if (status !== 'granted') {
+      toast.error('Contacts permission is required to invite friends.');
+      return;
+    }
+    const { data } = await Contacts.getContactsAsync({
+      fields: [Contacts.Fields.PhoneNumbers, Contacts.Fields.Name],
+    });
+    const entries: ContactEntry[] = [];
+    for (const c of data) {
+      const name = c.name ?? '';
+      if (!name) continue;
+      for (const ph of c.phoneNumbers ?? []) {
+        const raw = ph.number ?? '';
+        const e164 = toE164(raw);
+        if (e164) {
+          entries.push({ id: `${c.id}-${raw}`, name, phone: e164 });
+          break;
+        }
+      }
+    }
+    entries.sort((a, b) => a.name.localeCompare(b.name));
+    setAllContacts(entries);
+    setContactsVisible(true);
+  };
 
   return (
     <SafeAreaView className="flex-1 bg-canvas" edges={['top']}>
@@ -449,7 +481,7 @@ export default function WingpeopleScreen() {
             style={{ position: 'absolute', bottom: 0, left: 0, right: 0 }}
           >
             <View
-              className="bg-canvas"
+              className="bg-background"
               style={{
                 borderTopLeftRadius: 24,
                 borderTopRightRadius: 24,
@@ -470,14 +502,15 @@ export default function WingpeopleScreen() {
               />
               <Text
                 className="font-serif text-ink"
-                style={{ fontSize: 24, letterSpacing: -0.4, lineHeight: 28 }}
+                style={{
+                  fontSize: 24,
+                  letterSpacing: -0.4,
+                  lineHeight: 28,
+                }}
               >
                 Invite a wingperson
               </Text>
-              <Text
-                className="text-ink-dim"
-                style={{ fontSize: 13, marginTop: 6, marginBottom: 14 }}
-              >
+              <Text style={{ fontSize: 13, marginTop: 6, marginBottom: 14, color: INK3 }}>
                 Enter their phone number — we{"'"}ll text them an invite.
               </Text>
 
@@ -526,13 +559,30 @@ export default function WingpeopleScreen() {
                   Send invite
                 </Sprout>
               </View>
+
+              <View style={{ marginTop: 10 }}>
+                <Sprout block variant="secondary" onPress={openContactsPicker}>
+                  Invite from contacts
+                </Sprout>
+              </View>
             </View>
           </KeyboardAvoidingView>
         </View>
       </Modal>
+
+      <ContactsPicker
+        visible={contactsVisible}
+        contacts={allContacts}
+        onClose={() => setContactsVisible(false)}
+        onInvite={async (phone) => {
+          const ok = await sendInviteToPhone(phone);
+          if (ok) {
+            setContactsVisible(false);
+            closeInviteSheet();
+          }
+          return ok;
+        }}
+      />
     </SafeAreaView>
   );
 }
-
-// Suppress unused-warning (kept import path of StyleSheet for any future tweaks)
-const _ = StyleSheet;

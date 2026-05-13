@@ -11,6 +11,16 @@ export const userRole = pgEnum("user_role", ['dater', 'winger'])
 export const wingpersonStatus = pgEnum("wingperson_status", ['invited', 'active', 'removed'])
 
 
+export const profileReports = pgTable("profile_reports", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	reporterId: uuid("reporter_id").notNull(),
+	reportedId: uuid("reported_id").notNull(),
+	reason: text().notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	pgPolicy("Users can insert their own reports", { as: "permissive", for: "insert", to: ["public"], withCheck: sql`(auth.uid() = reporter_id)` }),
+]);
+
 export const profiles = pgTable("profiles", {
 	id: uuid().primaryKey().notNull(),
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }),

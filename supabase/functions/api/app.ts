@@ -5,6 +5,7 @@ import { pushMiddleware } from './middleware/push.ts';
 import { transactionMiddleware } from './middleware/transaction.ts';
 import { errorHandler } from './middleware/error.ts';
 import { mountContacts } from './domains/contacts/route.ts';
+import { mountReports } from './domains/reports/route.ts';
 import { mountDecisions } from './domains/decisions/route.ts';
 import { mountDiscover } from './domains/discover/route.ts';
 import { mountLikesYou } from './domains/likes-you/route.ts';
@@ -57,6 +58,7 @@ export function createApp() {
   mountPhotos(app);
   mountPrompts(app);
   mountContacts(app);
+  mountReports(app);
 
   app.onError(errorHandler);
 

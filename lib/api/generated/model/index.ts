@@ -96,6 +96,8 @@ export * from './publicProfile';
 export * from './publicProfilePhoto';
 export * from './publicProfilePrompt';
 export * from './reorderPhotoRequest';
+export * from './reportRequest';
+export * from './reportResponse';
 export * from './sendMessageRequest';
 export * from './sentInvitation';
 export * from './suggestRequest';
