@@ -109,7 +109,7 @@ export default function LoginScreen() {
           style={{
             fontFamily: 'DMSerifDisplay',
             fontSize: 60,
-            lineHeight: 56,
+            lineHeight: 68,
             letterSpacing: -1.8,
           }}
         >
@@ -120,7 +120,7 @@ export default function LoginScreen() {
               fontFamily: 'DMSerifDisplay',
               fontStyle: 'italic',
               fontSize: 60,
-              lineHeight: 56,
+              lineHeight: 68,
               letterSpacing: -1.8,
             }}
           >
