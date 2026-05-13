@@ -17,20 +17,17 @@ import {
 } from '@/lib/api/generated/profiles/profiles';
 import type { OwnDatingProfileResponse } from '@/lib/api/generated/model';
 import { useGetApiWingpeopleSuspense } from '@/lib/api/generated/contacts/contacts';
-import { pickAndResizePhoto, uploadAvatar } from '@/lib/photos';
-
 import { View, Text, Pressable, SafeAreaView } from '@/lib/tw';
 import { TextTabBar } from '@/components/ui/TextTabBar';
 import { WingStack } from '@/components/ui/WingStack';
-import { FaceAvatar } from '@/components/ui/FaceAvatar';
 import { Sprout } from '@/components/ui/Sprout';
+import { AvatarPicker } from '@/components/ui/AvatarPicker';
 import ScreenSuspense from '@/components/ui/ScreenSuspense';
 
 import { AboutMeTab } from '@/components/profile/AboutMeTab';
 import { PhotosTab } from '@/components/profile/PhotosTab';
 import { PromptsTab } from '@/components/profile/PromptsTab';
 
-const INK = '#1F1B16';
 const INK2 = '#4A4338';
 
 function computeAge(dob: string): number | null {
@@ -59,20 +56,6 @@ function SettingsIcon({ size = 16, color = INK2 }: { size?: number; color?: stri
   );
 }
 
-function CameraIcon({ size = 14, color = INK }: { size?: number; color?: string }) {
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-      <Path
-        d="M4 8h3l2-2h6l2 2h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"
-        stroke={color}
-        strokeWidth={1.6}
-        strokeLinejoin="round"
-      />
-      <Path d="M12 17a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z" stroke={color} strokeWidth={1.6} />
-    </Svg>
-  );
-}
-
 // ── Settings cog button (header right) ────────────────────────────────────────
 
 function SettingsButton() {
@@ -88,58 +71,6 @@ function SettingsButton() {
       <Text className="text-ink-mid" style={{ fontSize: 13, fontWeight: '600' }}>
         Settings
       </Text>
-    </Pressable>
-  );
-}
-
-// ── Avatar (tappable to upload) ───────────────────────────────────────────────
-
-type AvatarPickerProps = {
-  name: string | null;
-  avatarUrl: string | null;
-  size: number;
-  userId: string;
-};
-
-function AvatarPicker({ name, avatarUrl, size, userId }: AvatarPickerProps) {
-  const queryClient = useQueryClient();
-  const [uploading, setUploading] = useState(false);
-
-  const handlePick = async () => {
-    const uri = await pickAndResizePhoto({ width: 400, aspect: [1, 1] });
-    if (!uri) return;
-
-    setUploading(true);
-    try {
-      await uploadAvatar(userId, uri);
-      queryClient.invalidateQueries({ queryKey: getGetApiProfilesMeQueryKey() });
-    } catch {
-      toast.error("Couldn't upload photo. Try again.");
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const badge = Math.round(size * 0.34);
-
-  return (
-    <Pressable onPress={handlePick} className="relative" style={{ width: size, height: size }}>
-      <FaceAvatar name={name ?? ''} size={size} photoUri={avatarUrl} />
-      <View
-        className="absolute items-center justify-center bg-surface"
-        style={{
-          right: -2,
-          bottom: -2,
-          width: badge,
-          height: badge,
-          borderRadius: badge / 2,
-          borderWidth: 1.5,
-          borderColor: '#F5F1E8',
-          opacity: uploading ? 0.5 : 1,
-        }}
-      >
-        <CameraIcon size={Math.round(badge * 0.55)} />
-      </View>
     </Pressable>
   );
 }

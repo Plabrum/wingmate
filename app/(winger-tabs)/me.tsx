@@ -2,8 +2,9 @@ import { useRouter } from 'expo-router';
 import { toast } from 'sonner-native';
 import { useQueryClient } from '@tanstack/react-query';
 
+import { useAuth } from '@/context/auth';
 import { View, Text, Pressable, ScrollView, SafeAreaView } from '@/lib/tw';
-import { FaceAvatar } from '@/components/ui/FaceAvatar';
+import { AvatarPicker } from '@/components/ui/AvatarPicker';
 import { Sprout } from '@/components/ui/Sprout';
 import ScreenSuspense from '@/components/ui/ScreenSuspense';
 import {
@@ -19,6 +20,7 @@ import { useGetApiWingpeopleSuspense } from '@/lib/api/generated/contacts/contac
 function MeContent() {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { userId } = useAuth();
 
   const { data: profile } = useGetApiProfilesMeSuspense();
   const { data: datingProfile } = useGetApiDatingProfilesMeSuspense();
@@ -59,10 +61,11 @@ function MeContent() {
       </View>
 
       <View className="px-4 pt-3 pb-4 flex-row items-center" style={{ gap: 14 }}>
-        <FaceAvatar
+        <AvatarPicker
           name={profile?.chosenName ?? ''}
+          avatarUrl={profile?.avatarUrl ?? null}
           size={64}
-          photoUri={profile?.avatarUrl ?? null}
+          userId={userId}
         />
         <View style={{ flex: 1 }}>
           <Text className="font-serif text-ink" style={{ fontSize: 22, letterSpacing: -0.4 }}>
