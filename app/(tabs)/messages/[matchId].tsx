@@ -1,7 +1,9 @@
 import React, { useRef, useState } from 'react';
-import { FlatList, KeyboardAvoidingView, Platform, StyleSheet } from 'react-native';
+import { FlatList, Platform, StyleSheet } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Controller, useForm } from 'react-hook-form';
+import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import Svg, { Path } from 'react-native-svg';
 
 import { useAuth } from '@/context/auth';
@@ -185,6 +187,7 @@ type ChatBodyProps = {
 function ChatBody({ matchId, userId, otherUserId, otherName }: ChatBodyProps) {
   const { messages, send } = useMessages(matchId);
   const { isOtherTyping, notifyTyping } = useTyping(otherUserId, userId);
+  const tabBarHeight = useBottomTabBarHeight();
   const listRef = useRef<FlatList>(null);
 
   const {
@@ -213,7 +216,7 @@ function ChatBody({ matchId, userId, otherUserId, otherName }: ChatBodyProps) {
     <KeyboardAvoidingView
       style={{ flex: 1 }}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={0}
+      keyboardVerticalOffset={tabBarHeight}
     >
       <FlatList
         ref={listRef}
