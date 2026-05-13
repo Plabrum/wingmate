@@ -3,7 +3,7 @@ import 'react-native-url-polyfill/auto';
 import 'react-native-reanimated';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { Stack, router } from 'expo-router';
+import { Stack, router, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Toaster } from 'sonner-native';
 import { useQuery, QueryClientProvider } from '@tanstack/react-query';
@@ -72,20 +72,32 @@ function AppShell() {
     });
   }, [session?.user.id]);
 
+  const segments = useSegments();
+  const currentGroup = segments[0];
+
+  const targetGroup = !session
+    ? '(auth)'
+    : needsOnboarding
+      ? '(onboarding)'
+      : isWinger
+        ? '(winger-tabs)'
+        : '(tabs)';
+
   useEffect(() => {
     if (loading) return;
-    if (!session) {
-      router.replace('/(auth)/login' as any);
-    } else if (needsOnboarding) {
-      router.replace('/(onboarding)' as any);
-    } else if (isWinger) {
-      router.replace('/(winger-tabs)/friends' as any);
-    } else {
-      router.replace('/(tabs)/discover' as any);
-    }
-  }, [loading, session?.user.id, needsOnboarding, isWinger]);
+    if (currentGroup === targetGroup) return;
+    const path =
+      targetGroup === '(auth)'
+        ? '/(auth)/login'
+        : targetGroup === '(onboarding)'
+          ? '/(onboarding)'
+          : targetGroup === '(winger-tabs)'
+            ? '/(winger-tabs)/friends'
+            : '/(tabs)/discover';
+    router.replace(path as never);
+  }, [loading, currentGroup, targetGroup]);
 
-  if (loading) return <Splash />;
+  if (loading || currentGroup !== targetGroup) return <Splash />;
 
   return (
     <Stack screenOptions={{ animation: 'none' }}>

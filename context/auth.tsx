@@ -30,7 +30,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'INITIAL_SESSION' && __DEV__ && !session) {
+      if ((event === 'INITIAL_SESSION' || event === 'SIGNED_OUT') && __DEV__ && !session) {
         supabase.auth
           .signInWithPassword({ email: 'dev@local.test', password: 'devpassword' })
           .then(({ error }) => {
