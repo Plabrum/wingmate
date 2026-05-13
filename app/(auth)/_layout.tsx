@@ -14,16 +14,6 @@ export default function AuthLayout() {
           sheetAllowedDetents: [0.65, 1.0],
         }}
       />
-      <Stack.Screen
-        name="apple"
-        options={{
-          presentation: 'formSheet',
-          headerShown: true,
-          title: 'Sign in with Apple',
-          sheetGrabberVisible: true,
-          sheetAllowedDetents: [0.45, 1.0],
-        }}
-      />
     </Stack>
   );
 }

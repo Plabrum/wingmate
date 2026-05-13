@@ -1,9 +1,13 @@
+import * as AppleAuthentication from 'expo-apple-authentication';
+import { Platform } from 'react-native';
+import { toast } from 'sonner-native';
 import { View, Text } from '@/lib/tw';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PearMark } from '@/components/ui/PearMark';
 import { Sprout } from '@/components/ui/Sprout';
 import { IconSymbol } from '@/components/ui/icon-symbol';
+import { supabase } from '@/lib/supabase';
 
 const LEAF = '#5A8C3A';
 const LEAF2 = '#7BAE52';
@@ -13,6 +17,55 @@ const BLUSH = '#E9A6A0';
 export default function LoginScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+
+  const handleAppleSignIn = async () => {
+    if (Platform.OS !== 'ios') return;
+    try {
+      const credential = await AppleAuthentication.signInAsync({
+        requestedScopes: [
+          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+          AppleAuthentication.AppleAuthenticationScope.EMAIL,
+        ],
+      });
+
+      if (!credential.identityToken) {
+        toast.error('Apple sign-in did not return an identity token.');
+        return;
+      }
+
+      const { error } = await supabase.auth.signInWithIdToken({
+        provider: 'apple',
+        token: credential.identityToken,
+      });
+
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
+
+      if (credential.fullName) {
+        const parts = [
+          credential.fullName.givenName,
+          credential.fullName.middleName,
+          credential.fullName.familyName,
+        ].filter(Boolean);
+
+        if (parts.length > 0) {
+          await supabase.auth.updateUser({
+            data: {
+              full_name: parts.join(' '),
+              given_name: credential.fullName.givenName,
+              family_name: credential.fullName.familyName,
+            },
+          });
+        }
+      }
+    } catch (e: any) {
+      if (e.code === 'ERR_REQUEST_CANCELED') return;
+      console.error('Apple sign-in error:', e);
+      toast.error(e.message ?? 'Apple sign-in failed');
+    }
+  };
 
   return (
     <View
@@ -88,7 +141,7 @@ export default function LoginScreen() {
           block
           size="lg"
           icon={<IconSymbol name="applelogo" size={18} color="#FBF8F1" />}
-          onPress={() => router.push('/(auth)/apple')}
+          onPress={handleAppleSignIn}
         >
           Continue with Apple
         </Sprout>

@@ -97,7 +97,7 @@ function AppShell() {
     router.replace(path as never);
   }, [loading, currentGroup, targetGroup]);
 
-  if (loading || currentGroup !== targetGroup) return <Splash />;
+  if (loading) return <Splash />;
 
   return (
     <Stack screenOptions={{ animation: 'none' }}>
