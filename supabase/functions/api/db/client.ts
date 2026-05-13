@@ -10,7 +10,7 @@ import { config } from '../lib/config.ts';
 // `middleware/transaction.ts` should import it — handlers and query helpers get
 // the request-scoped transaction from `c.var.db` instead.
 const sql = postgres(config.databaseUrl, {
-  max: 1,
+  max: 10,
   prepare: false,
 });
 
