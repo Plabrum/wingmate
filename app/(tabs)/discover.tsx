@@ -385,6 +385,8 @@ function DiscoverCard({
       await onReport(reportReason.trim());
       setReportStep(null);
       setReportReason('');
+    } catch {
+      toast.error("Couldn't send report. Try again.");
     } finally {
       setReporting(false);
     }
@@ -609,6 +611,7 @@ function DiscoverCard({
             {/* Report icon */}
             <Pressable
               onPress={() => setReportStep('confirm')}
+              hitSlop={8}
               style={{
                 position: 'absolute',
                 top: 14,
@@ -1078,7 +1081,7 @@ function PoolView({ userId, initialPool, fetchPool, emptyState, onDecrementLikes
     if (!card) return;
     const reportedCard = card;
     onDecrementLikes?.(reportedCard.userId);
-    await postApiReports({ recipientId: reportedCard.profileId, reason });
+    await postApiReports({ recipientId: reportedCard.userId, reason });
     await pass();
     invalidatePools(reportedCard);
   }
