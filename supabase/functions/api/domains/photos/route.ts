@@ -27,6 +27,7 @@ import { rowToPhoto } from './transformers.ts';
 import { createSignedUploadToken, removeProfilePhoto } from '../../lib/storage.ts';
 import { getDeps } from '../../lib/deps.ts';
 
+// trigger redeploy
 const listOwnPhotosRoute = createRoute({
   method: 'get',
   path: '/photos/me',
