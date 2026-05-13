@@ -323,21 +323,6 @@ authorization_url_path = "/oauth/consent"
 # Allow dynamic client registration
 allow_dynamic_registration = false
 
-[functions.notify-match]
-verify_jwt = false
-
-[functions.notify-message]
-verify_jwt = false
-
-[functions.notify-invite]
-verify_jwt = false
-
-[functions.notify-suggestion]
-verify_jwt = false
-
-[functions.notify-photo]
-verify_jwt = false
-
 [edge_runtime]
 enabled = true
 # Supported request policies: `oneshot`, `per_worker`.

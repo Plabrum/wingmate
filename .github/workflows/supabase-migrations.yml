@@ -7,6 +7,8 @@ on:
     paths:
       - 'supabase/migrations/**'
       - 'supabase/functions/**'
+      - 'supabase/config.toml'
+      - '.github/workflows/supabase-migrations.yml'
 
 jobs:
   deploy:
@@ -31,23 +33,25 @@ jobs:
 
       - name: Deploy edge functions
         run: |
+          set -euo pipefail
           LOCAL_FNS=$(ls -d supabase/functions/*/ 2>/dev/null | xargs -I{} basename {} | sort)
-          REMOTE_FNS=$(supabase functions list --project-ref ${{ secrets.SUPABASE_PROJECT_REF }} | tail -n +4 | awk '{print $2}' | grep -E '^[A-Za-z][A-Za-z0-9_-]*$' | sort)
+          REMOTE_FNS=$(supabase functions list --project-ref ${{ secrets.SUPABASE_PROJECT_REF }} --output json | jq -r '.[].slug' | sort)
 
-          # Deploy all local functions. Kong (the platform gateway) verifies JWTs
-          # for the `api` function. Webhook responders (`notify-*`, `delete-profile-photo`)
-          # opt out of verification via `verify_jwt = false` in supabase/config.toml.
+          echo "Local functions:"
+          echo "$LOCAL_FNS"
+          echo "Remote functions:"
+          echo "$REMOTE_FNS"
+
           if [ -n "$LOCAL_FNS" ]; then
             echo "$LOCAL_FNS" | while read fn; do
               supabase functions deploy "$fn"
             done
           fi
 
-          # Delete remote functions that no longer exist locally
           for fn in $REMOTE_FNS; do
             if ! echo "$LOCAL_FNS" | grep -qx -- "$fn"; then
               echo "Deleting removed function: $fn"
-              supabase functions delete "$fn" --project-ref ${{ secrets.SUPABASE_PROJECT_REF }}
+              yes | supabase functions delete "$fn" --project-ref ${{ secrets.SUPABASE_PROJECT_REF }}
             fi
           done
         env:
