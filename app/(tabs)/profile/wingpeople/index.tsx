@@ -1,11 +1,12 @@
 import { Suspense, useState } from 'react';
-import { Alert, KeyboardAvoidingView, Modal, Platform, StyleSheet } from 'react-native';
+import { Alert, KeyboardAvoidingView, Modal, Platform, FlatList } from 'react-native';
 import Splash from '@/components/ui/Splash';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Controller, useForm } from 'react-hook-form';
 import { toast } from 'sonner-native';
 import * as SMS from 'expo-sms';
+import * as Contacts from 'expo-contacts';
 import { Ionicons } from '@expo/vector-icons';
 
 import { useQueryClient } from '@tanstack/react-query';
@@ -348,6 +349,8 @@ function WingpeopleContent({ onOpenInvite }: ContentProps) {
 
 type InviteForm = { phone: string };
 
+type ContactEntry = { id: string; name: string; phone: string };
+
 export default function WingpeopleScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -355,6 +358,11 @@ export default function WingpeopleScreen() {
   const { data: profile } = useGetApiProfilesMeSuspense();
 
   const [inviteVisible, setInviteVisible] = useState(false);
+  const [contactsVisible, setContactsVisible] = useState(false);
+  const [contactSearch, setContactSearch] = useState('');
+  const [allContacts, setAllContacts] = useState<ContactEntry[]>([]);
+  const [pendingContact, setPendingContact] = useState<ContactEntry | null>(null);
+  const [contactInviting, setContactInviting] = useState(false);
 
   const inviteMutation = usePostApiWingpeopleInvite();
 
@@ -374,17 +382,14 @@ export default function WingpeopleScreen() {
     reset();
   };
 
-  const onSendInvite = handleSubmit(async ({ phone }) => {
-    const e164 = toE164(phone)!;
-
+  const sendInviteToPhone = async (e164: string) => {
     const result = await inviteMutation
       .mutateAsync({ data: { phoneNumber: e164 } })
       .catch(() => null);
     if (result == null) {
       toast.error("Couldn't send invite. Try again.");
-      return;
+      return false;
     }
-
     if (result.wingerId == null) {
       const isAvailable = await SMS.isAvailableAsync();
       if (isAvailable) {
@@ -398,10 +403,59 @@ export default function WingpeopleScreen() {
         toast.error('SMS is not available on this device.');
       }
     }
-
     queryClient.invalidateQueries({ queryKey: getGetApiWingpeopleQueryKey() });
-    closeInviteSheet();
+    return true;
+  };
+
+  const onSendInvite = handleSubmit(async ({ phone }) => {
+    const e164 = toE164(phone)!;
+    const ok = await sendInviteToPhone(e164);
+    if (ok) closeInviteSheet();
   });
+
+  const openContactsPicker = async () => {
+    const { status } = await Contacts.requestPermissionsAsync();
+    if (status !== 'granted') {
+      toast.error('Contacts permission is required to invite friends.');
+      return;
+    }
+    const { data } = await Contacts.getContactsAsync({
+      fields: [Contacts.Fields.PhoneNumbers, Contacts.Fields.Name],
+    });
+    const entries: ContactEntry[] = [];
+    for (const c of data) {
+      const name = c.name ?? '';
+      if (!name) continue;
+      for (const ph of c.phoneNumbers ?? []) {
+        const raw = ph.number ?? '';
+        const e164 = toE164(raw);
+        if (e164) {
+          entries.push({ id: `${c.id}-${raw}`, name, phone: e164 });
+          break;
+        }
+      }
+    }
+    entries.sort((a, b) => a.name.localeCompare(b.name));
+    setAllContacts(entries);
+    setContactSearch('');
+    setContactsVisible(true);
+  };
+
+  const filteredContacts = contactSearch.trim()
+    ? allContacts.filter((c) => c.name.toLowerCase().includes(contactSearch.toLowerCase()))
+    : allContacts;
+
+  const handleContactConfirm = async () => {
+    if (!pendingContact) return;
+    setContactInviting(true);
+    const ok = await sendInviteToPhone(pendingContact.phone);
+    setContactInviting(false);
+    setPendingContact(null);
+    if (ok) {
+      setContactsVisible(false);
+      closeInviteSheet();
+    }
+  };
 
   return (
     <SafeAreaView className="flex-1 bg-canvas" edges={['top']}>
@@ -449,8 +503,8 @@ export default function WingpeopleScreen() {
             style={{ position: 'absolute', bottom: 0, left: 0, right: 0 }}
           >
             <View
-              className="bg-canvas"
               style={{
+                backgroundColor: '#F5F1E8',
                 borderTopLeftRadius: 24,
                 borderTopRightRadius: 24,
                 paddingHorizontal: 20,
@@ -469,15 +523,17 @@ export default function WingpeopleScreen() {
                 }}
               />
               <Text
-                className="font-serif text-ink"
-                style={{ fontSize: 24, letterSpacing: -0.4, lineHeight: 28 }}
+                style={{
+                  fontFamily: 'DMSerifDisplay_400Regular',
+                  fontSize: 24,
+                  letterSpacing: -0.4,
+                  lineHeight: 28,
+                  color: INK,
+                }}
               >
                 Invite a wingperson
               </Text>
-              <Text
-                className="text-ink-dim"
-                style={{ fontSize: 13, marginTop: 6, marginBottom: 14 }}
-              >
+              <Text style={{ fontSize: 13, marginTop: 6, marginBottom: 14, color: INK3 }}>
                 Enter their phone number — we{"'"}ll text them an invite.
               </Text>
 
@@ -526,13 +582,156 @@ export default function WingpeopleScreen() {
                   Send invite
                 </Sprout>
               </View>
+
+              <View style={{ marginTop: 10 }}>
+                <Sprout block variant="secondary" onPress={openContactsPicker}>
+                  Invite from contacts
+                </Sprout>
+              </View>
             </View>
           </KeyboardAvoidingView>
         </View>
       </Modal>
+
+      {/* ── Contact Picker Modal ─────────────────────────────────────────────── */}
+      <Modal
+        visible={contactsVisible}
+        animationType="slide"
+        transparent={false}
+        onRequestClose={() => setContactsVisible(false)}
+      >
+        <View style={{ flex: 1, backgroundColor: '#F5F1E8' }}>
+          <View
+            style={{
+              paddingTop: insets.top + 8,
+              paddingHorizontal: 16,
+              paddingBottom: 12,
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 10,
+            }}
+          >
+            <Pressable
+              onPress={() => setContactsVisible(false)}
+              hitSlop={12}
+              style={{ padding: 6 }}
+            >
+              <Ionicons name="chevron-back" size={22} color={INK} />
+            </Pressable>
+            <TextInput
+              style={{
+                flex: 1,
+                backgroundColor: '#FBF8F1',
+                borderWidth: 1,
+                borderColor: LINE,
+                borderRadius: 12,
+                paddingHorizontal: 12,
+                paddingVertical: 10,
+                fontSize: 14,
+                color: INK,
+              }}
+              placeholder="Search contacts…"
+              placeholderTextColor={INK3}
+              value={contactSearch}
+              onChangeText={setContactSearch}
+              autoCorrect={false}
+            />
+          </View>
+
+          <FlatList
+            data={filteredContacts}
+            keyExtractor={(item) => item.id}
+            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={{ paddingBottom: insets.bottom + 16 }}
+            renderItem={({ item }) => (
+              <Pressable
+                onPress={() => setPendingContact(item)}
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 12,
+                  paddingHorizontal: 16,
+                  paddingVertical: 12,
+                  borderBottomWidth: 1,
+                  borderColor: LINE,
+                }}
+              >
+                <View
+                  style={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: 20,
+                    backgroundColor: LEAF_SOFT,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Text style={{ fontSize: 15, fontWeight: '600', color: LEAF }}>
+                    {item.name.charAt(0).toUpperCase()}
+                  </Text>
+                </View>
+                <Text style={{ flex: 1, fontSize: 15, color: INK }}>{item.name}</Text>
+              </Pressable>
+            )}
+          />
+        </View>
+
+        {/* ── Confirm-contact overlay ─────────────────────────────────────────── */}
+        {pendingContact != null && (
+          <View
+            style={{
+              position: 'absolute',
+              inset: 0,
+              backgroundColor: 'rgba(31,27,22,0.5)',
+              alignItems: 'center',
+              justifyContent: 'center',
+              paddingHorizontal: 28,
+            }}
+          >
+            <View
+              style={{
+                backgroundColor: '#F5F1E8',
+                borderRadius: 20,
+                padding: 24,
+                width: '100%',
+              }}
+            >
+              <Text
+                style={{
+                  fontFamily: 'DMSerifDisplay_400Regular',
+                  fontSize: 22,
+                  letterSpacing: -0.3,
+                  color: INK,
+                  marginBottom: 8,
+                }}
+              >
+                Invite {pendingContact.name}?
+              </Text>
+              <Text style={{ fontSize: 13, color: INK3, lineHeight: 19, marginBottom: 20 }}>
+                We{"'"}ll send {pendingContact.name} a text inviting them to be your wingperson on
+                Pear.
+              </Text>
+              <View style={{ flexDirection: 'row', gap: 10 }}>
+                <View style={{ flex: 1 }}>
+                  <Sprout block variant="secondary" onPress={() => setPendingContact(null)}>
+                    No
+                  </Sprout>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Sprout
+                    block
+                    onPress={handleContactConfirm}
+                    loading={contactInviting}
+                    disabled={contactInviting}
+                  >
+                    Yes, invite
+                  </Sprout>
+                </View>
+              </View>
+            </View>
+          </View>
+        )}
+      </Modal>
     </SafeAreaView>
   );
 }
-
-// Suppress unused-warning (kept import path of StyleSheet for any future tweaks)
-const _ = StyleSheet;
