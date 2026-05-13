@@ -1992,6 +1992,31 @@
           }
         },
         "required": ["ok"]
+      },
+      "ReportResponse": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "enum": [true]
+          }
+        },
+        "required": ["ok"]
+      },
+      "ReportRequest": {
+        "type": "object",
+        "properties": {
+          "recipientId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          }
+        },
+        "required": ["recipientId", "reason"]
       }
     },
     "parameters": {}
@@ -3584,6 +3609,44 @@
           },
           "404": {
             "description": "Contact not found for this caller"
+          }
+        }
+      }
+    },
+    "/api/reports": {
+      "post": {
+        "tags": ["reports"],
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReportRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Report filed and profile removed from queue",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Unauthenticated"
           }
         }
       }
